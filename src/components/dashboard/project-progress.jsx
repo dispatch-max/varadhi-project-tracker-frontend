@@ -1,46 +1,29 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { calcProgress, cn } from '@/utils'
 import { PROJECT_STATUS_COLORS, PROJECT_STATUS_LABELS } from '@/constants'
+import { dashboardApi } from '@/lib/api/dashboard.api'
+import Link from 'next/link'
 
-// Mock projects — replace with real API later
-const MOCK_PROJECTS = [
-  {
-    id: '1',
-    name: 'Varadhi Tracker Frontend',
-    status: 'active',
-    completedTasksCount: 12,
-    tasksCount: 20,
-    manager: { name: 'Suhail' },
-  },
-  {
-    id: '2',
-    name: 'Varadhi Tracker Backend',
-    status: 'active',
-    completedTasksCount: 8,
-    tasksCount: 18,
-    manager: { name: 'Jagdish' },
-  },
-  {
-    id: '3',
-    name: 'Mobile App v2',
-    status: 'on_hold',
-    completedTasksCount: 5,
-    tasksCount: 15,
-    manager: { name: 'Nikhil' },
-  },
-  {
-    id: '4',
-    name: 'Admin Dashboard',
-    status: 'completed',
-    completedTasksCount: 24,
-    tasksCount: 24,
-    manager: { name: 'Suhail' },
-  },
-]
 
 export function ProjectProgress({ projects }) {
-  const items = projects || MOCK_PROJECTS
+  // const items = projects || MOCK_PROJECTS
+  const [items, setItems] = useState([])
+
+useEffect(() => {
+  async function loadProjects() {
+    try {
+      const data = await dashboardApi.getProjects()
+      setItems(data)
+    } catch (err) {
+      console.error(err)
+      setItems([])
+    }
+  }
+
+  loadProjects()
+}, [])
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-5">
@@ -48,12 +31,12 @@ export function ProjectProgress({ projects }) {
         <h3 className="text-sm font-semibold text-slate-800">
           Project Progress
         </h3>
-        <a
-          href="/projects"
-          className="text-xs text-violet-600 hover:underline font-medium"
-        >
-          View all
-        </a>
+        <Link
+  href="/projects"
+  className="text-xs text-violet-600 hover:underline font-medium"
+>
+  View all
+</Link>
       </div>
 
       <div className="space-y-4">
@@ -103,7 +86,7 @@ export function ProjectProgress({ projects }) {
               {/* Meta */}
               <div className="flex items-center justify-between mt-1">
                 <p className="text-xs text-slate-400">
-                  {project.manager.name}
+                  {project.manager_name}
                 </p>
                 <p className="text-xs text-slate-400">
                   {project.completedTasksCount}/{project.tasksCount} tasks

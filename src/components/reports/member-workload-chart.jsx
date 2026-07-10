@@ -7,38 +7,7 @@ import {
 } from 'recharts'
 import { reportsApi } from '@/lib/api/reports.api'
 
-// const DATA = [
-//   {
-//     name: 'Suhail H',
-//     completed: 8,
-//     inProgress: 3,
-//     todo: 2,
-//   },
-//   {
-//     name: 'Jagdish D',
-//     completed: 12,
-//     inProgress: 4,
-//     todo: 1,
-//   },
-//   {
-//     name: 'Arjun R',
-//     completed: 6,
-//     inProgress: 3,
-//     todo: 3,
-//   },
-//   {
-//     name: 'Priya S',
-//     completed: 5,
-//     inProgress: 2,
-//     todo: 2,
-//   },
-//   {
-//     name: 'Rahul K',
-//     completed: 7,
-//     inProgress: 2,
-//     todo: 0,
-//   },
-// ]
+
 
 function ChartState({ children }) {
   return (

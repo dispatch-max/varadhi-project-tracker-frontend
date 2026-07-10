@@ -101,7 +101,7 @@ export function RegisterForm() {
           id="name"
           name="name"
           type="text"
-          placeholder="Suhail"
+          placeholder="Enter your full name"
           value={formData.name}
           onChange={handleChange}
           disabled={isLoading}

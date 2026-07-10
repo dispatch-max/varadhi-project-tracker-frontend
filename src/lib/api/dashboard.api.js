@@ -15,9 +15,17 @@ export const dashboardApi = {
     return data.data
   },
 
+  // Get project progress
+  getProjects: async () => {
+    const { data } = await apiClient.get('/dashboard/projects')
+    return data.data
+  },
+
   // Get sprint burndown data
   getBurndown: async (projectId) => {
     const { data } = await apiClient.get(`/dashboard/burndown/${projectId}`)
     return data.data
   },
+
+
 }

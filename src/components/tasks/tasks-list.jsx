@@ -42,6 +42,10 @@ function TaskRowSkeleton() {
 
 function TaskActionsMenu({ task, onDeleted, onEdit }) {
   const router = useRouter()
+  const { user } = useAuthStore()
+
+  const canManageTask =
+  user?.role === "admin" || user?.role === "manager"
   const [open, setOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -98,7 +102,24 @@ function TaskActionsMenu({ task, onDeleted, onEdit }) {
               <Pencil className="w-3.5 h-3.5 text-slate-400" />
               Edit Task
             </button>
-            <div className="border-t border-slate-100 my-1" />
+            {canManageTask && (
+  <>
+    <div className="border-t border-slate-100 my-1" />
+
+    <button
+      onClick={handleDelete}
+      disabled={isDeleting}
+      className={cn(
+        'w-full text-left px-3 py-2 text-sm hover:bg-red-50 flex items-center gap-2 text-red-500',
+        isDeleting && 'opacity-50 cursor-not-allowed'
+      )}
+    >
+      <Trash2 className="w-3.5 h-3.5" />
+      {isDeleting ? 'Deleting…' : 'Delete Task'}
+    </button>
+  </>
+)}
+            {/* <div className="border-t border-slate-100 my-1" />
             <button
               onClick={handleDelete}
               disabled={isDeleting}
@@ -109,7 +130,7 @@ function TaskActionsMenu({ task, onDeleted, onEdit }) {
             >
               <Trash2 className="w-3.5 h-3.5" />
               {isDeleting ? 'Deleting…' : 'Delete Task'}
-            </button>
+            </button> */}
           </div>
         </>
       )}
@@ -205,13 +226,22 @@ export function TasksList() {
         </select>
 
         {/* Create Button */}
-        <Button
+        {canCreateTask && (
+  <Button
+    onClick={() => setShowCreateModal(true)}
+    className="bg-violet-600 hover:bg-violet-700 flex-shrink-0"
+  >
+    <Plus className="w-4 h-4 mr-2" />
+    New Task
+  </Button>
+)}
+        {/* <Button
           onClick={() => setShowCreateModal(true)}
           className="bg-violet-600 hover:bg-violet-700 flex-shrink-0"
         >
           <Plus className="w-4 h-4 mr-2" />
           New Task
-        </Button>
+        </Button> */}
       </div>
 
       {/* Error Banner */}
@@ -281,15 +311,15 @@ export function TasksList() {
                       className="hover:bg-slate-50 transition-colors"
                     >
                       {/* Title */}
-                      <td className="px-4 py-3">
-                        <p className="text-sm font-medium text-slate-800 truncate max-w-xs">
+                      <td className="px-4 py-4">
+                        <p className="text-base font-semibold text-slate-900 truncate max-w-sm">
                           {task.title}
                         </p>
-                        {task.description && (
+                        {/* {task.description && (
                           <p className="text-xs text-slate-400 truncate max-w-xs mt-0.5">
                             {task.description}
                           </p>
-                        )}
+                        )} */}
                       </td>
 
                       {/* Project */}

@@ -33,17 +33,14 @@ const [projectsLoading, setProjectsLoading] = useState(true)
 const [projectsError, setProjectsError] = useState(false)
 
 async function loadProjects() {
-  // console.log('LOAD PROJECTS CALLED')
   setProjectsLoading(true)
   setProjectsError(false)
   try {
     const response = await projectsApi.getAll()
 
-    // console.log('PROJECT API RESPONSE =>', response)
 
     const list = response?.data ?? response ?? []
 
-    // console.log('PROJECT LIST =>', list)
 
     setProjects(Array.isArray(list) ? list : [])
   } catch (err) {
@@ -57,7 +54,6 @@ async function loadProjects() {
 }
 
 useEffect(() => {
-  // console.log('LOAD PROJECTS EFFECT FIRED')
   loadProjects()
 }, [])
 
@@ -69,9 +65,26 @@ useEffect(() => {
     if (file.size > MAX_FILE_SIZE) {
       return 'File size exceeds 10MB limit.'
     }
-    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-      return 'File type not allowed. Use PDF, DOC, XLS, PNG, JPG or ZIP.'
-    }
+    // if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+    //   return 'File type not allowed. Use PDF, DOC, XLS, PNG, JPG or ZIP.'
+    // }
+    const ext = file.name.split('.').pop()?.toLowerCase()
+
+const allowedExtensions = [
+  'pdf',
+  'doc',
+  'docx',
+  'xls',
+  'xlsx',
+  'png',
+  'jpg',
+  'jpeg',
+  'zip',
+]
+
+if (!allowedExtensions.includes(ext)) {
+  return 'File type not allowed. Use PDF, DOC, XLS, PNG, JPG or ZIP.'
+}
     return null
   }
 

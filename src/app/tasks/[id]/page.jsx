@@ -1,5 +1,5 @@
 'use client'
-
+import { useAuthStore } from '@/store/auth.store'
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -49,6 +49,11 @@ export default function TaskDetailsPage() {
   const { id } = useParams()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { user } = useAuthStore()
+
+  const canManageTask =
+  user?.role === 'admin' || user?.role === 'manager'
+  const isEmployee = user?.role?.toLowerCase() === 'employee'
 
   const [task, setTask] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -72,6 +77,8 @@ export default function TaskDetailsPage() {
       setForm({
         title: data.title ?? '',
         description: data.description ?? '',
+        userStory: data.userStory ?? '',
+        acceptanceCriteria: data.acceptanceCriteria ?? '',
         status: data.status ?? 'todo',
         priority: data.priority ?? 'medium',
         dueDate: (data.dueDate || '').slice(0, 10), // ISO -> yyyy-mm-dd for date input
@@ -93,11 +100,12 @@ export default function TaskDetailsPage() {
   }
 
   function cancelEdit() {
-    // reset the form back to the loaded task
     if (task) {
       setForm({
         title: task.title ?? '',
         description: task.description ?? '',
+        userStory: task.userStory ?? '',
+        acceptanceCriteria: task.acceptanceCriteria ?? '',
         status: task.status ?? 'todo',
         priority: task.priority ?? 'medium',
         dueDate: (task.dueDate || '').slice(0, 10),
@@ -106,19 +114,50 @@ export default function TaskDetailsPage() {
     setEditing(false)
   }
 
-  async function handleSave() {
-    setIsSaving(true)
-    try {
-      const res = await tasksApi.update(id, form)
-      const data = res?.data ?? res
-      setTask(data ?? { ...task, ...form })
-      setEditing(false)
-    } catch (err) {
-      window.alert('Failed to save changes. Please try again.')
-    } finally {
-      setIsSaving(false)
+  // async function handleSave() {
+  //   setIsSaving(true)
+  //   try {
+      
+  //     // const res = await tasksApi.update(id, form)
+  //     const data = res?.data ?? res
+  //     setTask(data ?? { ...task, ...form })
+  //     setEditing(false)
+  //   } catch (err) {
+  //     window.alert('Failed to save changes. Please try again.')
+  //   } finally {
+  //     setIsSaving(false)
+  //   }
+  // }
+
+//  async function handleSave() {
+//     setIsSaving(true)
+//     try {
+//       const payload = {
+//   ...form,
+//   dueDate: form.dueDate?.trim() || null,
+//   userStory: form.userStory?.trim() || null,
+//   acceptanceCriteria: form.acceptanceCriteria?.trim() || null,
+
+async function handleSave() {
+  setIsSaving(true)
+  try {
+    // Sanitize — convert empty strings to null before sending to API
+    const payload = {
+      ...form,
+      dueDate:            form.dueDate?.trim()            || null,
+      userStory:          form.userStory?.trim()          || null,
+      acceptanceCriteria: form.acceptanceCriteria?.trim() || null,
     }
+    const res = await tasksApi.update(id, payload)
+    const data = res?.data ?? res
+    setTask(data ?? { ...task, ...form })
+    setEditing(false)
+  } catch (err) {
+    window.alert('Failed to save changes. Please try again.')
+  } finally {
+    setIsSaving(false)
   }
+}
 
   async function handleDelete() {
     if (!task) return
@@ -185,26 +224,35 @@ export default function TaskDetailsPage() {
                   name="title"
                   value={form.title}
                   onChange={handleFormChange}
-                  disabled={isSaving}
+                  disabled={isSaving || isEmployee}
                 />
               </div>
             ) : (
-              <div className="flex items-center gap-3 flex-wrap">
-                <h2 className="text-xl font-semibold text-slate-800">
-                  {task.title}
-                </h2>
-                <span className={cn('text-xs px-2 py-0.5 rounded-md font-medium', status.color)}>
-                  {status.label}
-                </span>
-                <span className={cn('text-xs px-2 py-0.5 rounded-md font-medium', priority.color)}>
-                  {priority.label}
-                </span>
-              </div>
+              <div>
+  {/* <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-2">
+    Title
+  </h3> */}
+
+  <div className="flex items-center gap-3 flex-wrap">
+    <h2 className="text-2xl font-bold text-slate-900">
+      {task.title}
+    </h2>
+
+    <span className={cn('text-xs px-2 py-0.5 rounded-md font-medium', status.color)}>
+      {status.label}
+    </span>
+
+    <span className={cn('text-xs px-2 py-0.5 rounded-md font-medium', priority.color)}>
+      {priority.label}
+    </span>
+  </div>
+</div>
+              
             )}
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          {/* <div className="flex items-center gap-2 flex-shrink-0">
             {editing ? (
               <>
                 <Button
@@ -241,30 +289,165 @@ export default function TaskDetailsPage() {
                 </Button>
               </>
             )}
-          </div>
+          </div> */}
+          {/* Actions */}
+<div className="flex items-center gap-2 flex-shrink-0">
+  {editing ? (
+    <>
+      <Button
+        type="button"
+        className="bg-violet-600 hover:bg-violet-700"
+        onClick={handleSave}
+        disabled={isSaving}
+      >
+        {isSaving ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Saving...
+          </>
+        ) : (
+          <>
+            <Save className="w-4 h-4 mr-2" />
+            Save
+          </>
+        )}
+      </Button>
+
+      <Button
+        type="button"
+        variant="outline"
+        onClick={cancelEdit}
+        disabled={isSaving}
+      >
+        <X className="w-4 h-4 mr-2" />
+        Cancel
+      </Button>
+    </>
+  ) : (
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => setEditing(true)}
+      >
+        <Pencil className="w-4 h-4 mr-2" />
+        Edit
+      </Button>
+
+      {canManageTask && (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleDelete}
+          disabled={isDeleting}
+          className="text-red-500 hover:text-red-600 hover:bg-red-50"
+        >
+          {isDeleting ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Deleting...
+            </>
+          ) : (
+            <>
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete
+            </>
+          )}
+        </Button>
+      )}
+    </>
+  )}
+</div>
         </div>
 
-        {/* Description */}
-        {editing ? (
-          <div className="space-y-1.5 mt-4">
-            <Label htmlFor="description">Description</Label>
-            <textarea
-              id="description"
-              name="description"
-              value={form.description}
-              onChange={handleFormChange}
-              disabled={isSaving}
-              rows={3}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none placeholder:text-slate-400"
-            />
-          </div>
-        ) : (
-          task.description && (
-            <p className="text-sm text-slate-500 mt-2 max-w-2xl">{task.description}</p>
-          )
-        )}
-      </div>
+{/* Description */}
+{editing ? (
+  <>
+    <div className="space-y-1.5 mt-4">
+      <Label htmlFor="description">Description</Label>
+      <textarea
+        id="description"
+        name="description"
+        value={form.description}
+        onChange={handleFormChange}
+        disabled={isSaving || isEmployee}
+        rows={3}
+        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none placeholder:text-slate-400"
+      />
+    </div>
 
+    <div className="space-y-1.5 mt-4">
+      <Label htmlFor="userStory">User Story</Label>
+      <textarea
+        id="userStory"
+        name="userStory"
+        value={form.userStory}
+        onChange={handleFormChange}
+        disabled={isSaving || isEmployee}
+        rows={3}
+        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none placeholder:text-slate-400"
+      />
+    </div>
+
+    <div className="space-y-1.5 mt-4">
+      <Label htmlFor="acceptanceCriteria">Acceptance Criteria</Label>
+      <textarea
+        id="acceptanceCriteria"
+        name="acceptanceCriteria"
+        value={form.acceptanceCriteria}
+        onChange={handleFormChange}
+        disabled={isSaving || isEmployee}
+        rows={4}
+        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none placeholder:text-slate-400"
+      />
+    </div>
+  </>
+) : (
+  <>
+    {task.description && (
+      <div className="mt-6">
+        <h3 className="text-sm font-semibold text-slate-700 mb-2">
+          Description
+        </h3>
+
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <p className="text-sm text-slate-700 whitespace-pre-wrap">
+            {task.description}
+          </p>
+        </div>
+      </div>
+    )}
+
+    {task.userStory && (
+      <div className="mt-6">
+        <h3 className="text-sm font-semibold text-slate-700 mb-2">
+          User Story
+        </h3>
+
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <p className="text-sm text-slate-700 whitespace-pre-wrap">
+            {task.userStory}
+          </p>
+        </div>
+      </div>
+    )}
+
+    {task.acceptanceCriteria && (
+      <div className="mt-6">
+        <h3 className="text-sm font-semibold text-slate-700 mb-2">
+          Acceptance Criteria
+        </h3>
+
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <p className="text-sm text-slate-700 whitespace-pre-wrap">
+            {task.acceptanceCriteria}
+          </p>
+        </div>
+      </div>
+    )}
+  </>
+)}
+</div>
       {/* Details cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
@@ -298,7 +481,7 @@ export default function TaskDetailsPage() {
                     name="priority"
                     value={form.priority}
                     onChange={handleFormChange}
-                    disabled={isSaving}
+                    disabled={isSaving || isEmployee}
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
                   >
                     <option value="low">Low</option>
@@ -316,7 +499,7 @@ export default function TaskDetailsPage() {
                   type="date"
                   value={form.dueDate}
                   onChange={handleFormChange}
-                  disabled={isSaving}
+                  disabled={isSaving || isEmployee}
                 />
               </div>
             </div>

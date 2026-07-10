@@ -16,6 +16,8 @@ export function CreateTaskModal({ onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    userStory: '',
+    acceptanceCriteria: '',
     type: 'feature',
     priority: 'medium',
     status: 'todo',
@@ -147,7 +149,7 @@ export function CreateTaskModal({ onClose, onSuccess }) {
 
           {/* Title */}
           <div className="space-y-1.5">
-            <Label htmlFor="title">Task Title *</Label>
+            <Label htmlFor="title">Task Title</Label>
             <Input
               id="title"
               name="title"
@@ -175,6 +177,44 @@ export function CreateTaskModal({ onClose, onSuccess }) {
               className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none placeholder:text-slate-400"
             />
           </div>
+
+
+          {/* User Story */}
+          <div className="space-y-1.5">
+              <Label htmlFor="userStory">User Story</Label>
+                <textarea
+                  id="userStory"
+                  name="userStory"
+                  // placeholder={`As a [user type],
+                  // I want [action],
+                  // So that [benefit]`}
+                  value={formData.userStory}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  rows={4}
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
+              />
+          </div>
+
+            {/* Acceptance Criteria */}
+                          <div className="space-y-1.5">
+                <Label htmlFor="acceptanceCriteria">
+                  Acceptance Criteria
+                </Label>
+
+                <textarea
+                  id="acceptanceCriteria"
+                  name="acceptanceCriteria"
+              //     placeholder={`• Criteria 1
+              // • Criteria 2
+              // • Criteria 3`}
+                  value={formData.acceptanceCriteria}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  rows={4}
+                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
+                />
+                </div>
 
           {/* Project */}
           <div className="space-y-1.5">
