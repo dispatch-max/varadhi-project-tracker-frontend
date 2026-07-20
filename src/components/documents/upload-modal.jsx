@@ -10,24 +10,21 @@ import { MAX_FILE_SIZE, ALLOWED_FILE_TYPES } from '@/constants'
 import { documentsApi } from '@/lib/api/documents.api'
 import { projectsApi } from '@/lib/api/projects.api'
 
-export function UploadModal({ onClose, onSuccess }) {
+export function UploadModal({ onClose, onSuccess, folders = [], defaultFolderId = '' }) {
 
 
   const fileInputRef = useRef(null)
   const [selectedFile, setSelectedFile] = useState(null)
   const [description, setDescription] = useState('')
   const [projectId, setProjectId] = useState('')
+  const [folderId, setFolderId] = useState(defaultFolderId)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [isUploading, setIsUploading] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
   const [error, setError] = useState('')
   const [isSuccess, setIsSuccess] = useState(false)
 
-  // const MOCK_PROJECTS = [
-  //   { id: '1', name: 'Varadhi Tracker Frontend' },
-  //   { id: '2', name: 'Varadhi Tracker Backend' },
-  //   { id: '3', name: 'Mobile App v2' },
-  // ]
+
   const [projects, setProjects] = useState([])
 const [projectsLoading, setProjectsLoading] = useState(true)
 const [projectsError, setProjectsError] = useState(false)
@@ -130,6 +127,7 @@ if (!allowedExtensions.includes(ext)) {
       formData.append('file', selectedFile)
       formData.append('description', description)
       if (projectId) formData.append('projectId', projectId)
+        if (folderId) formData.append('folderId', folderId)
 
       await documentsApi.upload(formData, (progressEvent) => {
         const percent = Math.round(
@@ -277,22 +275,78 @@ if (!allowedExtensions.includes(ext)) {
             />
           </div>
 
-          {/* Project */}
-          <div className="space-y-1.5">
+          {/* Project */}{/* Project */}
+<div className="space-y-1.5">
+  <Label htmlFor="projectId">Link to Project (optional)</Label>
+
+  {/* ===== KEEP YOUR OLD PROJECT SELECT EXACTLY AS IT WAS ===== */}
+  <select
+    id="projectId"
+    value={projectId}
+    onChange={(e) => setProjectId(e.target.value)}
+    disabled={isUploading || projectsLoading}
+    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+  >
+    <option value="">
+      {projectsLoading ? 'Loading projects...' : 'Select a project...'}
+    </option>
+
+    {projects.map((p) => (
+      <option key={p.id} value={p.id}>
+        {p.name}
+      </option>
+    ))}
+  </select>
+
+  {projectsError && (
+    <p className="text-amber-600 text-xs">
+      Couldn't load projects.{' '}
+      <button
+        type="button"
+        onClick={loadProjects}
+        className="underline font-medium"
+      >
+        Retry
+      </button>
+    </p>
+  )}
+</div>
+
+{/* ===== PASTE CLAUDE'S CODE BELOW THIS ===== */}
+{!defaultFolderId && (
+<div className="space-y-1.5">
+  <Label htmlFor="folderId">Folder (optional)</Label>
+
+  <select
+    id="folderId"
+    value={folderId}
+    onChange={(e) => setFolderId(e.target.value)}
+    disabled={isUploading}
+    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+  >
+    <option value="">No folder (All Files)</option>
+
+    {folders.map((f) => (
+      <option key={f.id} value={f.id}>
+        {f.name}
+      </option>
+    ))}
+  </select>
+</div>
+
+  )}
+          {/* <div className="space-y-1.5">
             <Label htmlFor="projectId">Link to Project (optional)</Label>
-            <select
-              id="projectId"
-              value={projectId}
-              onChange={(e) => setProjectId(e.target.value)}
-              disabled={isUploading || projectsLoading}
+           <select
+              id="folderId"
+              value={folderId}
+              onChange={(e) => setFolderId(e.target.value)}
+              disabled={isUploading}
               className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
             >
-              <option value="">
-                {projectsLoading ? 'Loading projects...' : 'Select a project...'}
-              </option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}
-                </option>
+              <option value="">No folder (All Files)</option>
+              {folders.map((f) => (
+                <option key={f.id} value={f.id}>{f.name}</option>
               ))}
             </select>
 
@@ -305,7 +359,7 @@ if (!allowedExtensions.includes(ext)) {
   </p>
 )}
 
-          </div>
+          </div> */}
 
           {/* Footer */}
           <div className="flex items-center justify-end gap-3 pt-2">

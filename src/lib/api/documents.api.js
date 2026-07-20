@@ -24,22 +24,18 @@ export const documentsApi = {
     return data.data
   },
 
-  // Delete document
-  // delete: async (id) => {
-  //   await apiClient.delete(`/documents/${id}`)
-  // },
+  //  // Move a document to a folder (folderId) or to All Files (null)
+  move: async (id, folderId) => {
+    const { data } = await apiClient.patch(`/documents/${id}/move`, { folderId })
+    return data.data
+  },
+
   delete: async (id) => {
   const { data } = await apiClient.delete(`/documents/${id}`)
   return data.data
   },
 
-  // Download document
-  // download: async (id) => {
-  //   const response = await apiClient.get(`/documents/${id}/download`, {
-  //     responseType: 'blob',
-  //   })
-  //   return response.data
-  // },
+
   download: async (id) => {
   const response = await apiClient.get(`/documents/${id}/download`, {
     responseType: 'blob',
