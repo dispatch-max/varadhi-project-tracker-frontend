@@ -35,7 +35,7 @@ function PageSkeleton() {
         <div className="h-4 w-2/3 bg-slate-100 rounded" />
       </div>
       <div className="grid grid-cols-3 gap-4">
-        {[1,2,3].map(i => (
+        {[1, 2, 3].map(i => (
           <div key={i} className="bg-white rounded-xl border border-slate-200 p-4">
             <div className="h-7 w-12 bg-slate-200 rounded mb-2" />
             <div className="h-3 w-20 bg-slate-100 rounded" />
@@ -54,46 +54,52 @@ export default function ProjectDetailPage({ params }) {
   const { user } = useAuthStore()
 
   const [project, setProject] = useState(null)
-  const [tasks, setTasks]     = useState([])
+  const [tasks, setTasks] = useState([])
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError]     = useState(null)
+  const [error, setError] = useState(null)
   const [showEditModal, setShowEditModal] = useState(
     searchParams.get('edit') === 'true'
   )
   const [activeTab, setActiveTab] = useState('overview')
 
-  const isAdmin   = user?.role === 'admin'
+  const isAdmin = user?.role === 'admin'
   const isManager = user?.role === 'manager'
-  const canEdit   = isAdmin || isManager
+  const canEdit = isAdmin || isManager
   const canDelete = isAdmin
 
   async function fetchProject() {
     setIsLoading(true)
     setError(null)
     try {
-      // Both calls in parallel — project detail + tasks
-      const [projectData, tasksData] = await Promise.all([
-        projectsApi.getById(id),
-        projectsApi.getAll({}).then(() =>
-          // Use the dedicated tasks endpoint
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/projects/${id}/tasks`, {
-            headers: {
-              Authorization: `Bearer ${JSON.parse(localStorage.getItem('varadhi_token') || 'null')}`
-            }
-          }).then(r => r.json()).then(r => r.data || [])
-        ).catch(() => [])
-      ])
+      // 1. Fetch project details via API helper
+      const projectRes = await projectsApi.getById(id)
+      const projectData = projectRes?.data || projectRes
+
+      // 2. Fetch project tasks using the project data tasks or safe fallback endpoint
+      let tasksData = projectData?.tasks || []
+      
+      if (!tasksData.length) {
+        try {
+          const tasksRes = await projectsApi.getTasks?.(id)
+          tasksData = tasksRes?.data || tasksRes || []
+        } catch {
+          tasksData = []
+        }
+      }
+
       setProject(projectData)
       setTasks(tasksData)
     } catch (err) {
-      setError('Failed to load project.')
+      setError('Failed to load project details.')
     } finally {
       setIsLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchProject()
+    if (id) {
+      fetchProject()
+    }
   }, [id])
 
   async function handleArchive() {
@@ -140,14 +146,16 @@ export default function ProjectDetailPage({ params }) {
     )
   }
 
-  const progress = calcProgress(project.completedTasksCount, project.tasksCount)
+  const completedTasksCount = project.completedTasksCount ?? tasks.filter(t => t.status === 'completed').length
+  const totalTasksCount = project.tasksCount ?? tasks.length
+  const progress = calcProgress(completedTasksCount, totalTasksCount)
 
   // Task breakdown by status
   const tasksByStatus = {
-    todo:        tasks.filter(t => t.status === 'todo').length,
+    todo: tasks.filter(t => t.status === 'todo').length,
     in_progress: tasks.filter(t => t.status === 'in_progress').length,
-    in_review:   tasks.filter(t => t.status === 'in_review').length,
-    completed:   tasks.filter(t => t.status === 'completed').length,
+    in_review: tasks.filter(t => t.status === 'in_review').length,
+    completed: tasks.filter(t => t.status === 'completed').length,
   }
 
   return (
@@ -175,10 +183,10 @@ export default function ProjectDetailPage({ params }) {
             {/* Status + Name */}
             <div className="flex items-center gap-3 mb-2 flex-wrap">
               <span className={cn(
-                'text-xs px-2 py-0.5 rounded-md font-medium',
-                PROJECT_STATUS_COLORS[project.status]
+                'text-xs px-2 py-0.5 rounded-md font-medium capitalize',
+                PROJECT_STATUS_COLORS[project.status] || 'bg-slate-100 text-slate-700'
               )}>
-                {PROJECT_STATUS_LABELS[project.status]}
+                {PROJECT_STATUS_LABELS[project.status] || project.status}
               </span>
             </div>
             <h1 className="text-2xl font-semibold text-slate-800 mb-2">
@@ -204,7 +212,7 @@ export default function ProjectDetailPage({ params }) {
               {project.status !== 'archived' && (
                 <button
                   onClick={handleArchive}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
                 >
                   <Archive className="w-3.5 h-3.5" />
                   Archive
@@ -248,7 +256,7 @@ export default function ProjectDetailPage({ params }) {
           </div>
           <div className="flex items-center justify-between mt-1.5">
             <span className="text-xs text-slate-400">
-              {project.completedTasksCount} of {project.tasksCount} tasks completed
+              {completedTasksCount} of {totalTasksCount} tasks completed
             </span>
             {project.endDate && (
               <span className="text-xs text-slate-400 flex items-center gap-1">
@@ -266,7 +274,7 @@ export default function ProjectDetailPage({ params }) {
           {
             icon: ListChecks,
             label: 'Total Tasks',
-            value: project.tasksCount,
+            value: totalTasksCount,
             color: 'bg-slate-50 text-slate-500'
           },
           {
@@ -348,11 +356,11 @@ export default function ProjectDetailPage({ params }) {
             </h3>
             <div className="space-y-3">
               {[
-                { label: 'Manager',    value: project.manager?.name || 'Unassigned' },
-                { label: 'Status',     value: PROJECT_STATUS_LABELS[project.status]  },
+                { label: 'Manager', value: project.manager?.name || 'Unassigned' },
+                { label: 'Status', value: PROJECT_STATUS_LABELS[project.status] || project.status },
                 { label: 'Start Date', value: project.startDate ? formatDate(project.startDate) : '—' },
-                { label: 'End Date',   value: project.endDate   ? formatDate(project.endDate)   : '—' },
-                { label: 'Created',    value: formatDate(project.createdAt) },
+                { label: 'End Date', value: project.endDate ? formatDate(project.endDate) : '—' },
+                { label: 'Created', value: project.createdAt ? formatDate(project.createdAt) : '—' },
               ].map((item) => (
                 <div key={item.label} className="flex items-center justify-between">
                   <span className="text-xs text-slate-400">{item.label}</span>
@@ -371,20 +379,19 @@ export default function ProjectDetailPage({ params }) {
             </h3>
             <div className="space-y-3">
               {Object.entries(tasksByStatus).map(([status, count]) => {
-                const pct = project.tasksCount > 0
-                  ? Math.round((count / project.tasksCount) * 100)
-                  : 0
+                const total = totalTasksCount || 1
+                const pct = Math.round((count / total) * 100)
                 const colors = {
-                  todo:        'bg-slate-300',
+                  todo: 'bg-slate-300',
                   in_progress: 'bg-amber-400',
-                  in_review:   'bg-blue-400',
-                  completed:   'bg-green-500',
+                  in_review: 'bg-blue-400',
+                  completed: 'bg-green-500',
                 }
                 return (
                   <div key={status}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs text-slate-500">
-                        {TASK_STATUS_LABELS[status]}
+                        {TASK_STATUS_LABELS[status] || status}
                       </span>
                       <span className="text-xs font-medium text-slate-600">
                         {count} ({pct}%)

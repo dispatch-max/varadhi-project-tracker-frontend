@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect,useRef } from 'react'
 import { Loader2, CheckCircle2, Camera } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,14 +13,52 @@ import { USER_ROLE_LABELS } from '@/constants'
 export function ProfileForm() {
   const { user, setAuth } = useAuthStore()
 
+  // Add this line
+  const fileInputRef = useRef(null)
+
   const [formData, setFormData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
+    name: '',
+    email: '',
   })
+
+  const [preview, setPreview] = useState(null)
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0]
+
+     if (!file) return
+
+  setPreview(URL.createObjectURL(file))
+
+  console.log("Selected File:", file)
+
+    // ==========================
+    // BACKEND API GOES HERE
+    // ==========================
+    /*
+    POST /api/users/profile-image
+
+    Request:
+    FormData
+      image : File
+
+    Response:
+    {
+      success: true,
+      imageUrl: "https://..."
+    }
+    */
+  }
+
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [errors, setErrors] = useState({})
-
   function handleChange(e) {
     setFormData({ ...formData, [e.target.name]: e.target.value })
     setErrors({ ...errors, [e.target.name]: '' })
@@ -64,8 +102,12 @@ export function ProfileForm() {
       setIsLoading(false)
     }
   }
+  if (!mounted) {
+  return null
+}
 
   return (
+    
     <div className="bg-white rounded-xl border border-slate-200 p-6">
       <h3 className="text-sm font-semibold text-slate-800 mb-5">
         Profile Information
@@ -78,11 +120,30 @@ export function ProfileForm() {
             'w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-semibold',
             getAvatarColor(user?.name || 'U')
           )}>
-            {getInitials(user?.name || 'User')}
+            {preview ? (
+  <img
+    src={preview}
+    alt="Profile"
+    className="w-full h-full object-cover rounded-full"
+  />
+) : (
+  getInitials(user?.name || 'User')
+)}
           </div>
-          <button className="absolute -bottom-1 -right-1 w-6 h-6 bg-violet-600 rounded-full flex items-center justify-center text-white hover:bg-violet-700 transition-colors">
-            <Camera className="w-3 h-3" />
-          </button>
+          <button
+  type="button"
+  onClick={() => fileInputRef.current?.click()}
+  className="absolute -bottom-1 -right-1 w-6 h-6 bg-violet-600 rounded-full flex items-center justify-center text-white hover:bg-violet-700 transition-colors"
+>
+  <Camera className="w-3 h-3" />
+</button>
+          <input
+  ref={fileInputRef}
+  type="file"
+  accept="image/png,image/jpeg,image/jpg,image/webp"
+  className="hidden"
+  onChange={handleImageUpload}
+/>
         </div>
         <div>
           <p className="text-sm font-semibold text-slate-800">

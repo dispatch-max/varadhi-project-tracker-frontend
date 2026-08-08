@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState,useEffect } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,10 +13,23 @@ export function CreateProjectModal({ onClose, onSuccess }) {
     description: '',
     startDate: '',
     endDate: '',
+     team: [],
   })
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState({})
+const [members, setMembers] = useState([])
+useEffect(() => {
+  async function loadMembers() {
+    try {
+      const res = await projectsApi.getMembers()
+      setMembers(res.data)
+    } catch (error) {
+      console.log("Failed to load members", error)
+    }
+  }
 
+  loadMembers()
+}, [])
   function handleChange(e) {
     setFormData({ ...formData, [e.target.name]: e.target.value })
     setErrors({ ...errors, [e.target.name]: '' })
@@ -147,7 +160,58 @@ export function CreateProjectModal({ onClose, onSuccess }) {
               />
             </div>
           </div>
+          {/* Assign Team Members */}
+<div className="space-y-1.5">
 
+  <Label htmlFor="team">
+    Assign Team Members *
+  </Label>
+
+  <select
+    id="team"
+    name="team"
+    multiple
+    value={formData.team}
+    onChange={(e) => {
+      const selected = Array.from(
+        e.target.selectedOptions,
+        option => Number(option.value)
+      )
+
+      setFormData({
+        ...formData,
+        team: selected
+      })
+    }}
+    disabled={isLoading}
+    className="
+      w-full min-h-[100px]
+      px-3 py-2
+      text-sm
+      border border-slate-200
+      rounded-lg
+      bg-white
+      focus:ring-2
+      focus:ring-violet-500
+    "
+  >
+
+    {members.map((member) => (
+      <option
+        key={member.id}
+        value={member.id}
+      >
+        {member.name}
+      </option>
+    ))}
+
+  </select>
+
+  <p className="text-xs text-slate-400">
+    Select members who will work on this project
+  </p>
+
+</div>
           {/* Footer Buttons */}
           <div className="flex items-center justify-end gap-3 pt-2">
             <Button

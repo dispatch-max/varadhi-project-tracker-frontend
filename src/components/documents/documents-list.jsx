@@ -1,12 +1,12 @@
-
-
 'use client'
 
 import { useState, useEffect } from 'react'
 import {
-  Upload, Search, Download,
-  Trash2, Filter, Loader2,
-  Folder, FolderPlus, FolderInput, Files, Pencil, X as XIcon
+  Upload, Search, Download, Trash2, Filter, Loader2,
+  Folder, FolderPlus, FolderInput, Files, Pencil, X as XIcon,
+  ChevronRight, HardDrive, Clock, Share2, Archive, FileText,
+  Eye, MoreVertical, LayoutGrid, List, CheckSquare, ChevronDown,
+  ChevronLeft
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -30,24 +30,30 @@ import { foldersApi } from '@/lib/api/folders.api'
 export function DocumentsList() {
   const { user } = useAuthStore()
   const isEmployee = user?.role?.toLowerCase() === 'employee'
-  const canManage = !isEmployee // admin/manager: folders, move, download, delete
+  const canManage = !isEmployee
 
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [documents, setDocuments] = useState([])
 
-  // ─── Folder state ────────────────────────────────────────────────────────
+  // ─── Folder State ────────────────────────────────────────────────────────
   const [folders, setFolders] = useState([])
-  const [selectedFolder, setSelectedFolder] = useState('all') // 'all' | 'root' | folderId
+  const [selectedFolder, setSelectedFolder] = useState('all')
   const [showCreateFolder, setShowCreateFolder] = useState(false)
   const [folderDeleteTarget, setFolderDeleteTarget] = useState(null)
   const [isFolderDeleting, setIsFolderDeleting] = useState(false)
-  const [renamingFolder, setRenamingFolder] = useState(null) // { id, name }
+  const [renamingFolder, setRenamingFolder] = useState(null)
   const [renameValue, setRenameValue] = useState('')
 
-  // Move-document menu state
-  const [moveTargetDoc, setMoveTargetDoc] = useState(null) // doc whose move menu is open
+  // ─── Pagination State ───────────────────────────────────────────────────
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
+
+  // ─── UI / Drawer State ───────────────────────────────────────────────────
+  const [selectedDoc, setSelectedDoc] = useState(null)
+  const [viewMode, setViewMode] = useState('table') // 'table' | 'grid'
+  const [moveTargetDoc, setMoveTargetDoc] = useState(null)
 
   // Delete document dialog state
   const [deleteTarget, setDeleteTarget] = useState(null)
@@ -66,7 +72,7 @@ export function DocumentsList() {
   async function loadDocuments(folder = selectedFolder) {
     try {
       const filters = {}
-      if (folder && folder !== 'all') filters.folderId = folder // 'root' or a uuid
+      if (folder && folder !== 'all') filters.folderId = folder
       const docs = await documentsApi.getAll(filters)
       setDocuments(Array.isArray(docs) ? docs : [])
     } catch (err) {
@@ -80,6 +86,7 @@ export function DocumentsList() {
 
   useEffect(() => {
     loadDocuments(selectedFolder)
+    setCurrentPage(1)
   }, [selectedFolder])
 
   function refreshAll() {
@@ -87,7 +94,12 @@ export function DocumentsList() {
     loadDocuments()
   }
 
-  // ─── Folder actions ──────────────────────────────────────────────────────
+  // Reset pagination when searching or filtering
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [search, typeFilter])
+
+  // ─── Handlers ────────────────────────────────────────────────────────────
   async function handleFolderDelete(id) {
     setIsFolderDeleting(true)
     try {
@@ -126,12 +138,12 @@ export function DocumentsList() {
     }
   }
 
-  // ─── Document actions (unchanged) ────────────────────────────────────────
   async function handleDelete(id) {
     setIsDeleting(true)
     try {
       await documentsApi.delete(id)
       setDeleteTarget(null)
+      if (selectedDoc?.id === id) setSelectedDoc(null)
       refreshAll()
     } catch (err) {
       alert('Failed to delete the document. Please try again.')
@@ -156,7 +168,7 @@ export function DocumentsList() {
     }
   }
 
-  // Client-side search/type filtering (within the selected folder scope)
+  // Filter calculations
   const filtered = documents.filter((doc) => {
     const name = doc.name ?? ''
     const description = doc.description ?? ''
@@ -170,335 +182,499 @@ export function DocumentsList() {
     return matchesSearch && matchesType
   })
 
-  const unfiledCount = selectedFolder === 'all'
-    ? documents.filter((d) => !d.folder).length
-    : null
+  // Pagination Math
+  const totalPages = Math.ceil(filtered.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const paginatedDocs = filtered.slice(startIndex, startIndex + itemsPerPage)
+
+  // Quick Stats
+  const totalFiles = documents.length
+  const pdfCount = documents.filter((d) => d.fileType === 'pdf').length
+  const docCount = documents.filter((d) => ['doc', 'docx'].includes(d.fileType)).length
+  const sheetCount = documents.filter((d) => ['xls', 'xlsx'].includes(d.fileType)).length
+  const imgCount = documents.filter((d) => ['png', 'jpg', 'jpeg'].includes(d.fileType)).length
+  const zipCount = documents.filter((d) => d.fileType === 'zip').length
+
+  const selectedFolderName = folders.find((f) => f.id === selectedFolder)?.name || 'All Documents'
 
   return (
-    <div>
+    <div className="space-y-6">
 
-      {/* ─── Folder Bar ─────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-2 mb-5">
-
-        {/* All Files */}
-        <button
-          onClick={() => setSelectedFolder('all')}
-          className={cn(
-            'inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors',
-            selectedFolder === 'all'
-              ? 'bg-violet-600 border-violet-600 text-white'
-              : 'bg-white border-slate-200 text-slate-600 hover:border-violet-300'
-          )}
-        >
-          <Files className="w-3.5 h-3.5" />
-          All Files
-        </button>
-
-        {/* Unfiled */}
-        <button
-          onClick={() => setSelectedFolder('root')}
-          className={cn(
-            'inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors',
-            selectedFolder === 'root'
-              ? 'bg-violet-600 border-violet-600 text-white'
-              : 'bg-white border-slate-200 text-slate-600 hover:border-violet-300'
-          )}
-        >
-          <Folder className="w-3.5 h-3.5" />
-          Unfiled
-        </button>
-
-        {/* Folder chips */}
-        {folders.map((f) => (
-          <div
-            key={f.id}
-            className={cn(
-              'inline-flex items-center gap-1 rounded-lg border transition-colors',
-              selectedFolder === f.id
-                ? 'bg-violet-600 border-violet-600'
-                : 'bg-white border-slate-200 hover:border-violet-300'
-            )}
-          >
-            {renamingFolder?.id === f.id ? (
-              <form onSubmit={handleFolderRename} className="flex items-center px-1 py-0.5">
-                <input
-                  value={renameValue}
-                  onChange={(e) => setRenameValue(e.target.value)}
-                  autoFocus
-                  className="text-xs px-2 py-1 border border-slate-200 rounded w-32 focus:outline-none focus:ring-1 focus:ring-violet-500"
-                />
-                <button type="submit" className="p-1 text-green-600 hover:bg-green-50 rounded">
-                  ✓
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setRenamingFolder(null); setRenameValue('') }}
-                  className="p-1 text-slate-400 hover:bg-slate-50 rounded"
-                >
-                  <XIcon className="w-3 h-3" />
-                </button>
-              </form>
-            ) : (
-              <>
-                <button
-                  onClick={() => setSelectedFolder(f.id)}
-                  className={cn(
-                    'inline-flex items-center gap-1.5 text-xs pl-3 py-1.5 font-medium',
-                    canManage ? 'pr-1' : 'pr-3',
-                    selectedFolder === f.id ? 'text-white' : 'text-slate-600'
-                  )}
-                >
-                  <Folder className="w-3.5 h-3.5" />
-                  {f.name}
-                  <span className={cn(
-                    'text-[10px] px-1.5 py-0.5 rounded-full',
-                    selectedFolder === f.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
-                  )}>
-                    {f.documentsCount}
-                  </span>
-                </button>
-                {canManage && (
-                  <span className="flex items-center pr-1.5 gap-0.5">
-                    <button
-                      title="Rename folder"
-                      onClick={() => { setRenamingFolder(f); setRenameValue(f.name) }}
-                      className={cn(
-                        'p-1 rounded transition-colors',
-                        selectedFolder === f.id
-                          ? 'text-white/70 hover:text-white hover:bg-white/10'
-                          : 'text-slate-300 hover:text-slate-500 hover:bg-slate-50'
-                      )}
-                    >
-                      <Pencil className="w-3 h-3" />
-                    </button>
-                    <button
-                      title="Delete folder"
-                      onClick={() => setFolderDeleteTarget(f)}
-                      className={cn(
-                        'p-1 rounded transition-colors',
-                        selectedFolder === f.id
-                          ? 'text-white/70 hover:text-white hover:bg-white/10'
-                          : 'text-slate-300 hover:text-red-500 hover:bg-red-50'
-                      )}
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </span>
-                )}
-              </>
-            )}
+      {/* ─── 1. Top Metrics Banner ────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="p-4 bg-white rounded-xl border border-slate-200 flex items-center space-x-3 shadow-xs">
+          <div className="p-3 bg-violet-50 text-violet-600 rounded-xl">
+            <FileText className="w-5 h-5" />
           </div>
-        ))}
-
-        {/* New Folder — admin/manager only */}
-        {canManage && (
-          <button
-            onClick={() => setShowCreateFolder(true)}
-            className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-dashed border-slate-300 text-slate-500 hover:border-violet-400 hover:text-violet-600 font-medium transition-colors"
-          >
-            <FolderPlus className="w-3.5 h-3.5" />
-            New Folder
-          </button>
-        )}
-      </div>
-
-      {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search documents..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white placeholder:text-slate-400"
-          />
+          <div>
+            <p className="text-xl font-bold text-slate-800">{totalFiles}</p>
+            <p className="text-xs text-slate-400">Total Documents</p>
+          </div>
         </div>
 
-        <select
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          className="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white text-slate-700"
-        >
-          <option value="all">All Types</option>
-          <option value="pdf">PDF</option>
-          <option value="docx">DOCX</option>
-          <option value="xlsx">XLSX</option>
-          <option value="png">PNG</option>
-          <option value="jpg">JPG</option>
-          <option value="zip">ZIP</option>
-        </select>
-
-        <Button
-          onClick={() => setShowUploadModal(true)}
-          className="bg-violet-600 hover:bg-violet-700 flex-shrink-0"
-        >
-          <Upload className="w-4 h-4 mr-2" />
-          Upload File
-        </Button>
-      </div>
-
-      {/* Stats Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-        {[
-          { label: 'Total Files', value: documents.length },
-          { label: 'PDFs', value: documents.filter((d) => d.fileType === 'pdf').length },
-          { label: 'Documents', value: documents.filter((d) => ['doc', 'docx'].includes(d.fileType)).length },
-          { label: 'Spreadsheets', value: documents.filter((d) => ['xls', 'xlsx'].includes(d.fileType)).length },
-          { label: 'Images', value: documents.filter((d) => ['png', 'jpg', 'jpeg'].includes(d.fileType)).length },
-          { label: 'Archives', value: documents.filter((d) => d.fileType === 'zip').length },
-        ].map((stat) => (
-          <div key={stat.label} className="bg-white rounded-xl border border-slate-200 px-4 py-3">
-            <p className="text-xl font-semibold text-slate-800">{stat.value}</p>
-            <p className="text-xs text-slate-400 mt-0.5">{stat.label}</p>
+        <div className="p-4 bg-white rounded-xl border border-slate-200 flex items-center space-x-3 shadow-xs">
+          <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
+            <HardDrive className="w-5 h-5" />
           </div>
-        ))}
+          <div>
+            <p className="text-xl font-bold text-slate-800">
+              {formatFileSize(documents.reduce((acc, d) => acc + (d.fileSize || 0), 0))}
+            </p>
+            <p className="text-xs text-slate-400">Storage Used</p>
+          </div>
+        </div>
+
+        <div className="p-4 bg-white rounded-xl border border-slate-200 flex items-center space-x-3 shadow-xs">
+          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+            <Clock className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-xl font-bold text-slate-800">{pdfCount + docCount}</p>
+            <p className="text-xs text-slate-400">Docs & PDFs</p>
+          </div>
+        </div>
+
+        <div className="p-4 bg-white rounded-xl border border-slate-200 flex items-center space-x-3 shadow-xs">
+          <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
+            <Share2 className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-xl font-bold text-slate-800">{imgCount}</p>
+            <p className="text-xs text-slate-400">Images</p>
+          </div>
+        </div>
+
+        <div className="p-4 bg-white rounded-xl border border-slate-200 flex items-center space-x-3 shadow-xs">
+          <div className="p-3 bg-slate-100 text-slate-600 rounded-xl">
+            <Archive className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-xl font-bold text-slate-800">{zipCount}</p>
+            <p className="text-xs text-slate-400">Archives</p>
+          </div>
+        </div>
       </div>
 
-      {/* Results */}
-      <p className="text-xs text-slate-400 mb-3">
-        Showing {filtered.length} file{filtered.length !== 1 ? 's' : ''}
-        {unfiledCount !== null && unfiledCount > 0 && (
-          <span className="text-slate-300"> · {unfiledCount} unfiled</span>
-        )}
-      </p>
-
-      {/* Documents Grid */}
-      {filtered.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filtered.map((doc) => (
-            <div
-              key={doc.id}
-              className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-sm transition-shadow"
-            >
-              {/* Top row */}
-              <div className="flex items-start gap-3 mb-3">
+      {/* ─── 2. Recently Opened Row ─────────────────────────────────────── */}
+      {documents.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5" /> Recently Opened
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {documents.slice(0, 4).map((doc) => (
+              <div
+                key={doc.id}
+                onClick={() => setSelectedDoc(doc)}
+                className="p-3 bg-white rounded-xl border border-slate-200 hover:border-violet-300 hover:shadow-xs transition cursor-pointer flex items-center space-x-3"
+              >
                 <FileIcon fileType={doc.fileType} size="md" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-800 truncate">{doc.name}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{formatFileSize(doc.fileSize)}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-medium text-slate-800 truncate">{doc.name}</p>
+                  <p className="text-[11px] text-slate-400 truncate">{doc.project?.name || 'General'}</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">{formatDate(doc.createdAt, 'MMM dd')}</p>
                 </div>
               </div>
-
-              {/* Description */}
-              {doc.description && (
-                <p className="text-xs text-slate-500 mb-3 line-clamp-2 leading-relaxed">
-                  {doc.description}
-                </p>
-              )}
-
-              {/* Folder + Project tags */}
-              {(doc.folder || doc.project) && (
-                <div className="mb-3 flex flex-wrap gap-1.5">
-                  {doc.folder && (
-                    <span className="inline-flex items-center gap-1 text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-medium">
-                      <Folder className="w-3 h-3" />
-                      {doc.folder.name}
-                    </span>
-                  )}
-                  {doc.project && (
-                    <span className="text-xs bg-violet-50 text-violet-600 px-2 py-0.5 rounded-md font-medium">
-                      {doc.project.name}
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* Footer */}
-              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                <div className="flex items-center gap-2">
-                  <div className={cn(
-                    'w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-semibold',
-                    getAvatarColor(doc.uploadedBy?.name)
-                  )}>
-                    {getInitials(doc.uploadedBy?.name)}
-                  </div>
-                  <span className="text-xs text-slate-500">{doc.uploadedBy?.name ?? 'Unknown'}</span>
-                  <span className="text-xs text-slate-300">·</span>
-                  <span className="text-xs text-slate-400">{formatDate(doc.createdAt, 'MMM dd')}</span>
-                </div>
-
-                {/* Actions — admin/manager only */}
-                <div className="relative flex items-center gap-1">
-                  {canManage && (
-                    <>
-                      {/* Move */}
-                      <button
-                        title="Move to folder"
-                        onClick={() => setMoveTargetDoc(moveTargetDoc?.id === doc.id ? null : doc)}
-                        className="p-1.5 text-slate-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors"
-                      >
-                        <FolderInput className="w-3.5 h-3.5" />
-                      </button>
-
-                      {/* Move dropdown */}
-                      {moveTargetDoc?.id === doc.id && (
-                        <>
-                          <div
-                            className="fixed inset-0 z-10"
-                            onClick={() => setMoveTargetDoc(null)}
-                          />
-                          <div className="absolute right-0 bottom-8 w-44 bg-white border border-slate-200 rounded-xl shadow-lg z-20 py-1 max-h-56 overflow-y-auto">
-                            <p className="px-3 py-1.5 text-xs font-medium text-slate-400">Move to</p>
-                            <button
-                              onClick={() => handleMove(doc, null)}
-                              className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                            >
-                              <Files className="w-3.5 h-3.5 text-slate-400" />
-                              All Files (unfiled)
-                            </button>
-                            {folders.map((f) => (
-                              <button
-                                key={f.id}
-                                onClick={() => handleMove(doc, f.id)}
-                                disabled={doc.folder?.id === f.id}
-                                className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 disabled:opacity-40"
-                              >
-                                <Folder className="w-3.5 h-3.5 text-slate-400" />
-                                <span className="truncate">{f.name}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </>
-                      )}
-
-                      <button
-                        title="Download"
-                        onClick={() => handleDownload(doc)}
-                        className="p-1.5 text-slate-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                      </button>
-
-                      <button
-                        title="Delete"
-                        onClick={() => setDeleteTarget(doc)}
-                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
-          <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-            <Filter className="w-5 h-5 text-slate-400" />
+            ))}
           </div>
-          <p className="text-sm font-medium text-slate-600">No documents found</p>
-          <p className="text-xs text-slate-400 mt-1">
-            {selectedFolder !== 'all'
-              ? 'This folder is empty — upload a file or move one here'
-              : 'Upload a file or try a different search'}
-          </p>
         </div>
       )}
 
-      {/* Delete Document Dialog */}
+      {/* ─── 3. Action Toolbar & Path Breadcrumbs ───────────────────────── */}
+      <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
+        {/* Breadcrumb Path */}
+        <div className="flex items-center space-x-1 text-xs font-medium text-slate-600">
+          <span>Documents</span>
+          <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+          <span className="text-violet-600 font-semibold">{selectedFolderName}</span>
+        </div>
+
+        {/* View Controls & Filter Actions */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Toggle View */}
+          <div className="flex items-center bg-slate-100 p-0.5 rounded-lg">
+            <button
+              onClick={() => setViewMode('table')}
+              className={cn(
+                'p-1.5 rounded-md text-xs font-medium flex items-center gap-1 transition',
+                viewMode === 'table' ? 'bg-white shadow-xs text-violet-600' : 'text-slate-500 hover:text-slate-800'
+              )}
+            >
+              <List className="w-3.5 h-3.5" /> Table
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={cn(
+                'p-1.5 rounded-md text-xs font-medium flex items-center gap-1 transition',
+                viewMode === 'grid' ? 'bg-white shadow-xs text-violet-600' : 'text-slate-500 hover:text-slate-800'
+              )}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" /> Grid
+            </button>
+          </div>
+
+          {/* Search Box */}
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-violet-400 w-36 sm:w-48"
+            />
+          </div>
+
+          {/* Type Filter Select */}
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-600 outline-none focus:border-violet-400"
+          >
+            <option value="all">All Types</option>
+            <option value="pdf">PDF</option>
+            <option value="docx">DOCX</option>
+            <option value="xlsx">XLSX</option>
+            <option value="png">PNG</option>
+            <option value="zip">ZIP</option>
+          </select>
+
+          {/* Upload Button */}
+          <Button
+            onClick={() => setShowUploadModal(true)}
+            className="bg-violet-600 hover:bg-violet-700 text-xs h-8 px-3"
+          >
+            <Upload className="w-3.5 h-3.5 mr-1.5" /> Upload File
+          </Button>
+        </div>
+      </div>
+
+      {/* ─── 4. Main Split View (Sidebar | Content | Preview Drawer) ────── */}
+      <div className="grid grid-cols-12 gap-5 items-start">
+
+        {/* ─── Left Sidebar Folder Navigation ──────────────────────────── */}
+        <div className="col-span-12 lg:col-span-3 xl:col-span-2 bg-white rounded-xl border border-slate-200 p-3 space-y-3">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Folders</span>
+            {canManage && (
+              <button
+                onClick={() => setShowCreateFolder(true)}
+                className="text-violet-600 hover:text-violet-700 text-xs flex items-center gap-1 font-medium"
+              >
+                <FolderPlus className="w-3.5 h-3.5" /> New
+              </button>
+            )}
+          </div>
+
+          <div className="space-y-1">
+            {/* All Files */}
+            <button
+              onClick={() => setSelectedFolder('all')}
+              className={cn(
+                'w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition',
+                selectedFolder === 'all'
+                  ? 'bg-violet-50 text-violet-700'
+                  : 'text-slate-600 hover:bg-slate-50'
+              )}
+            >
+              <div className="flex items-center space-x-2">
+                <Files className="w-4 h-4 text-violet-500" />
+                <span>All Documents</span>
+              </div>
+              <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full">
+                {documents.length}
+              </span>
+            </button>
+
+            {/* Unfiled */}
+            <button
+              onClick={() => setSelectedFolder('root')}
+              className={cn(
+                'w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition',
+                selectedFolder === 'root'
+                  ? 'bg-violet-50 text-violet-700'
+                  : 'text-slate-600 hover:bg-slate-50'
+              )}
+            >
+              <div className="flex items-center space-x-2">
+                <Folder className="w-4 h-4 text-slate-400" />
+                <span>Unfiled</span>
+              </div>
+            </button>
+
+            {/* Custom Folders */}
+            {folders.map((f) => (
+              <div
+                key={f.id}
+                className={cn(
+                  'group flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition',
+                  selectedFolder === f.id
+                    ? 'bg-violet-50 text-violet-700'
+                    : 'text-slate-600 hover:bg-slate-50'
+                )}
+              >
+                {renamingFolder?.id === f.id ? (
+                  <form onSubmit={handleFolderRename} className="flex items-center space-x-1 w-full">
+                    <input
+                      value={renameValue}
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      autoFocus
+                      className="text-xs px-1.5 py-0.5 border border-violet-300 rounded w-full outline-none"
+                    />
+                    <button type="submit" className="text-emerald-600 hover:text-emerald-700 text-xs">✓</button>
+                    <button
+                      type="button"
+                      onClick={() => { setRenamingFolder(null); setRenameValue('') }}
+                      className="text-slate-400 hover:text-slate-600"
+                    >
+                      <XIcon className="w-3 h-3" />
+                    </button>
+                  </form>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setSelectedFolder(f.id)}
+                      className="flex items-center space-x-2 truncate flex-1 text-left"
+                    >
+                      <Folder className="w-4 h-4 text-violet-500 flex-shrink-0" />
+                      <span className="truncate">{f.name}</span>
+                    </button>
+                    <div className="flex items-center space-x-1">
+                      <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full">
+                        {f.documentsCount || 0}
+                      </span>
+                      {canManage && (
+                        <div className="hidden group-hover:flex items-center space-x-0.5 ml-1">
+                          <button
+                            onClick={() => { setRenamingFolder(f); setRenameValue(f.name) }}
+                            className="text-slate-400 hover:text-slate-600 p-0.5"
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={() => setFolderDeleteTarget(f)}
+                            className="text-slate-400 hover:text-red-600 p-0.5"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ─── Center Documents Listing ─────────────────────────────────── */}
+        <div
+          className={cn(
+            'col-span-12 transition-all',
+            selectedDoc
+              ? 'lg:col-span-6 xl:col-span-7'
+              : 'lg:col-span-9 xl:col-span-10'
+          )}
+        >
+          {filtered.length > 0 ? (
+            <div className="bg-white rounded-xl border border-slate-200 shadow-xs flex flex-col overflow-hidden">
+              
+              {viewMode === 'table' ? (
+                /* Scrollable Fixed-Height Table */
+                <div className="max-h-[520px] overflow-y-auto overflow-x-auto relative custom-scrollbar">
+                 <table className="w-full text-left text-xs border-collapse min-w-[650px]">
+  <thead className="sticky top-0 z-10 bg-slate-50 border-b border-slate-200 font-semibold text-slate-500 uppercase tracking-wider shadow-xs">
+    <tr>
+      {/* Checkbox column removed */}
+      <th className="p-3">Name</th>
+      <th className="p-3">Project</th>
+      <th className="p-3">Folder</th>
+      <th className="p-3">Uploader</th>
+      <th className="p-3">Date</th>
+      <th className="p-3">Size</th>
+      <th className="p-3 text-right">Actions</th>
+    </tr>
+  </thead>
+  <tbody className="divide-y divide-slate-100 bg-white">
+    {paginatedDocs.map((doc) => (
+      <tr
+        key={doc.id}
+        onClick={() => setSelectedDoc(doc)}
+        className={cn(
+          'hover:bg-slate-50/80 cursor-pointer transition',
+          selectedDoc?.id === doc.id ? 'bg-violet-50/60' : ''
+        )}
+      >
+        {/* Checkbox cell removed */}
+        <td className="p-3 font-medium text-slate-800 flex items-center space-x-2">
+          <FileIcon fileType={doc.fileType} size="sm" />
+          <span className="truncate max-w-[180px]" title={doc.name}>{doc.name}</span>
+        </td>
+        <td className="p-3 text-slate-500 whitespace-nowrap">{doc.project?.name || '-'}</td>
+        <td className="p-3 text-slate-500 whitespace-nowrap">{doc.folder?.name || 'Unfiled'}</td>
+        <td className="p-3 text-slate-500 whitespace-nowrap">{doc.uploadedBy?.name || 'Unknown'}</td>
+        <td className="p-3 text-slate-500 whitespace-nowrap">{formatDate(doc.createdAt, 'MMM dd')}</td>
+        <td className="p-3 text-slate-500 whitespace-nowrap">{formatFileSize(doc.fileSize)}</td>
+        <td className="p-3 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-end space-x-1 text-slate-400">
+            <button
+              onClick={() => handleDownload(doc)}
+              className="p-1 hover:text-violet-600 rounded transition"
+              title="Download"
+            >
+              <Download className="w-3.5 h-3.5" />
+            </button>
+            {canManage && (
+              <button
+                onClick={() => setDeleteTarget(doc)}
+                className="p-1 hover:text-red-600 rounded transition"
+                title="Delete"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+                </div>
+              ) : (
+                /* Capped Scrollable Grid Area */
+                <div className="p-4 max-h-[520px] overflow-y-auto">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {paginatedDocs.map((doc) => (
+                      <div
+                        key={doc.id}
+                        onClick={() => setSelectedDoc(doc)}
+                        className={cn(
+                          'bg-white rounded-xl border border-slate-200 p-4 hover:shadow-xs transition cursor-pointer',
+                          selectedDoc?.id === doc.id ? 'border-violet-400 ring-1 ring-violet-400' : ''
+                        )}
+                      >
+                        <div className="flex items-start gap-3 mb-3">
+                          <FileIcon fileType={doc.fileType} size="md" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-slate-800 truncate" title={doc.name}>{doc.name}</p>
+                            <p className="text-[11px] text-slate-400 mt-0.5">{formatFileSize(doc.fileSize)}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-slate-400 pt-3 border-t border-slate-100">
+                          <span>{formatDate(doc.createdAt, 'MMM dd')}</span>
+                          <span className="text-violet-600 font-medium truncate max-w-[100px]">{doc.folder?.name || 'Unfiled'}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Pagination Bar */}
+              <div className="flex items-center justify-between px-4 py-2.5 border-t border-slate-100 bg-slate-50/60">
+                <p className="text-xs text-slate-500">
+                  Showing <span className="font-semibold text-slate-700">{filtered.length > 0 ? startIndex + 1 : 0}</span> to{' '}
+                  <span className="font-semibold text-slate-700">
+                    {Math.min(startIndex + itemsPerPage, filtered.length)}
+                  </span>{' '}
+                  of <span className="font-semibold text-slate-700">{filtered.length}</span> documents
+                </p>
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="text-xs font-semibold text-slate-600 px-2">
+                    {currentPage} / {totalPages || 1}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                    disabled={currentPage === totalPages || totalPages === 0}
+                    className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          ) : (
+            <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
+              <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+                <Filter className="w-5 h-5 text-slate-400" />
+              </div>
+              <p className="text-xs font-medium text-slate-600">No documents found</p>
+            </div>
+          )}
+        </div>
+
+        {/* ─── Right Drawer Document Details ───────────────────────────── */}
+        {selectedDoc && (
+          <div className="col-span-12 lg:col-span-3 xl:col-span-3 bg-white rounded-xl border border-slate-200 p-4 space-y-4 shadow-xs sticky top-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Document Preview</h4>
+              <button onClick={() => setSelectedDoc(null)} className="text-slate-400 hover:text-slate-600">
+                <XIcon className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div>
+              <h3 className="font-bold text-sm text-slate-800 break-words">{selectedDoc.name}</h3>
+              <p className="text-xs text-slate-400 mt-0.5">{selectedDoc.project?.name || 'General Project'}</p>
+            </div>
+
+            {/* Metadata list */}
+            <div className="text-xs space-y-2 border-y border-slate-100 py-3 text-slate-600">
+              <div className="flex justify-between">
+                <span>Size:</span>
+                <span className="font-medium text-slate-800">{formatFileSize(selectedDoc.fileSize)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Uploader:</span>
+                <span className="font-medium text-slate-800">{selectedDoc.uploadedBy?.name || 'Unknown'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Created:</span>
+                <span className="font-medium text-slate-800">{formatDate(selectedDoc.createdAt, 'MMM dd, yyyy')}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Folder:</span>
+                <span className="font-medium text-violet-600">{selectedDoc.folder?.name || 'Unfiled'}</span>
+              </div>
+            </div>
+
+            {/* Preview Box */}
+            <div className="h-32 bg-slate-50 border border-slate-200 rounded-lg flex flex-col items-center justify-center p-3 text-center">
+              <FileIcon fileType={selectedDoc.fileType} size="lg" />
+              <p className="text-[11px] text-slate-400 mt-2">Preview canvas ready</p>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <button
+                onClick={() => handleDownload(selectedDoc)}
+                className="flex items-center justify-center gap-1 border border-slate-200 py-1.5 rounded-lg hover:bg-slate-50 font-medium text-slate-700"
+              >
+                <Download className="w-3.5 h-3.5" /> Download
+              </button>
+              {canManage && (
+                <button
+                  onClick={() => setDeleteTarget(selectedDoc)}
+                  className="flex items-center justify-center gap-1 bg-red-50 text-red-600 py-1.5 rounded-lg hover:bg-red-100 font-medium"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Delete
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ─── Modals & Alert Dialogs ──────────────────────────────────────── */}
       <AlertDialog
         open={deleteTarget !== null}
         onOpenChange={(open) => { if (!open && !isDeleting) setDeleteTarget(null) }}
@@ -532,7 +708,6 @@ export function DocumentsList() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Delete Folder Dialog */}
       <AlertDialog
         open={folderDeleteTarget !== null}
         onOpenChange={(open) => { if (!open && !isFolderDeleting) setFolderDeleteTarget(null) }}
@@ -543,8 +718,7 @@ export function DocumentsList() {
               Delete Folder?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-slate-500">
-              &ldquo;{folderDeleteTarget?.name}&rdquo; will be deleted. Documents inside it are
-              NOT deleted — they will be moved to All Files.
+              &ldquo;{folderDeleteTarget?.name}&rdquo; will be deleted. Documents inside it are NOT deleted — they will be moved to All Documents.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -567,7 +741,6 @@ export function DocumentsList() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Create Folder Modal */}
       {showCreateFolder && (
         <CreateFolderModal
           onClose={() => setShowCreateFolder(false)}
@@ -575,7 +748,6 @@ export function DocumentsList() {
         />
       )}
 
-      {/* Upload Modal — pass folders + current folder so uploads land in context */}
       {showUploadModal && (
         <UploadModal
           folders={folders}
@@ -589,7 +761,6 @@ export function DocumentsList() {
           }}
         />
       )}
-
     </div>
   )
 }
