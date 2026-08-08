@@ -77,7 +77,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { Bell, Search } from 'lucide-react'
+import { Bell, Search, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { useAuthStore } from '@/store/auth.store'
 import { useNotificationStore } from '@/store/notification.store'
@@ -106,7 +106,7 @@ export function Topbar() {
   const showUnread = mounted && unreadCount > 0
 
   return (
-    <header className="h-14 bg-card border-b border-border flex items-center px-6 gap-4 sticky top-0 z-10 rounded-tl-[1.5rem] rounded-bl-[1.5rem] overflow-hidden">
+    <header className="h-14 bg-card border-b border-border flex items-center px-6 gap-5 sticky top-0 z-10 rounded-tl-[1.5rem] rounded-bl-[1.5rem] overflow-hidden">
 
       {/* Page Title */}
       <div className="flex-1">
@@ -115,6 +115,14 @@ export function Topbar() {
           {displayRole ? `${displayRole} · ` : ''}Varadhi Club
         </p>
       </div>
+
+          {/* AI Assistant */}
+    <button className="flex items-center gap-2 px-4 h-10 bg-violet-50 border border-violet-100 rounded-xl text-sm text-violet-600 hover:bg-violet-100">
+      <Sparkles className="w-4 h-4" />
+      AI Assistant
+    </button>
+
+      
 
       {/* Search */}
       <div className="relative hidden md:block">

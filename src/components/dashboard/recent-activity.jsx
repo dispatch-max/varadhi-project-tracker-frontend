@@ -51,6 +51,7 @@ export function RecentActivity() {
 
   return (
     <div className="bg-card rounded-xl border border-border p-5 h-[320px] overflow-y-auto">
+      
       <h3 className="text-sm font-semibold text-foreground mb-4">
         Recent Activity 
       </h3>

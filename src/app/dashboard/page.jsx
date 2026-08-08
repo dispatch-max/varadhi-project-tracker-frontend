@@ -46,24 +46,6 @@ export default function DashboardPage() {
       <ChevronDown className="w-4 h-4" />
     </button>
 
-    {/* New Project */}
-    <button className="flex items-center gap-2 px-4 h-10 bg-card border border-border rounded-xl text-sm text-foreground hover:bg-background">
-      <Plus className="w-4 h-4" />
-      New Project
-    </button>
-
-    {/* AI Assistant */}
-    <button className="flex items-center gap-2 px-4 h-10 bg-violet-50 border border-violet-100 rounded-xl text-sm text-violet-600 hover:bg-violet-100">
-      <Sparkles className="w-4 h-4" />
-      AI Assistant
-    </button>
-
-    {/* Notifications */}
-    <button className="flex items-center gap-2 px-4 h-10 bg-card border border-border rounded-xl text-sm text-foreground hover:bg-background">
-      <Bell className="w-4 h-4" />
-      Notifications
-    </button>
-
   </div>
 
 </div>
