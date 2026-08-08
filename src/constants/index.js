@@ -80,6 +80,8 @@ export const NAV_ITEMS = [
   { label: 'Tasks',      href: '/tasks',       icon: 'ListChecks',      roles: ['admin', 'manager', 'employee'] },
   { label: 'Kanban',     href: '/kanban',      icon: 'LayoutKanban',    roles: ['admin', 'manager', 'employee'] },
   { label: 'Documents',  href: '/documents',   icon: 'Files',           roles: ['admin', 'manager', 'employee'] },
+  { label: 'Leave',      href: '/leave-management', icon: 'CalendarDays', roles: ['admin', 'manager', 'employee'] },
+  { label: 'Time',       href: '/time-management', icon: 'Clock3', roles: ['admin', 'manager', 'employee'] },
   { label: 'Reports',    href: '/reports',     icon: 'BarChart3',       roles: ['admin', 'manager'] },
   { label: 'Users',      href: '/users',       icon: 'Users',           roles: ['admin'] },
   { label: 'Settings',   href: '/settings',    icon: 'Settings',        roles: ['admin', 'manager', 'employee'] },

@@ -362,7 +362,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, FolderOpen, ListChecks,
   Kanban, Files, BarChart3, Users, Settings,
-  LogOut, ChevronLeft, ChevronRight
+  LogOut, ChevronLeft, ChevronRight, CalendarDays, Clock3
 } from 'lucide-react'
 
 import { useState } from 'react'
@@ -381,6 +381,8 @@ const ICON_MAP = {
   BarChart3,
   Users,
   Settings,
+  CalendarDays,
+  Clock3,
 }
 
 export function Sidebar() {
