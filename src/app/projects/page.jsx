@@ -10,10 +10,10 @@ export default function ProjectsPage() {
 
       {/* Page Header */}
       <div>
-        <h2 className="text-xl font-semibold text-slate-800">
+        <h2 className="text-xl font-semibold text-foreground">
           Projects
         </h2>
-        <p className="text-sm text-slate-500 mt-0.5">
+        <p className="text-sm text-muted-foreground mt-0.5">
           Manage and track all your team projects.
         </p>
       </div>

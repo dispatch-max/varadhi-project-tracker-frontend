@@ -67,8 +67,8 @@ export function ProjectCompletionChart() {
   }, [])
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-5">
-      <h3 className="text-sm font-semibold text-slate-800 mb-1">
+    <div className="bg-card rounded-xl border border-border p-5">
+      <h3 className="text-sm font-semibold text-foreground mb-1">
         Project Completion
       </h3>
       <p className="text-xs text-slate-400 mb-4">

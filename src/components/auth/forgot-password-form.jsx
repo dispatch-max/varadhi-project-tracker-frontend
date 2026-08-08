@@ -48,12 +48,12 @@ export function ForgotPasswordForm() {
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-green-100">
           <CheckCircle className="w-7 h-7 text-green-600" />
         </div>
-        <h2 className="text-lg font-semibold text-slate-800">
+        <h2 className="text-lg font-semibold text-foreground">
           Check your email
         </h2>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-muted-foreground">
           We sent a password reset link to{' '}
-          <span className="font-medium text-slate-700">{email}</span>
+          <span className="font-medium text-foreground">{email}</span>
         </p>
         <Link
           href="/auth/login"
@@ -106,7 +106,7 @@ export function ForgotPasswordForm() {
       </Button>
 
       {/* Back to login */}
-      <p className="text-center text-sm text-slate-500">
+      <p className="text-center text-sm text-muted-foreground">
         Remember your password?{' '}
         <Link
           href="/auth/login"

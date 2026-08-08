@@ -66,8 +66,8 @@ export function ProfileForm() {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-6">
-      <h3 className="text-sm font-semibold text-slate-800 mb-5">
+    <div className="bg-card rounded-xl border border-border p-6">
+      <h3 className="text-sm font-semibold text-foreground mb-5">
         Profile Information
       </h3>
 
@@ -85,7 +85,7 @@ export function ProfileForm() {
           </button>
         </div>
         <div>
-          <p className="text-sm font-semibold text-slate-800">
+          <p className="text-sm font-semibold text-foreground">
             {user?.name}
           </p>
           <p className="text-xs text-slate-400 mt-0.5">
@@ -151,7 +151,7 @@ export function ProfileForm() {
         {/* Role — read only */}
         <div className="space-y-1.5">
           <Label>Role</Label>
-          <div className="px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-500 capitalize">
+          <div className="px-3 py-2 text-sm bg-background border border-border rounded-lg text-muted-foreground capitalize">
             {USER_ROLE_LABELS[user?.role] || user?.role}
             <span className="text-xs text-slate-400 ml-2">
               (Contact admin to change)

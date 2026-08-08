@@ -147,7 +147,7 @@ export function RegisterForm() {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-muted-foreground"
           >
             {showPassword
               ? <EyeOff className="w-4 h-4" />
@@ -177,7 +177,7 @@ export function RegisterForm() {
           <button
             type="button"
             onClick={() => setShowConfirm(!showConfirm)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-muted-foreground"
           >
             {showConfirm
               ? <EyeOff className="w-4 h-4" />
@@ -203,7 +203,7 @@ export function RegisterForm() {
       </Button>
 
       {/* Login link */}
-      <p className="text-center text-sm text-slate-500">
+      <p className="text-center text-sm text-muted-foreground">
         Already have an account?{' '}
         <Link
           href="/auth/login"

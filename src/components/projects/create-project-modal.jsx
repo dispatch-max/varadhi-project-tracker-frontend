@@ -63,16 +63,16 @@ export function CreateProjectModal({ onClose, onSuccess }) {
       className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-xl">
+      <div className="bg-card rounded-2xl w-full max-w-md shadow-xl">
 
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-          <h2 className="text-base font-semibold text-slate-800">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <h2 className="text-base font-semibold text-foreground">
             Create New Project
           </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-50"
+            className="text-slate-400 hover:text-muted-foreground p-1 rounded-lg hover:bg-background"
           >
             <X className="w-4 h-4" />
           </button>
@@ -115,7 +115,7 @@ export function CreateProjectModal({ onClose, onSuccess }) {
               onChange={handleChange}
               disabled={isLoading}
               rows={3}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent resize-none placeholder:text-slate-400"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent resize-none placeholder:text-slate-400"
             />
           </div>
 

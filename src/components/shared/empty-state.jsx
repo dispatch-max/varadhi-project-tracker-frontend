@@ -13,7 +13,7 @@ export function EmptyState({
           <Icon className="w-5 h-5 text-slate-400" />
         </div>
       )}
-      <p className="text-sm font-medium text-slate-600 mb-1">
+      <p className="text-sm font-medium text-muted-foreground mb-1">
         {title}
       </p>
       {description && (

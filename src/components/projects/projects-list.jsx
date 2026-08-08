@@ -12,7 +12,7 @@ import { useHasMounted } from '@/hooks/use-has-mounted'
 // Skeleton loader
 function ProjectSkeleton() {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-5 animate-pulse">
+    <div className="bg-card rounded-xl border border-border p-5 animate-pulse">
       <div className="h-4 bg-slate-100 rounded w-3/4 mb-3" />
       <div className="h-3 bg-slate-100 rounded w-full mb-2" />
       <div className="h-3 bg-slate-100 rounded w-2/3 mb-4" />
@@ -74,13 +74,13 @@ export function ProjectsList() {
             placeholder="Search projects..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white placeholder:text-slate-400"
+            className="w-full pl-9 pr-4 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-card placeholder:text-slate-400"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white text-slate-700"
+          className="px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-card text-foreground"
         >
           <option value="all">All Status</option>
           <option value="active">Active</option>
@@ -137,7 +137,7 @@ export function ProjectsList() {
           <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3">
             <Filter className="w-5 h-5 text-slate-400" />
           </div>
-          <p className="text-sm font-medium text-slate-600">No projects found</p>
+          <p className="text-sm font-medium text-muted-foreground">No projects found</p>
           <p className="text-xs text-slate-400 mt-1">
             Try changing your search or filter
           </p>

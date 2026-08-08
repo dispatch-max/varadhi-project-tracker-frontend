@@ -6,23 +6,28 @@ import { Topbar } from './topbar'
 import { cn } from '@/utils'
 
 export function AppShell({ children }) {
+
+  const [collapsed, setCollapsed] = useState(false)
+
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-background">
 
-      {/* Sidebar */}
-      <Sidebar />
+      <Sidebar
+        collapsed={collapsed}
+        setCollapsed={setCollapsed}
+      />
 
-      {/* Main content — pushed right to make room for sidebar */}
-      <div className="ml-60 flex flex-col min-h-screen transition-all duration-300">
-
-        {/* Topbar */}
+      <div
+        className={cn(
+          "flex flex-col min-h-screen transition-all duration-300",
+          collapsed ? "ml-16" : "ml-60"
+        )}
+      >
         <Topbar />
 
-        {/* Page content */}
         <main className="flex-1 p-6">
           {children}
         </main>
-
       </div>
     </div>
   )

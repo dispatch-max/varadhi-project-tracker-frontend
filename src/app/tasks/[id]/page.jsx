@@ -14,14 +14,14 @@ import { tasksApi } from '@/lib/api/tasks.api'
 import { formatDate, getInitials, getAvatarColor, cn } from '@/utils'
 
 const STATUS_CONFIG = {
-  todo:        { label: 'To Do',       color: 'bg-slate-100 text-slate-600' },
+  todo:        { label: 'To Do',       color: 'bg-slate-100 text-muted-foreground' },
   in_progress: { label: 'In Progress', color: 'bg-blue-100 text-blue-700' },
   in_review:   { label: 'In Review',   color: 'bg-amber-100 text-amber-700' },
   completed:   { label: 'Completed',   color: 'bg-green-100 text-green-700' },
 }
 
 const PRIORITY_CONFIG = {
-  low:      { label: 'Low',      color: 'bg-slate-100 text-slate-600' },
+  low:      { label: 'Low',      color: 'bg-slate-100 text-muted-foreground' },
   medium:   { label: 'Medium',   color: 'bg-blue-100 text-blue-700' },
   high:     { label: 'High',     color: 'bg-amber-100 text-amber-700' },
   critical: { label: 'Critical', color: 'bg-red-100 text-red-700' },
@@ -31,14 +31,14 @@ function DetailsSkeleton() {
   return (
     <div className="animate-pulse space-y-6">
       <div className="h-4 w-24 bg-slate-100 rounded" />
-      <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+      <div className="bg-card rounded-xl border border-border p-6 space-y-4">
         <div className="h-6 w-1/3 bg-slate-100 rounded" />
         <div className="h-3 w-2/3 bg-slate-100 rounded" />
         <div className="h-3 w-1/2 bg-slate-100 rounded" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {Array.from({ length: 2 }).map((_, i) => (
-          <div key={i} className="bg-white rounded-xl border border-slate-200 p-5 h-40" />
+          <div key={i} className="bg-card rounded-xl border border-border p-5 h-40" />
         ))}
       </div>
     </div>
@@ -179,7 +179,7 @@ async function handleSave() {
       <div className="space-y-4">
         <Link
           href="/tasks"
-          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Tasks
@@ -206,14 +206,14 @@ async function handleSave() {
       {/* Back link */}
       <Link
         href="/tasks"
-        className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700"
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Tasks
       </Link>
 
       {/* Header */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-card rounded-xl border border-border p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             {editing ? (
@@ -229,12 +229,12 @@ async function handleSave() {
               </div>
             ) : (
               <div>
-  {/* <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-2">
+  {/* <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-2">
     Title
   </h3> */}
 
   <div className="flex items-center gap-3 flex-wrap">
-    <h2 className="text-2xl font-bold text-slate-900">
+    <h2 className="text-2xl font-bold text-foreground">
       {task.title}
     </h2>
 
@@ -372,7 +372,7 @@ async function handleSave() {
         onChange={handleFormChange}
         disabled={isSaving || isEmployee}
         rows={3}
-        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none placeholder:text-slate-400"
+        className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none placeholder:text-slate-400"
       />
     </div>
 
@@ -385,7 +385,7 @@ async function handleSave() {
         onChange={handleFormChange}
         disabled={isSaving || isEmployee}
         rows={3}
-        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none placeholder:text-slate-400"
+        className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none placeholder:text-slate-400"
       />
     </div>
 
@@ -398,7 +398,7 @@ async function handleSave() {
         onChange={handleFormChange}
         disabled={isSaving || isEmployee}
         rows={4}
-        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none placeholder:text-slate-400"
+        className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none placeholder:text-slate-400"
       />
     </div>
   </>
@@ -406,12 +406,12 @@ async function handleSave() {
   <>
     {task.description && (
       <div className="mt-6">
-        <h3 className="text-sm font-semibold text-slate-700 mb-2">
+        <h3 className="text-sm font-semibold text-foreground mb-2">
           Description
         </h3>
 
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-          <p className="text-sm text-slate-700 whitespace-pre-wrap">
+        <div className="rounded-lg border border-border bg-background p-4">
+          <p className="text-sm text-foreground whitespace-pre-wrap">
             {task.description}
           </p>
         </div>
@@ -420,12 +420,12 @@ async function handleSave() {
 
     {task.userStory && (
       <div className="mt-6">
-        <h3 className="text-sm font-semibold text-slate-700 mb-2">
+        <h3 className="text-sm font-semibold text-foreground mb-2">
           User Story
         </h3>
 
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-          <p className="text-sm text-slate-700 whitespace-pre-wrap">
+        <div className="rounded-lg border border-border bg-background p-4">
+          <p className="text-sm text-foreground whitespace-pre-wrap">
             {task.userStory}
           </p>
         </div>
@@ -434,12 +434,12 @@ async function handleSave() {
 
     {task.acceptanceCriteria && (
       <div className="mt-6">
-        <h3 className="text-sm font-semibold text-slate-700 mb-2">
+        <h3 className="text-sm font-semibold text-foreground mb-2">
           Acceptance Criteria
         </h3>
 
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-          <p className="text-sm text-slate-700 whitespace-pre-wrap">
+        <div className="rounded-lg border border-border bg-background p-4">
+          <p className="text-sm text-foreground whitespace-pre-wrap">
             {task.acceptanceCriteria}
           </p>
         </div>
@@ -452,8 +452,8 @@ async function handleSave() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
         {/* Overview */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
-          <h3 className="text-sm font-semibold text-slate-700 mb-4">Details</h3>
+        <div className="bg-card rounded-xl border border-border p-5">
+          <h3 className="text-sm font-semibold text-foreground mb-4">Details</h3>
 
           {editing ? (
             <div className="space-y-4">
@@ -466,7 +466,7 @@ async function handleSave() {
                     value={form.status}
                     onChange={handleFormChange}
                     disabled={isSaving}
-                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+                    className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-card"
                   >
                     <option value="todo">To Do</option>
                     <option value="in_progress">In Progress</option>
@@ -482,7 +482,7 @@ async function handleSave() {
                     value={form.priority}
                     onChange={handleFormChange}
                     disabled={isSaving || isEmployee}
-                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+                    className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-card  "
                   >
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
@@ -529,7 +529,7 @@ async function handleSave() {
                 <dt className="text-slate-400 inline-flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5" /> Due date
                 </dt>
-                <dd className="text-slate-700 font-medium">
+                <dd className="text-foreground font-medium">
                   {task.dueDate ? formatDate(task.dueDate) : '—'}
                 </dd>
               </div>
@@ -537,15 +537,15 @@ async function handleSave() {
                 <dt className="text-slate-400 inline-flex items-center gap-1.5">
                   <FolderOpen className="w-3.5 h-3.5" /> Project
                 </dt>
-                <dd className="text-slate-700 font-medium">{projectName ?? '—'}</dd>
+                <dd className="text-foreground font-medium">{projectName ?? '—'}</dd>
               </div>
             </dl>
           )}
         </div>
 
         {/* Assignee */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
-          <h3 className="text-sm font-semibold text-slate-700 mb-4">Assignee</h3>
+        <div className="bg-card rounded-xl border border-border p-5">
+          <h3 className="text-sm font-semibold text-foreground mb-4">Assignee</h3>
           {assigneeName ? (
             <div className="flex items-center gap-2.5">
               <div className={cn(
@@ -554,7 +554,7 @@ async function handleSave() {
               )}>
                 {getInitials(assigneeName)}
               </div>
-              <span className="text-sm text-slate-700">{assigneeName}</span>
+              <span className="text-sm text-foreground">{assigneeName}</span>
             </div>
           ) : (
             <p className="text-xs text-slate-400">Unassigned</p>

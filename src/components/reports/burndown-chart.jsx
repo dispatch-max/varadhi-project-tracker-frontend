@@ -86,16 +86,16 @@ export function BurndownChart() {
   }, [projectId])
  
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-5">
+    <div className="bg-card rounded-xl border border-border p-5">
       <div className="flex items-start justify-between gap-3 mb-1">
-      <h3 className="text-sm font-semibold text-slate-800 mb-1">
+      <h3 className="text-sm font-semibold text-foreground mb-1">
         Sprint Burndown
       </h3>
               {projects.length > 0 && (
           <select
             value={projectId}
             onChange={(e) => setProjectId(e.target.value)}
-            className="text-xs border border-slate-200 rounded-lg px-2 py-1 bg-white text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500"
+            className="text-xs border border-border rounded-lg px-2 py-1 bg-card text-muted-foreground focus:outline-none focus:ring-2 focus:ring-violet-500"
           >
             {projects.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>

@@ -22,11 +22,11 @@
 //   const pageTitle = currentNav?.label || 'Dashboard'
 
 //   return (
-//     <header className="h-14 bg-white border-b border-slate-200 flex items-center px-6 gap-4 sticky top-0 z-10">
+//     <header className="h-14 bg-card border-b border-border flex items-center px-6 gap-4 sticky top-0 z-10">
 
 //       {/* Page Title */}
 //       <div className="flex-1">
-//         <h1 className="text-sm font-semibold text-slate-800">{pageTitle}</h1>
+//         <h1 className="text-sm font-semibold text-foreground">{pageTitle}</h1>
 //         <p className="text-xs text-slate-400 capitalize">
 //           {user?.role} · Varadhi Club
 //         </p>
@@ -40,12 +40,12 @@
 //           placeholder="Search tasks, projects..."
 //           value={searchValue}
 //           onChange={(e) => setSearchValue(e.target.value)}
-//           className="pl-8 pr-4 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent placeholder:text-slate-400"
+//           className="pl-8 pr-4 py-1.5 text-sm bg-background border border-border rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent placeholder:text-slate-400"
 //         />
 //       </div>
 
 //       {/* Notification Bell */}
-//       <button className="relative p-2 rounded-lg hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-colors">
+//       <button className="relative p-2 rounded-lg hover:bg-background text-muted-foreground hover:text-foreground transition-colors">
 //         <Bell className="w-4 h-4" />
 //         {unreadCount > 0 && (
 //           <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
@@ -63,7 +63,7 @@
 //           {getInitials(user?.name || 'User')}
 //         </div>
 //         <div className="hidden md:block">
-//           <p className="text-xs font-medium text-slate-800 leading-tight">
+//           <p className="text-xs font-medium text-foreground leading-tight">
 //             {user?.name}
 //           </p>
 //           <p className="text-xs text-slate-400 capitalize">{user?.role}</p>
@@ -106,11 +106,11 @@ export function Topbar() {
   const showUnread = mounted && unreadCount > 0
 
   return (
-    <header className="h-14 bg-white border-b border-slate-200 flex items-center px-6 gap-4 sticky top-0 z-10">
+    <header className="h-14 bg-card border-b border-border flex items-center px-6 gap-4 sticky top-0 z-10 rounded-tl-[1.5rem] rounded-bl-[1.5rem] overflow-hidden">
 
       {/* Page Title */}
       <div className="flex-1">
-        <h1 className="text-sm font-semibold text-slate-800">{pageTitle}</h1>
+        <h1 className="text-sm font-semibold text-foreground">{pageTitle}</h1>
         <p className="text-xs text-slate-400 capitalize">
           {displayRole ? `${displayRole} · ` : ''}Varadhi Club
         </p>
@@ -124,12 +124,12 @@ export function Topbar() {
           placeholder="Search tasks, projects..."
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
-          className="pl-8 pr-4 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent placeholder:text-slate-400"
+          className="pl-8 pr-4 py-1.5 text-sm bg-background border border-border rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent placeholder:text-slate-400"
         />
       </div>
 
       {/* Notification Bell */}
-      <button className="relative p-2 rounded-lg hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-colors">
+      <button className="relative p-2 rounded-lg hover:bg-background text-muted-foreground hover:text-foreground transition-colors">
         <Bell className="w-4 h-4" />
         {showUnread && (
           <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
@@ -147,7 +147,7 @@ export function Topbar() {
           {getInitials(displayName || 'User')}
         </div>
         <div className="hidden md:block">
-          <p className="text-xs font-medium text-slate-800 leading-tight">
+          <p className="text-xs font-medium text-foreground leading-tight">
             {displayName}
           </p>
           <p className="text-xs text-slate-400 capitalize">{displayRole}</p>

@@ -107,7 +107,7 @@ export function LoginForm() {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-muted-foreground"
           >
             {showPassword
               ? <EyeOff className="w-4 h-4" />
@@ -128,7 +128,7 @@ export function LoginForm() {
         }
       </Button>
 
-      <p className="text-center text-sm text-slate-500">
+      <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{' '}
         <Link
           href="/auth/register"
