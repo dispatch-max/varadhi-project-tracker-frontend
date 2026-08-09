@@ -360,17 +360,9 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 
 import {
-  LayoutDashboard,
-  FolderKanban,
-  ListChecks,
-  KanbanSquare,
-  Files,
-  ChartNoAxesCombined,
-  UsersRound,
-  Settings2,
-  LogOut,
-  ChevronLeft,
-  ChevronRight,
+  LayoutDashboard, FolderOpen, ListChecks,
+  Kanban, Files, BarChart3, Users, Settings,
+  LogOut, ChevronLeft, ChevronRight
 } from 'lucide-react'
 
 import { useState } from 'react'
@@ -386,9 +378,9 @@ const ICON_MAP = {
   ListChecks,
   LayoutKanban: KanbanSquare,
   Files,
-  BarChart3: ChartNoAxesCombined,
-  Users: UsersRound,
-  Settings: Settings2,
+  BarChart3,
+  Users,
+  Settings,
 }
 
 export function Sidebar() {
