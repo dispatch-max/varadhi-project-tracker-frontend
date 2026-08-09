@@ -29,15 +29,20 @@ export const tasksApi = {
     return data.data
   },
 
-  // Update task
-  update: async (id, taskData) => {
-    const { data } = await apiClient.put(`/tasks/${id}`, taskData)
+  // Update task.
+  // `baseUpdatedAt` is optional optimistic-concurrency (AC-15): pass the
+  // `updatedAt` you last saw and the server rejects the write with 409 if the
+  // row has moved on. Omit it and the call behaves exactly as it always did.
+  update: async (id, taskData, baseUpdatedAt) => {
+    const body = baseUpdatedAt ? { ...taskData, baseUpdatedAt } : taskData
+    const { data } = await apiClient.put(`/tasks/${id}`, body)
     return data.data
   },
 
   // Update only the status (used in Kanban drag & drop)
-  updateStatus: async (id, status) => {
-    const { data } = await apiClient.patch(`/tasks/${id}/status`, { status })
+  updateStatus: async (id, status, baseUpdatedAt) => {
+    const body = baseUpdatedAt ? { status, baseUpdatedAt } : { status }
+    const { data } = await apiClient.patch(`/tasks/${id}/status`, body)
     return data.data
   },
 

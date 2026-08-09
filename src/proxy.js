@@ -38,5 +38,21 @@ export function proxy(request) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  // PWA assets MUST be reachable while logged out, or the app is silently not
+  // installable — with no error surfaced anywhere:
+  //
+  //   sw.js                 browsers refuse to register a service worker that
+  //                         redirects to an HTML login page
+  //   manifest.webmanifest  fetched during first paint, often before any auth
+  //                         state exists; a 307 makes it parse as HTML
+  //   icons/, apple-touch-icon
+  //                         the OS installer fetches these entirely outside the
+  //                         page's auth context
+  //   offline               the fallback page must render when there is no
+  //                         network to redirect over (used from SF6)
+  //
+  // `offline$` is anchored so a future /offline-report stays auth-protected.
+  matcher: [
+    '/((?!api|_next/static|_next/image|favicon.ico|sw.js|manifest.webmanifest|icons/|apple-touch-icon|offline$|robots.txt|sitemap.xml).*)',
+  ],
 }

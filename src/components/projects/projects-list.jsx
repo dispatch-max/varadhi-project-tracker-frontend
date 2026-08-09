@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Plus, Search, Filter } from 'lucide-react'
 import { ProjectCard } from './project-card'
 import { CreateProjectModal } from './create-project-modal'
@@ -27,13 +28,24 @@ function ProjectSkeleton() {
 
 export function ProjectsList() {
   const { user } = useAuthStore()
+  const searchParams = useSearchParams()
   const [projects, setProjects] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(searchParams.get('search') || '')
   const [statusFilter, setStatusFilter] = useState('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const mounted = useHasMounted()
+
+  // Picks up a search term the topbar navigated here with (?search=...),
+  // including when this page is already mounted and the term changes.
+  useEffect(() => {
+    // Same traced-false-positive as elsewhere in this app (e.g.
+    // use-has-mounted.js's setMounted(true)) — a plain setState with no
+    // async work, safe to run directly in the effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSearch(searchParams.get('search') || '')
+  }, [searchParams])
 
   async function fetchProjects() {
     setIsLoading(true)

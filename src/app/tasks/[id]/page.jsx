@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { tasksApi } from '@/lib/api/tasks.api'
+import { usersApi } from '@/lib/api/users.api'
+import { TaskComments } from '@/components/tasks/task-comments'
 import { formatDate, getInitials, getAvatarColor, cn } from '@/utils'
 
 const STATUS_CONFIG = {
@@ -64,6 +66,36 @@ export default function TaskDetailsPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
+  // Reassignment dropdown data. GET /users is admin/manager-only on the
+  // backend, so only fetch it for roles that could actually use it —
+  // employees would just get a 403 for a control that's disabled anyway.
+  const [users, setUsers] = useState([])
+  const [usersLoading, setUsersLoading] = useState(false)
+  const [usersError, setUsersError] = useState(false)
+
+  async function loadUsers() {
+    setUsersLoading(true)
+    setUsersError(false)
+    try {
+      const response = await usersApi.getAll()
+      const list = response?.data ?? response ?? []
+      setUsers(Array.isArray(list) ? list : [])
+    } catch (err) {
+      setUsers([])
+      setUsersError(true)
+    } finally {
+      setUsersLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    // loadUsers only calls setState after its internal await — same
+    // traced-false-positive as this file's own fetchTask/notification-bell's
+    // fetchNotifications (plain function referenced by name, not inline).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (canManageTask) loadUsers()
+  }, [canManageTask])
+
   const fetchTask = useCallback(async () => {
     if (!id) return
     setIsLoading(true)
@@ -82,6 +114,7 @@ export default function TaskDetailsPage() {
         status: data.status ?? 'todo',
         priority: data.priority ?? 'medium',
         dueDate: (data.dueDate || '').slice(0, 10), // ISO -> yyyy-mm-dd for date input
+        assigneeId: data.assignee?.id ?? '',
       })
     } catch (err) {
       setError('Failed to load this task.')
@@ -109,6 +142,7 @@ export default function TaskDetailsPage() {
         status: task.status ?? 'todo',
         priority: task.priority ?? 'medium',
         dueDate: (task.dueDate || '').slice(0, 10),
+        assigneeId: task.assignee?.id ?? '',
       })
     }
     setEditing(false)
@@ -141,16 +175,45 @@ export default function TaskDetailsPage() {
 async function handleSave() {
   setIsSaving(true)
   try {
-    // Sanitize — convert empty strings to null before sending to API
-    const payload = {
-      ...form,
-      dueDate:            form.dueDate?.trim()            || null,
-      userStory:          form.userStory?.trim()          || null,
-      acceptanceCriteria: form.acceptanceCriteria?.trim() || null,
+    // A status change is sent through PATCH /tasks/:id/status — the same
+    // endpoint the Kanban board uses. Going through PUT /tasks/:id instead
+    // only produces a generic "Task Updated" and skips both the
+    // review-requested notification and the project milestone re-check.
+    const statusChanged = form.status !== task.status
+
+    const nonStatusChanged =
+      form.title !== (task.title ?? '') ||
+      form.description !== (task.description ?? '') ||
+      form.userStory !== (task.userStory ?? '') ||
+      form.acceptanceCriteria !== (task.acceptanceCriteria ?? '') ||
+      form.priority !== task.priority ||
+      form.dueDate !== (task.dueDate || '').slice(0, 10) ||
+      (form.assigneeId || '') !== (task.assignee?.id || '')
+
+    let latest = task
+
+    if (nonStatusChanged) {
+      // Sanitize — convert empty strings to null before sending to API.
+      // status is deliberately null here so the field update can't also fire
+      // a second, generic notification for the status move.
+      const payload = {
+        ...form,
+        status:             null,
+        dueDate:            form.dueDate?.trim()            || null,
+        userStory:          form.userStory?.trim()          || null,
+        acceptanceCriteria: form.acceptanceCriteria?.trim() || null,
+        assigneeId:         form.assigneeId?.trim()          || null,
+      }
+      const res = await tasksApi.update(id, payload)
+      latest = (res?.data ?? res) || latest
     }
-    const res = await tasksApi.update(id, payload)
-    const data = res?.data ?? res
-    setTask(data ?? { ...task, ...form })
+
+    if (statusChanged) {
+      const res = await tasksApi.updateStatus(id, form.status)
+      latest = (res?.data ?? res) || latest
+    }
+
+    setTask(latest ?? { ...task, ...form })
     setEditing(false)
   } catch (err) {
     window.alert('Failed to save changes. Please try again.')
@@ -546,7 +609,44 @@ async function handleSave() {
         {/* Assignee */}
         <div className="bg-white rounded-xl border border-slate-200 p-5">
           <h3 className="text-sm font-semibold text-slate-700 mb-4">Assignee</h3>
-          {assigneeName ? (
+          {editing ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="assigneeId">Reassign to</Label>
+              <select
+                id="assigneeId"
+                name="assigneeId"
+                value={form.assigneeId}
+                onChange={handleFormChange}
+                disabled={isSaving || isEmployee || usersLoading}
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+              >
+                <option value="">
+                  {usersLoading ? 'Loading users...' : 'Unassigned'}
+                </option>
+                {/* Employees never fetch the full user list (GET /users is
+                    admin/manager-only), so fall back to the task's own
+                    assignee data to still show the correct name here. */}
+                {!canManageTask && assignee && (
+                  <option value={assignee.id}>{assigneeName}</option>
+                )}
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>{u.name}</option>
+                ))}
+              </select>
+              {usersError && (
+                <p className="text-amber-600 text-xs">
+                  Couldn&apos;t load users.{' '}
+                  <button
+                    type="button"
+                    onClick={loadUsers}
+                    className="underline font-medium"
+                  >
+                    Retry
+                  </button>
+                </p>
+              )}
+            </div>
+          ) : assigneeName ? (
             <div className="flex items-center gap-2.5">
               <div className={cn(
                 'w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0',
@@ -559,14 +659,18 @@ async function handleSave() {
           ) : (
             <p className="text-xs text-slate-400">Unassigned</p>
           )}
-          {editing && (
-            <p className="text-xs text-slate-400 mt-3">
-              Reassigning isn&apos;t available here yet — it can be added with a
-              user dropdown like the create modal.
-            </p>
-          )}
         </div>
       </div>
+
+      {/* Comments — posting here is what triggers the existing
+          TASK_COMMENT / TASK_MENTION notifications. */}
+      <TaskComments
+        taskId={id}
+        projectId={task.project?.id}
+        comments={task.comments || []}
+        currentUserId={user?.id}
+        onTaskUpdated={(updated) => setTask(updated)}
+      />
 
     </div>
   )

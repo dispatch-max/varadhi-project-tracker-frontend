@@ -12,6 +12,7 @@ import {
 import { projectsApi } from '@/lib/api/projects.api'
 import { useAuthStore } from '@/store/auth.store'
 import { EditProjectModal } from '@/components/projects/edit-project-modal'
+import { AddProjectMember } from '@/components/projects/add-project-member'
 import { StatusBadge, PriorityBadge, TypeBadge } from '@/components/tasks/task-badge'
 import {
   PROJECT_STATUS_COLORS, PROJECT_STATUS_LABELS,
@@ -21,6 +22,12 @@ import {
   formatDate, calcProgress, getInitials,
   getAvatarColor, isOverdue, cn
 } from '@/utils'
+
+// The completion percentages the backend fires a project_milestone
+// notification at — see MILESTONE_THRESHOLDS in tasks.controller.js. Both
+// sides round the same way (completed / total, Math.round), so a tick sitting
+// behind the fill is exactly when the manager was notified.
+const MILESTONES = [25, 50, 75, 100]
 
 // ─── Skeleton ──────────────────────────────────────────────────────────────────
 function PageSkeleton() {
@@ -231,7 +238,7 @@ export default function ProjectDetailPage({ params }) {
               {progress}%
             </span>
           </div>
-          <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+          <div className="relative w-full h-2 bg-slate-100 rounded-full overflow-hidden">
             <div
               className={cn(
                 'h-full rounded-full transition-all duration-700',
@@ -245,6 +252,24 @@ export default function ProjectDetailPage({ params }) {
               )}
               style={{ width: `${progress}%` }}
             />
+            {/* Milestone ticks. 100% is the bar's own end, so only the interior
+                ones get a line; a tick on the filled side is drawn light so it
+                reads as passed rather than pending. */}
+            {MILESTONES.filter((m) => m < 100).map((m) => (
+              <span
+                key={m}
+                style={{ left: `${m}%` }}
+                title={
+                  progress >= m
+                    ? `${m}% milestone reached`
+                    : `${m}% milestone — not reached yet`
+                }
+                className={cn(
+                  'absolute top-0 h-full w-px',
+                  progress >= m ? 'bg-white/70' : 'bg-slate-300'
+                )}
+              />
+            ))}
           </div>
           <div className="flex items-center justify-between mt-1.5">
             <span className="text-xs text-slate-400">
@@ -257,6 +282,10 @@ export default function ProjectDetailPage({ params }) {
               </span>
             )}
           </div>
+          <p className="text-xs text-slate-400 mt-1">
+            Milestones at {MILESTONES.map((m) => `${m}%`).join(', ')} — the project
+            manager is notified each time one is reached.
+          </p>
         </div>
       </div>
 
@@ -512,6 +541,17 @@ export default function ProjectDetailPage({ params }) {
 
       {/* ── Tab: Members ── */}
       {activeTab === 'members' && (
+        <div className="space-y-4">
+
+        {/* Add member — the person added is notified, and so is the manager. */}
+        {canEdit && (
+          <AddProjectMember
+            projectId={project.id}
+            existingMemberIds={(project.members || []).map((m) => m.id)}
+            onAdded={fetchProject}
+          />
+        )}
+
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
           {!project.members?.length ? (
             <div className="text-center py-16">
@@ -601,6 +641,7 @@ export default function ProjectDetailPage({ params }) {
               </tbody>
             </table>
           )}
+        </div>
         </div>
       )}
 

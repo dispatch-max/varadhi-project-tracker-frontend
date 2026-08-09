@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { TasksList } from '@/components/tasks/tasks-list'
 
 export const metadata = {
@@ -13,7 +14,11 @@ export default function TasksPage() {
           View and manage all tasks across projects.
         </p>
       </div>
-      <TasksList />
+      {/* Suspense required: TasksList reads useSearchParams() (topbar search
+          hand-off) and this page is statically prerendered. */}
+      <Suspense fallback={null}>
+        <TasksList />
+      </Suspense>
     </div>
   )
 }

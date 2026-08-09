@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:pwa": "node scripts/notification-store.test.mjs && node scripts/sw-cache.test.mjs && node scripts/offline-cache.test.mjs && node scripts/sw-version-bump.test.mjs && node scripts/audit-fixes.test.mjs && node scripts/offline-writes.test.mjs && node scripts/outbox.test.mjs && node scripts/replay-lock.test.mjs && node scripts/integrations-cache.test.mjs",
+    "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

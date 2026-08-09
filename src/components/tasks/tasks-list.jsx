@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Plus, Search, Calendar,
   AlertTriangle, MoreHorizontal,
@@ -142,6 +142,7 @@ export function TasksList() {
   const { user } = useAuthStore()
   const mounted = useHasMounted()
   const canCreateTask = mounted && ['admin', 'manager'].includes(user?.role)
+  const searchParams = useSearchParams()
 
 
 
@@ -149,10 +150,20 @@ export function TasksList() {
   const [tasks, setTasks] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(searchParams.get('search') || '')
   const [statusFilter, setStatusFilter] = useState('all')
   const [priorityFilter, setPriorityFilter] = useState('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
+
+  // Picks up a search term the topbar navigated here with (?search=...),
+  // including when this page is already mounted and the term changes.
+  useEffect(() => {
+    // Same traced-false-positive as elsewhere in this app (e.g.
+    // use-has-mounted.js's setMounted(true)) — a plain setState with no
+    // async work, safe to run directly in the effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSearch(searchParams.get('search') || '')
+  }, [searchParams])
 
 
   // ---- NEW fetch from backend API ----

@@ -1,5 +1,7 @@
 import { ProfileForm } from '@/components/settings/profile-form'
 import { ChangePasswordForm } from '@/components/settings/change-password-form'
+import NotificationPreferences from "@/components/settings/notification-preferences";
+import PushNotifications from "@/components/settings/push-notifications";
 
 export const metadata = {
   title: 'Settings',
@@ -24,6 +26,8 @@ export default function SettingsPage() {
 
       {/* Change Password */}
       <ChangePasswordForm />
+      <NotificationPreferences />
+      <PushNotifications />
 
       {/* Danger Zone */}
       <div className="bg-white rounded-xl border border-red-200 p-6">
