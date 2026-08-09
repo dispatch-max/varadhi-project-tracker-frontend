@@ -391,7 +391,7 @@ const ICON_MAP = {
   Settings: Settings2,
 }
 
-export function Sidebar({ collapsed, setCollapsed }) {
+export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -424,101 +424,42 @@ export function Sidebar({ collapsed, setCollapsed }) {
     }
   }
 
-  // Prevent hydration mismatch
-  if (!mounted) {
-    return null
-  }
+  // Sidebar content depends on the auth store (client-only), so don't render
+  // it until after mount to keep SSR and the first client render in sync.
+  if (!mounted) return null
 
   return (
     <aside
       className={cn(
-        // Main sidebar
-        'fixed left-0 top-0 h-screen',
-        'bg-card',
-        'flex flex-col',
-        'z-20',
-        'transition-all duration-300',
-        'overflow-hidden',
-
-        // CURVED RIGHT SIDE
-        'rounded-tr-[4rem]',
-        'rounded-br-[4rem]',
-
-        // Width
+        'fixed left-0 top-0 h-screen bg-white border-r border-slate-200 flex flex-col z-20 transition-all duration-300',
         collapsed ? 'w-16' : 'w-60'
       )}
     >
-
-      {/* =========================
-          LOGO / HEADER
-      ========================= */}
-      <div
-        className={cn(
-          'flex items-center border-b border-border',
-
-          collapsed
-            ? 'justify-between px-3 py-4'
-            : 'gap-3 px-4 py-5'
-        )}
-      >
-
-        {/* Logo */}
-        <div
-          className="
-            w-8 h-8
-            rounded-xl
-            bg-violet-600
-            text-white
-            flex
-            items-center
-            justify-center
-            font-bold
-            text-sm
-            flex-shrink-0
-          "
-        >
+      {/* Logo */}
+      <div className="flex items-center gap-3 px-4 py-5 border-b border-slate-100">
+        <div className="w-8 h-8 rounded-lg bg-violet-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
           V
         </div>
-
-        {/* Logo Text */}
         {!collapsed && (
           <div>
-            <p className="text-sm font-semibold text-foreground leading-tight">
+            <p className="text-sm font-semibold text-slate-800 leading-tight">
               Varadhi
             </p>
-
-            <p className="text-xs text-muted-foreground">
-              Tracker
-            </p>
+            <p className="text-xs text-slate-400">Tracker</p>
           </div>
         )}
-
-        {/* Collapse Button */}
         <button
-          type="button"
           onClick={() => setCollapsed(!collapsed)}
-          className={cn(
-            'h-8 w-8',
-            'flex items-center justify-center',
-            'rounded-xl',
-            'transition-all duration-300',
-            'hover:bg-muted',
-            'hover:text-primary',
-            collapsed ? '' : 'ml-auto'
-          )}
+          className="ml-auto text-slate-400 hover:text-slate-600 flex-shrink-0"
         >
-          {collapsed ? (
-            <ChevronRight className="w-4 h-4" />
-          ) : (
-            <ChevronLeft className="w-4 h-4" />
-          )}
+          {collapsed
+            ? <ChevronRight className="w-4 h-4" />
+            : <ChevronLeft className="w-4 h-4" />
+          }
         </button>
-
       </div>
 
-      {/* =========================
-          NAVIGATION
-      ========================= */}
+      {/* Nav Items */}
       <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
 
         {filteredNav.map((item) => {
@@ -533,13 +474,7 @@ export function Sidebar({ collapsed, setCollapsed }) {
               key={item.href}
               href={item.href}
               className={cn(
-                'relative',
-                'flex items-center gap-3',
-                'px-3 py-2.5',
-                'rounded-xl',
-                'text-sm font-medium',
-                'transition-all duration-200',
-
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
                 isActive
                   ? 'bg-violet-50 text-violet-700'
                   : 'text-muted-foreground hover:bg-background hover:text-foreground'
@@ -586,36 +521,16 @@ export function Sidebar({ collapsed, setCollapsed }) {
 
       </nav>
 
-      {/* =========================
-          USER + LOGOUT
-      ========================= */}
-      <div className="border-t border-border p-3 space-y-1">
-
-        {/* User Information */}
-        <div
-          className={cn(
-            'flex items-center gap-3',
-            'px-2 py-2',
-            'rounded-xl',
-
-            collapsed
-              ? 'justify-center'
-              : ''
-          )}
-        >
-
-          {/* Avatar */}
-          <div
-            className={cn(
-              'w-7 h-7',
-              'rounded-full',
-              'flex items-center justify-center',
-              'text-white',
-              'text-xs font-semibold',
-              'flex-shrink-0',
-              getAvatarColor(user?.name || 'U')
-            )}
-          >
+      {/* User + Logout */}
+      <div className="border-t border-slate-100 p-3 space-y-1">
+        <div className={cn(
+          'flex items-center gap-3 px-2 py-2 rounded-lg',
+          collapsed ? 'justify-center' : ''
+        )}>
+          <div className={cn(
+            'w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0',
+            getAvatarColor(user?.name || 'U')
+          )}>
             {getInitials(user?.name || 'User')}
           </div>
 

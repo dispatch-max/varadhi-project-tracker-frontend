@@ -21,12 +21,16 @@ export function ProjectCard({ project, onUpdated }) {
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className={cn(
-              'text-xs px-2 py-0.5 rounded-md font-medium',
-              PROJECT_STATUS_COLORS[project.status]
-            )}>
-              {PROJECT_STATUS_LABELS[project.status]}
-            </span>
+            <span
+  className={cn(
+    'text-xs px-2 py-0.5 rounded-md font-medium',
+    progress === 100
+      ? 'bg-green-100 text-green-700'
+      : PROJECT_STATUS_COLORS[project.status]
+  )}
+>
+  {progress === 100 ? 'Completed' : PROJECT_STATUS_LABELS[project.status]}
+</span>
           </div>
           <Link href={`/projects/${project.id}`}>
             <h3 className="text-sm font-semibold text-foreground hover:text-violet-600 transition-colors truncate">
@@ -95,7 +99,7 @@ export function ProjectCard({ project, onUpdated }) {
             )}
           </div>
           <span className="text-xs text-slate-400 ml-2">
-            {project.members?.length || 0} members
+            {project.members?.length || 0} member
           </span>
         </div>
 

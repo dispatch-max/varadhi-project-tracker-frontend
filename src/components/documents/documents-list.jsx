@@ -1,12 +1,12 @@
-
-
 'use client'
 
 import { useState, useEffect } from 'react'
 import {
-  Upload, Search, Download,
-  Trash2, Filter, Loader2,
-  Folder, FolderPlus, FolderInput, Files, Pencil, X as XIcon
+  Upload, Search, Download, Trash2, Filter, Loader2,
+  Folder, FolderPlus, FolderInput, Files, Pencil, X as XIcon,
+  ChevronRight, HardDrive, Clock, Share2, Archive, FileText,
+  Eye, MoreVertical, LayoutGrid, List, CheckSquare, ChevronDown,
+  ChevronLeft
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -30,24 +30,30 @@ import { foldersApi } from '@/lib/api/folders.api'
 export function DocumentsList() {
   const { user } = useAuthStore()
   const isEmployee = user?.role?.toLowerCase() === 'employee'
-  const canManage = !isEmployee // admin/manager: folders, move, download, delete
+  const canManage = !isEmployee
 
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [documents, setDocuments] = useState([])
 
-  // ─── Folder state ────────────────────────────────────────────────────────
+  // ─── Folder State ────────────────────────────────────────────────────────
   const [folders, setFolders] = useState([])
-  const [selectedFolder, setSelectedFolder] = useState('all') // 'all' | 'root' | folderId
+  const [selectedFolder, setSelectedFolder] = useState('all')
   const [showCreateFolder, setShowCreateFolder] = useState(false)
   const [folderDeleteTarget, setFolderDeleteTarget] = useState(null)
   const [isFolderDeleting, setIsFolderDeleting] = useState(false)
-  const [renamingFolder, setRenamingFolder] = useState(null) // { id, name }
+  const [renamingFolder, setRenamingFolder] = useState(null)
   const [renameValue, setRenameValue] = useState('')
 
-  // Move-document menu state
-  const [moveTargetDoc, setMoveTargetDoc] = useState(null) // doc whose move menu is open
+  // ─── Pagination State ───────────────────────────────────────────────────
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
+
+  // ─── UI / Drawer State ───────────────────────────────────────────────────
+  const [selectedDoc, setSelectedDoc] = useState(null)
+  const [viewMode, setViewMode] = useState('table') // 'table' | 'grid'
+  const [moveTargetDoc, setMoveTargetDoc] = useState(null)
 
   // Delete document dialog state
   const [deleteTarget, setDeleteTarget] = useState(null)
@@ -66,7 +72,7 @@ export function DocumentsList() {
   async function loadDocuments(folder = selectedFolder) {
     try {
       const filters = {}
-      if (folder && folder !== 'all') filters.folderId = folder // 'root' or a uuid
+      if (folder && folder !== 'all') filters.folderId = folder
       const docs = await documentsApi.getAll(filters)
       setDocuments(Array.isArray(docs) ? docs : [])
     } catch (err) {
@@ -80,6 +86,7 @@ export function DocumentsList() {
 
   useEffect(() => {
     loadDocuments(selectedFolder)
+    setCurrentPage(1)
   }, [selectedFolder])
 
   function refreshAll() {
@@ -87,7 +94,12 @@ export function DocumentsList() {
     loadDocuments()
   }
 
-  // ─── Folder actions ──────────────────────────────────────────────────────
+  // Reset pagination when searching or filtering
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [search, typeFilter])
+
+  // ─── Handlers ────────────────────────────────────────────────────────────
   async function handleFolderDelete(id) {
     setIsFolderDeleting(true)
     try {
@@ -126,12 +138,12 @@ export function DocumentsList() {
     }
   }
 
-  // ─── Document actions (unchanged) ────────────────────────────────────────
   async function handleDelete(id) {
     setIsDeleting(true)
     try {
       await documentsApi.delete(id)
       setDeleteTarget(null)
+      if (selectedDoc?.id === id) setSelectedDoc(null)
       refreshAll()
     } catch (err) {
       alert('Failed to delete the document. Please try again.')
@@ -156,7 +168,7 @@ export function DocumentsList() {
     }
   }
 
-  // Client-side search/type filtering (within the selected folder scope)
+  // Filter calculations
   const filtered = documents.filter((doc) => {
     const name = doc.name ?? ''
     const description = doc.description ?? ''
@@ -170,9 +182,20 @@ export function DocumentsList() {
     return matchesSearch && matchesType
   })
 
-  const unfiledCount = selectedFolder === 'all'
-    ? documents.filter((d) => !d.folder).length
-    : null
+  // Pagination Math
+  const totalPages = Math.ceil(filtered.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const paginatedDocs = filtered.slice(startIndex, startIndex + itemsPerPage)
+
+  // Quick Stats
+  const totalFiles = documents.length
+  const pdfCount = documents.filter((d) => d.fileType === 'pdf').length
+  const docCount = documents.filter((d) => ['doc', 'docx'].includes(d.fileType)).length
+  const sheetCount = documents.filter((d) => ['xls', 'xlsx'].includes(d.fileType)).length
+  const imgCount = documents.filter((d) => ['png', 'jpg', 'jpeg'].includes(d.fileType)).length
+  const zipCount = documents.filter((d) => d.fileType === 'zip').length
+
+  const selectedFolderName = folders.find((f) => f.id === selectedFolder)?.name || 'All Documents'
 
   return (
     <div>
@@ -187,7 +210,7 @@ export function DocumentsList() {
             'inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors',
             selectedFolder === 'all'
               ? 'bg-violet-600 border-violet-600 text-white'
-              : 'bg-card border-border text-muted-foreground hover:border-violet-300'
+              : 'bg-white border-slate-200 text-slate-600 hover:border-violet-300'
           )}
         >
           <Files className="w-3.5 h-3.5" />
@@ -201,7 +224,7 @@ export function DocumentsList() {
             'inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors',
             selectedFolder === 'root'
               ? 'bg-violet-600 border-violet-600 text-white'
-              : 'bg-card border-border text-muted-foreground hover:border-violet-300'
+              : 'bg-white border-slate-200 text-slate-600 hover:border-violet-300'
           )}
         >
           <Folder className="w-3.5 h-3.5" />
@@ -216,7 +239,7 @@ export function DocumentsList() {
               'inline-flex items-center gap-1 rounded-lg border transition-colors',
               selectedFolder === f.id
                 ? 'bg-violet-600 border-violet-600'
-                : 'bg-card border-border hover:border-violet-300'
+                : 'bg-white border-slate-200 hover:border-violet-300'
             )}
           >
             {renamingFolder?.id === f.id ? (
@@ -225,7 +248,7 @@ export function DocumentsList() {
                   value={renameValue}
                   onChange={(e) => setRenameValue(e.target.value)}
                   autoFocus
-                  className="text-xs px-2 py-1 border border-border rounded w-32 focus:outline-none focus:ring-1 focus:ring-violet-500"
+                  className="text-xs px-2 py-1 border border-slate-200 rounded w-32 focus:outline-none focus:ring-1 focus:ring-violet-500"
                 />
                 <button type="submit" className="p-1 text-green-600 hover:bg-green-50 rounded">
                   ✓
@@ -233,7 +256,7 @@ export function DocumentsList() {
                 <button
                   type="button"
                   onClick={() => { setRenamingFolder(null); setRenameValue('') }}
-                  className="p-1 text-slate-400 hover:bg-background rounded"
+                  className="p-1 text-slate-400 hover:bg-slate-50 rounded"
                 >
                   <XIcon className="w-3 h-3" />
                 </button>
@@ -245,14 +268,14 @@ export function DocumentsList() {
                   className={cn(
                     'inline-flex items-center gap-1.5 text-xs pl-3 py-1.5 font-medium',
                     canManage ? 'pr-1' : 'pr-3',
-                    selectedFolder === f.id ? 'text-white' : 'text-muted-foreground'
+                    selectedFolder === f.id ? 'text-white' : 'text-slate-600'
                   )}
                 >
                   <Folder className="w-3.5 h-3.5" />
                   {f.name}
                   <span className={cn(
                     'text-[10px] px-1.5 py-0.5 rounded-full',
-                    selectedFolder === f.id ? 'bg-card/20 text-white' : 'bg-slate-100 text-muted-foreground'
+                    selectedFolder === f.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
                   )}>
                     {f.documentsCount}
                   </span>
@@ -265,8 +288,8 @@ export function DocumentsList() {
                       className={cn(
                         'p-1 rounded transition-colors',
                         selectedFolder === f.id
-                          ? 'text-white/70 hover:text-white hover:bg-card/10'
-                          : 'text-slate-300 hover:text-muted-foreground hover:bg-background'
+                          ? 'text-white/70 hover:text-white hover:bg-white/10'
+                          : 'text-slate-300 hover:text-slate-500 hover:bg-slate-50'
                       )}
                     >
                       <Pencil className="w-3 h-3" />
@@ -277,7 +300,7 @@ export function DocumentsList() {
                       className={cn(
                         'p-1 rounded transition-colors',
                         selectedFolder === f.id
-                          ? 'text-white/70 hover:text-white hover:bg-card/10'
+                          ? 'text-white/70 hover:text-white hover:bg-white/10'
                           : 'text-slate-300 hover:text-red-500 hover:bg-red-50'
                       )}
                     >
@@ -294,7 +317,7 @@ export function DocumentsList() {
         {canManage && (
           <button
             onClick={() => setShowCreateFolder(true)}
-            className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-dashed border-slate-300 text-muted-foreground hover:border-violet-400 hover:text-violet-600 font-medium transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-dashed border-slate-300 text-slate-500 hover:border-violet-400 hover:text-violet-600 font-medium transition-colors"
           >
             <FolderPlus className="w-3.5 h-3.5" />
             New Folder
@@ -311,14 +334,14 @@ export function DocumentsList() {
             placeholder="Search documents..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-card placeholder:text-slate-400"
+            className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white placeholder:text-slate-400"
           />
         </div>
 
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
-          className="px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-card text-foreground"
+          className="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white text-slate-700"
         >
           <option value="all">All Types</option>
           <option value="pdf">PDF</option>
@@ -348,8 +371,8 @@ export function DocumentsList() {
           { label: 'Images', value: documents.filter((d) => ['png', 'jpg', 'jpeg'].includes(d.fileType)).length },
           { label: 'Archives', value: documents.filter((d) => d.fileType === 'zip').length },
         ].map((stat) => (
-          <div key={stat.label} className="bg-card rounded-xl border border-border px-4 py-3">
-            <p className="text-xl font-semibold text-foreground">{stat.value}</p>
+          <div key={stat.label} className="bg-white rounded-xl border border-slate-200 px-4 py-3">
+            <p className="text-xl font-semibold text-slate-800">{stat.value}</p>
             <p className="text-xs text-slate-400 mt-0.5">{stat.label}</p>
           </div>
         ))}
@@ -369,20 +392,20 @@ export function DocumentsList() {
           {filtered.map((doc) => (
             <div
               key={doc.id}
-              className="bg-card rounded-xl border border-border p-4 hover:shadow-sm transition-shadow"
+              className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-sm transition-shadow"
             >
               {/* Top row */}
               <div className="flex items-start gap-3 mb-3">
                 <FileIcon fileType={doc.fileType} size="md" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground break-words whitespace-normal">{doc.name}</p>
+                  <p className="text-sm font-medium text-slate-800 truncate">{doc.name}</p>
                   <p className="text-xs text-slate-400 mt-0.5">{formatFileSize(doc.fileSize)}</p>
                 </div>
               </div>
 
               {/* Description */}
               {doc.description && (
-                <p className="text-xs text-muted-foreground mb-3 line-clamp-2 leading-relaxed">
+                <p className="text-xs text-slate-500 mb-3 line-clamp-2 leading-relaxed">
                   {doc.description}
                 </p>
               )}
@@ -391,7 +414,7 @@ export function DocumentsList() {
               {(doc.folder || doc.project) && (
                 <div className="mb-3 flex flex-wrap gap-1.5">
                   {doc.folder && (
-                    <span className="inline-flex items-center gap-1 text-xs bg-slate-100 text-muted-foreground px-2 py-0.5 rounded-md font-medium">
+                    <span className="inline-flex items-center gap-1 text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-medium">
                       <Folder className="w-3 h-3" />
                       {doc.folder.name}
                     </span>
@@ -413,7 +436,7 @@ export function DocumentsList() {
                   )}>
                     {getInitials(doc.uploadedBy?.name)}
                   </div>
-                  <span className="text-xs text-muted-foreground">{doc.uploadedBy?.name ?? 'Unknown'}</span>
+                  <span className="text-xs text-slate-500">{doc.uploadedBy?.name ?? 'Unknown'}</span>
                   <span className="text-xs text-slate-300">·</span>
                   <span className="text-xs text-slate-400">{formatDate(doc.createdAt, 'MMM dd')}</span>
                 </div>
@@ -438,11 +461,11 @@ export function DocumentsList() {
                             className="fixed inset-0 z-10"
                             onClick={() => setMoveTargetDoc(null)}
                           />
-                          <div className="absolute right-0 bottom-8 w-44 bg-card border border-border rounded-xl shadow-lg z-20 py-1 max-h-56 overflow-y-auto">
+                          <div className="absolute right-0 bottom-8 w-44 bg-white border border-slate-200 rounded-xl shadow-lg z-20 py-1 max-h-56 overflow-y-auto">
                             <p className="px-3 py-1.5 text-xs font-medium text-slate-400">Move to</p>
                             <button
                               onClick={() => handleMove(doc, null)}
-                              className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-background flex items-center gap-2"
+                              className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                             >
                               <Files className="w-3.5 h-3.5 text-slate-400" />
                               All Files (unfiled)
@@ -452,7 +475,7 @@ export function DocumentsList() {
                                 key={f.id}
                                 onClick={() => handleMove(doc, f.id)}
                                 disabled={doc.folder?.id === f.id}
-                                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-background flex items-center gap-2 disabled:opacity-40"
+                                className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 disabled:opacity-40"
                               >
                                 <Folder className="w-3.5 h-3.5 text-slate-400" />
                                 <span className="truncate">{f.name}</span>
@@ -485,11 +508,11 @@ export function DocumentsList() {
           ))}
         </div>
       ) : (
-        <div className="text-center py-16 bg-card rounded-xl border border-border">
+        <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
           <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3">
             <Filter className="w-5 h-5 text-slate-400" />
           </div>
-          <p className="text-sm font-medium text-muted-foreground">No documents found</p>
+          <p className="text-sm font-medium text-slate-600">No documents found</p>
           <p className="text-xs text-slate-400 mt-1">
             {selectedFolder !== 'all'
               ? 'This folder is empty — upload a file or move one here'
@@ -498,7 +521,7 @@ export function DocumentsList() {
         </div>
       )}
 
-      {/* Delete Document Dialog */}
+      {/* ─── Modals & Alert Dialogs ──────────────────────────────────────── */}
       <AlertDialog
         open={deleteTarget !== null}
         onOpenChange={(open) => { if (!open && !isDeleting) setDeleteTarget(null) }}
@@ -532,7 +555,6 @@ export function DocumentsList() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Delete Folder Dialog */}
       <AlertDialog
         open={folderDeleteTarget !== null}
         onOpenChange={(open) => { if (!open && !isFolderDeleting) setFolderDeleteTarget(null) }}
@@ -542,7 +564,7 @@ export function DocumentsList() {
             <AlertDialogTitle className="text-base font-semibold text-foreground">
               Delete Folder?
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-sm text-muted-foreground">
+            <AlertDialogDescription className="text-sm text-slate-500">
               &ldquo;{folderDeleteTarget?.name}&rdquo; will be deleted. Documents inside it are
               NOT deleted — they will be moved to All Files.
             </AlertDialogDescription>
@@ -567,7 +589,6 @@ export function DocumentsList() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Create Folder Modal */}
       {showCreateFolder && (
         <CreateFolderModal
           onClose={() => setShowCreateFolder(false)}
@@ -575,7 +596,6 @@ export function DocumentsList() {
         />
       )}
 
-      {/* Upload Modal — pass folders + current folder so uploads land in context */}
       {showUploadModal && (
         <UploadModal
           folders={folders}
@@ -589,7 +609,6 @@ export function DocumentsList() {
           }}
         />
       )}
-
     </div>
   )
 }

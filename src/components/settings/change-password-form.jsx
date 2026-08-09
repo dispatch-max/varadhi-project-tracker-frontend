@@ -52,8 +52,7 @@ export function ChangePasswordForm() {
       formData.newPassword &&
       formData.currentPassword === formData.newPassword
     ) {
-      newErrors.newPassword =
-        'New password must be different from current password.'
+      newErrors.newPassword = 'New password must be different from current password.'
     }
     return newErrors
   }
@@ -80,16 +79,13 @@ export function ChangePasswordForm() {
       })
     } catch (err) {
       setErrors({
-        general:
-          err.response?.data?.message ||
-          'Failed to change password. Try again.',
+        general: err.response?.data?.message || 'Failed to change password. Try again.',
       })
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Password field helper
   function PasswordInput({ id, name, placeholder, showField }) {
     return (
       <div className="relative">
@@ -108,10 +104,7 @@ export function ChangePasswordForm() {
           onClick={() => toggleShow(showField)}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-muted-foreground"
         >
-          {showPasswords[showField]
-            ? <EyeOff className="w-4 h-4" />
-            : <Eye className="w-4 h-4" />
-          }
+          {showPasswords[showField] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
         </button>
       </div>
     )
@@ -124,8 +117,6 @@ export function ChangePasswordForm() {
       </h3>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-
-        {/* Success */}
         {isSuccess && (
           <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg px-4 py-3 flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
@@ -133,14 +124,12 @@ export function ChangePasswordForm() {
           </div>
         )}
 
-        {/* General Error */}
         {errors.general && (
           <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3">
             {errors.general}
           </div>
         )}
 
-        {/* Current Password */}
         <div className="space-y-1.5">
           <Label htmlFor="currentPassword">Current Password</Label>
           <PasswordInput
@@ -154,7 +143,6 @@ export function ChangePasswordForm() {
           )}
         </div>
 
-        {/* New Password */}
         <div className="space-y-1.5">
           <Label htmlFor="newPassword">New Password</Label>
           <PasswordInput
@@ -168,7 +156,6 @@ export function ChangePasswordForm() {
           )}
         </div>
 
-        {/* Confirm Password */}
         <div className="space-y-1.5">
           <Label htmlFor="confirmPassword">Confirm New Password</Label>
           <PasswordInput
@@ -182,13 +169,8 @@ export function ChangePasswordForm() {
           )}
         </div>
 
-        {/* Save */}
         <div className="flex justify-end pt-2">
-          <Button
-            type="submit"
-            className="bg-violet-600 hover:bg-violet-700"
-            disabled={isLoading}
-          >
+          <Button type="submit" className="bg-violet-600 hover:bg-violet-700" disabled={isLoading}>
             {isLoading ? (
               <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Updating...</>
             ) : (
@@ -196,7 +178,6 @@ export function ChangePasswordForm() {
             )}
           </Button>
         </div>
-
       </form>
     </div>
   )
