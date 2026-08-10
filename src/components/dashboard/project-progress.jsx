@@ -26,9 +26,9 @@ useEffect(() => {
 }, [])
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-5">
+    <div className="bbg-card rounded-xl border border-border p-5">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-slate-800">
+        <h3 className="text-sm font-semibold text-foreground">
           Project Progress
         </h3>
         <Link
@@ -51,7 +51,7 @@ useEffect(() => {
               {/* Project name + status */}
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-2 min-w-0">
-                  <p className="text-xs font-medium text-slate-700 truncate">
+                  <p className="text-xs font-medium text-foreground truncate">
                     {project.name}
                   </p>
                   <span className={cn(
@@ -61,7 +61,7 @@ useEffect(() => {
                     {PROJECT_STATUS_LABELS[project.status]}
                   </span>
                 </div>
-                <span className="text-xs font-semibold text-slate-600 ml-2 flex-shrink-0">
+                <span className="text-xs font-semibold text-muted-foreground ml-2 flex-shrink-0">
                   {progress}%
                 </span>
               </div>

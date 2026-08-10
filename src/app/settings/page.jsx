@@ -13,10 +13,10 @@ export default function SettingsPage() {
 
       {/* Page Header */}
       <div>
-        <h2 className="text-xl font-semibold text-slate-800">
+        <h2 className="text-xl font-semibold text-foreground">
           Settings
         </h2>
-        <p className="text-sm text-slate-500 mt-0.5">
+        <p className="text-sm text-muted-foreground mt-0.5">
           Manage your profile and account settings.
         </p>
       </div>
@@ -30,16 +30,16 @@ export default function SettingsPage() {
       <PushNotifications />
 
       {/* Danger Zone */}
-      <div className="bg-white rounded-xl border border-red-200 p-6">
+      <div className="bg-card rounded-xl border border-red-200 p-6">
         <h3 className="text-sm font-semibold text-red-600 mb-1">
           Danger Zone
         </h3>
-        <p className="text-xs text-slate-500 mb-4">
+        <p className="text-xs text-muted-foreground mb-4">
           These actions are irreversible. Please be careful.
         </p>
         <div className="flex items-center justify-between py-3 border-t border-slate-100">
           <div>
-            <p className="text-sm font-medium text-slate-700">
+            <p className="text-sm font-medium text-foreground">
               Deactivate Account
             </p>
             <p className="text-xs text-slate-400 mt-0.5">

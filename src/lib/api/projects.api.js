@@ -15,7 +15,10 @@ export const projectsApi = {
     const { data } = await apiClient.get(`/projects/${id}`)
     return data.data
   },
-
+  // Get all members
+  getMembers: async () => {
+  return api.get('/users')
+},
   // Create new project
   create: async (projectData) => {
     const { data } = await apiClient.post('/projects', projectData)
@@ -47,7 +50,7 @@ export const projectsApi = {
     )
     return data.data
   },
-
+  
   // Remove member from project
   removeMember: async (projectId, userId) => {
     await apiClient.delete(`/projects/${projectId}/members/${userId}`)

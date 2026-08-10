@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState,useEffect } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,6 +22,19 @@ export function CreateProjectModal({ onClose, onSuccess }) {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState({})
+const [members, setMembers] = useState([])
+useEffect(() => {
+  async function loadMembers() {
+    try {
+      const res = await projectsApi.getMembers()
+      setMembers(res.data)
+    } catch (error) {
+      console.log("Failed to load members", error)
+    }
+  }
+
+  loadMembers()
+}, [])
 
   const { users, isLoading: usersLoading, error: usersError, reload: reloadUsers } = useUsers()
   const { privileged, employees } = groupUsersForManagerPicker(users)
@@ -87,16 +100,16 @@ export function CreateProjectModal({ onClose, onSuccess }) {
       className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-card rounded-2xl w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
 
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-          <h2 className="text-base font-semibold text-slate-800">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <h2 className="text-base font-semibold text-foreground">
             Create New Project
           </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-50"
+            className="text-slate-400 hover:text-muted-foreground p-1 rounded-lg hover:bg-background"
           >
             <X className="w-4 h-4" />
           </button>
@@ -139,7 +152,7 @@ export function CreateProjectModal({ onClose, onSuccess }) {
               onChange={handleChange}
               disabled={isLoading}
               rows={3}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent resize-none placeholder:text-slate-400"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent resize-none placeholder:text-slate-400"
             />
           </div>
 
@@ -171,7 +184,6 @@ export function CreateProjectModal({ onClose, onSuccess }) {
               />
             </div>
           </div>
-
           {/* Project Manager — drives who receives overdue alerts,
               48h escalations and milestone notifications. */}
           <div className="space-y-1.5">

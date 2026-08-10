@@ -5,8 +5,13 @@ import { clearAll as clearAllOutbox } from '@/lib/outbox'
 import { useConnectivityStore } from '@/store/connectivity.store'
 import { getFromStorage, removeFromStorage } from '@/utils'
 
+// Ensure we have a full backend URL at runtime. Prefer NEXT_PUBLIC_API_URL.
+const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
+
+console.debug('API base URL:', BASE)
+
 const apiClient = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: BASE,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

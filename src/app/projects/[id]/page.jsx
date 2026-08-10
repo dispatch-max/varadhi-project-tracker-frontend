@@ -36,7 +36,7 @@ function PageSkeleton() {
       <div className="flex items-center gap-3">
         <div className="h-4 w-24 bg-slate-200 rounded" />
       </div>
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-card rounded-xl border border-border p-6">
         <div className="h-7 w-64 bg-slate-200 rounded mb-3" />
         <div className="h-4 w-full bg-slate-100 rounded mb-2" />
         <div className="h-4 w-2/3 bg-slate-100 rounded" />
@@ -61,46 +61,52 @@ export default function ProjectDetailPage({ params }) {
   const { user } = useAuthStore()
 
   const [project, setProject] = useState(null)
-  const [tasks, setTasks]     = useState([])
+  const [tasks, setTasks] = useState([])
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError]     = useState(null)
+  const [error, setError] = useState(null)
   const [showEditModal, setShowEditModal] = useState(
     searchParams.get('edit') === 'true'
   )
   const [activeTab, setActiveTab] = useState('overview')
 
-  const isAdmin   = user?.role === 'admin'
+  const isAdmin = user?.role === 'admin'
   const isManager = user?.role === 'manager'
-  const canEdit   = isAdmin || isManager
+  const canEdit = isAdmin || isManager
   const canDelete = isAdmin
 
   async function fetchProject() {
     setIsLoading(true)
     setError(null)
     try {
-      // Both calls in parallel — project detail + tasks
-      const [projectData, tasksData] = await Promise.all([
-        projectsApi.getById(id),
-        projectsApi.getAll({}).then(() =>
-          // Use the dedicated tasks endpoint
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/projects/${id}/tasks`, {
-            headers: {
-              Authorization: `Bearer ${JSON.parse(localStorage.getItem('varadhi_token') || 'null')}`
-            }
-          }).then(r => r.json()).then(r => r.data || [])
-        ).catch(() => [])
-      ])
+      // 1. Fetch project details via API helper
+      const projectRes = await projectsApi.getById(id)
+      const projectData = projectRes?.data || projectRes
+
+      // 2. Fetch project tasks using the project data tasks or safe fallback endpoint
+      let tasksData = projectData?.tasks || []
+      
+      if (!tasksData.length) {
+        try {
+          const tasksRes = await projectsApi.getTasks?.(id)
+          tasksData = tasksRes?.data || tasksRes || []
+        } catch {
+          tasksData = []
+        }
+      }
+
       setProject(projectData)
       setTasks(tasksData)
     } catch (err) {
-      setError('Failed to load project.')
+      setError('Failed to load project details.')
     } finally {
       setIsLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchProject()
+    if (id) {
+      fetchProject()
+    }
   }, [id])
 
   async function handleArchive() {
@@ -131,7 +137,7 @@ export default function ProjectDetailPage({ params }) {
         <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mx-auto mb-3">
           <FolderOpen className="w-5 h-5 text-red-400" />
         </div>
-        <p className="text-sm font-medium text-slate-700 mb-1">
+        <p className="text-sm font-medium text-foreground mb-1">
           Project not found
         </p>
         <p className="text-xs text-slate-400 mb-4">
@@ -147,14 +153,16 @@ export default function ProjectDetailPage({ params }) {
     )
   }
 
-  const progress = calcProgress(project.completedTasksCount, project.tasksCount)
+  const completedTasksCount = project.completedTasksCount ?? tasks.filter(t => t.status === 'completed').length
+  const totalTasksCount = project.tasksCount ?? tasks.length
+  const progress = calcProgress(completedTasksCount, totalTasksCount)
 
   // Task breakdown by status
   const tasksByStatus = {
-    todo:        tasks.filter(t => t.status === 'todo').length,
+    todo: tasks.filter(t => t.status === 'todo').length,
     in_progress: tasks.filter(t => t.status === 'in_progress').length,
-    in_review:   tasks.filter(t => t.status === 'in_review').length,
-    completed:   tasks.filter(t => t.status === 'completed').length,
+    in_review: tasks.filter(t => t.status === 'in_review').length,
+    completed: tasks.filter(t => t.status === 'completed').length,
   }
 
   return (
@@ -164,35 +172,35 @@ export default function ProjectDetailPage({ params }) {
       <div className="flex items-center gap-2 text-sm">
         <Link
           href="/projects"
-          className="flex items-center gap-1.5 text-slate-500 hover:text-slate-700 transition-colors"
+          className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Projects
         </Link>
         <span className="text-slate-300">/</span>
-        <span className="text-slate-700 font-medium truncate">
+        <span className="text-foreground font-medium truncate">
           {project.name}
         </span>
       </div>
 
       {/* Header Card */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-card rounded-xl border border-border p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             {/* Status + Name */}
             <div className="flex items-center gap-3 mb-2 flex-wrap">
               <span className={cn(
-                'text-xs px-2 py-0.5 rounded-md font-medium',
-                PROJECT_STATUS_COLORS[project.status]
+                'text-xs px-2 py-0.5 rounded-md font-medium capitalize',
+                PROJECT_STATUS_COLORS[project.status] || 'bg-slate-100 text-slate-700'
               )}>
-                {PROJECT_STATUS_LABELS[project.status]}
+                {PROJECT_STATUS_LABELS[project.status] || project.status}
               </span>
             </div>
-            <h1 className="text-2xl font-semibold text-slate-800 mb-2">
+            <h1 className="text-2xl font-semibold text-foreground mb-2">
               {project.name}
             </h1>
             {project.description && (
-              <p className="text-sm text-slate-500 leading-relaxed">
+              <p className="text-sm text-muted-foreground leading-relaxed">
                 {project.description}
               </p>
             )}
@@ -203,7 +211,7 @@ export default function ProjectDetailPage({ params }) {
             <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 onClick={() => setShowEditModal(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground border border-border rounded-lg hover:bg-background transition-colors"
               >
                 <Pencil className="w-3.5 h-3.5" />
                 Edit
@@ -233,8 +241,8 @@ export default function ProjectDetailPage({ params }) {
         {/* Progress Bar */}
         <div className="mt-5 pt-5 border-t border-slate-100">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-slate-500">Overall Progress</span>
-            <span className="text-xs font-semibold text-slate-700">
+            <span className="text-xs text-muted-foreground">Overall Progress</span>
+            <span className="text-xs font-semibold text-foreground">
               {progress}%
             </span>
           </div>
@@ -273,7 +281,7 @@ export default function ProjectDetailPage({ params }) {
           </div>
           <div className="flex items-center justify-between mt-1.5">
             <span className="text-xs text-slate-400">
-              {project.completedTasksCount} of {project.tasksCount} tasks completed
+              {completedTasksCount} of {totalTasksCount} tasks completed
             </span>
             {project.endDate && (
               <span className="text-xs text-slate-400 flex items-center gap-1">
@@ -321,7 +329,7 @@ export default function ProjectDetailPage({ params }) {
           return (
             <div
               key={stat.label}
-              className="bg-white rounded-xl border border-slate-200 p-4"
+              className="bg-card rounded-xl border border-border p-4"
             >
               <div className={cn(
                 'w-8 h-8 rounded-lg flex items-center justify-center mb-3',
@@ -329,17 +337,17 @@ export default function ProjectDetailPage({ params }) {
               )}>
                 <Icon className="w-4 h-4" />
               </div>
-              <p className="text-2xl font-semibold text-slate-800 leading-none mb-1">
+              <p className="text-2xl font-semibold text-foreground leading-none mb-1">
                 {stat.value}
               </p>
-              <p className="text-xs text-slate-500">{stat.label}</p>
+              <p className="text-xs text-muted-foreground">{stat.label}</p>
             </div>
           )
         })}
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-slate-200">
+      <div className="flex gap-1 border-b border-border">
         {['overview', 'tasks', 'members'].map((tab) => (
           <button
             key={tab}
@@ -348,17 +356,17 @@ export default function ProjectDetailPage({ params }) {
               'px-4 py-2.5 text-sm font-medium capitalize border-b-2 -mb-px transition-colors',
               activeTab === tab
                 ? 'border-violet-600 text-violet-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             )}
           >
             {tab}
             {tab === 'tasks' && (
-              <span className="ml-1.5 text-xs bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full">
+              <span className="ml-1.5 text-xs bg-slate-100 text-muted-foreground px-1.5 py-0.5 rounded-full">
                 {tasks.length}
               </span>
             )}
             {tab === 'members' && (
-              <span className="ml-1.5 text-xs bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full">
+              <span className="ml-1.5 text-xs bg-slate-100 text-muted-foreground px-1.5 py-0.5 rounded-full">
                 {project.members?.length || 0}
               </span>
             )}
@@ -371,21 +379,21 @@ export default function ProjectDetailPage({ params }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
           {/* Project Info */}
-          <div className="bg-white rounded-xl border border-slate-200 p-5">
-            <h3 className="text-sm font-semibold text-slate-800 mb-4">
+          <div className="bg-card rounded-xl border border-border p-5">
+            <h3 className="text-sm font-semibold text-foreground mb-4">
               Project Info
             </h3>
             <div className="space-y-3">
               {[
-                { label: 'Manager',    value: project.manager?.name || 'Unassigned' },
-                { label: 'Status',     value: PROJECT_STATUS_LABELS[project.status]  },
+                { label: 'Manager', value: project.manager?.name || 'Unassigned' },
+                { label: 'Status', value: PROJECT_STATUS_LABELS[project.status] || project.status },
                 { label: 'Start Date', value: project.startDate ? formatDate(project.startDate) : '—' },
-                { label: 'End Date',   value: project.endDate   ? formatDate(project.endDate)   : '—' },
-                { label: 'Created',    value: formatDate(project.createdAt) },
+                { label: 'End Date', value: project.endDate ? formatDate(project.endDate) : '—' },
+                { label: 'Created', value: project.createdAt ? formatDate(project.createdAt) : '—' },
               ].map((item) => (
                 <div key={item.label} className="flex items-center justify-between">
                   <span className="text-xs text-slate-400">{item.label}</span>
-                  <span className="text-xs font-medium text-slate-700">
+                  <span className="text-xs font-medium text-foreground">
                     {item.value}
                   </span>
                 </div>
@@ -394,20 +402,19 @@ export default function ProjectDetailPage({ params }) {
           </div>
 
           {/* Task Status Breakdown */}
-          <div className="bg-white rounded-xl border border-slate-200 p-5">
-            <h3 className="text-sm font-semibold text-slate-800 mb-4">
+          <div className="bg-card rounded-xl border border-border p-5">
+            <h3 className="text-sm font-semibold text-foreground mb-4">
               Task Status Breakdown
             </h3>
             <div className="space-y-3">
               {Object.entries(tasksByStatus).map(([status, count]) => {
-                const pct = project.tasksCount > 0
-                  ? Math.round((count / project.tasksCount) * 100)
-                  : 0
+                const total = totalTasksCount || 1
+                const pct = Math.round((count / total) * 100)
                 const colors = {
-                  todo:        'bg-slate-300',
+                  todo: 'bg-slate-300',
                   in_progress: 'bg-amber-400',
-                  in_review:   'bg-blue-400',
-                  completed:   'bg-green-500',
+                  in_review: 'bg-blue-400',
+                  completed: 'bg-green-500',
                 }
                 return (
                   <div key={status}>
@@ -415,7 +422,7 @@ export default function ProjectDetailPage({ params }) {
                       <span className="text-xs text-slate-500">
                         {TASK_STATUS_LABELS[status]}
                       </span>
-                      <span className="text-xs font-medium text-slate-600">
+                      <span className="text-xs font-medium text-muted-foreground">
                         {count} ({pct}%)
                       </span>
                     </div>
@@ -435,13 +442,13 @@ export default function ProjectDetailPage({ params }) {
 
       {/* ── Tab: Tasks ── */}
       {activeTab === 'tasks' && (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div className="bg-card rounded-xl border border-border overflow-hidden">
           {tasks.length === 0 ? (
             <div className="text-center py-16">
               <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                 <ListChecks className="w-5 h-5 text-slate-400" />
               </div>
-              <p className="text-sm font-medium text-slate-600">No tasks yet</p>
+              <p className="text-sm font-medium text-muted-foreground">No tasks yet</p>
               <p className="text-xs text-slate-400 mt-1">
                 Create tasks from the Tasks page
               </p>
@@ -450,23 +457,23 @@ export default function ProjectDetailPage({ params }) {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">
+                  <tr className="border-b border-slate-100 bg-background">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">
                       Task
                     </th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">
                       Type
                     </th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">
                       Priority
                     </th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">
                       Status
                     </th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">
                       Assignee
                     </th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 whitespace-nowrap">
+                    <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground whitespace-nowrap">
                       Due Date
                     </th>
                   </tr>
@@ -480,10 +487,10 @@ export default function ProjectDetailPage({ params }) {
                     return (
                       <tr
                         key={task.id}
-                        className="hover:bg-slate-50 transition-colors"
+                        className="hover:bg-background transition-colors"
                       >
                         <td className="px-4 py-3">
-                          <p className="text-sm font-medium text-slate-800 truncate max-w-xs">
+                          <p className="text-sm font-medium text-foreground truncate max-w-xs">
                             {task.title}
                           </p>
                         </td>
@@ -505,7 +512,7 @@ export default function ProjectDetailPage({ params }) {
                               )}>
                                 {getInitials(task.assignee.name)}
                               </div>
-                              <span className="text-xs text-slate-600 whitespace-nowrap">
+                              <span className="text-xs text-muted-foreground whitespace-nowrap">
                                 {task.assignee.name}
                               </span>
                             </div>
@@ -519,7 +526,7 @@ export default function ProjectDetailPage({ params }) {
                           {task.dueDate ? (
                             <div className={cn(
                               'flex items-center gap-1 text-xs whitespace-nowrap',
-                              overdue ? 'text-red-500' : 'text-slate-500'
+                              overdue ? 'text-red-500' : 'text-muted-foreground'
                             )}>
                               {overdue && <AlertTriangle className="w-3 h-3" />}
                               <Calendar className="w-3 h-3" />
@@ -552,29 +559,29 @@ export default function ProjectDetailPage({ params }) {
           />
         )}
 
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div className="bg-card rounded-xl border border-border overflow-hidden">
           {!project.members?.length ? (
             <div className="text-center py-16">
               <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                 <Users className="w-5 h-5 text-slate-400" />
               </div>
-              <p className="text-sm font-medium text-slate-600">No members yet</p>
+              <p className="text-sm font-medium text-muted-foreground">No members yet</p>
             </div>
           ) : (
             <table className="w-full">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50">
-                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-500">
+                <tr className="border-b border-slate-100 bg-background">
+                  <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground">
                     Member
                   </th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-500">
+                  <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground">
                     Role
                   </th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-500">
+                  <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground">
                     Tasks
                   </th>
                   {canEdit && (
-                    <th className="px-5 py-3 text-xs font-medium text-slate-500">
+                    <th className="px-5 py-3 text-xs font-medium text-muted-foreground">
                       Action
                     </th>
                   )}
@@ -586,7 +593,7 @@ export default function ProjectDetailPage({ params }) {
                     t => t.assignee?.id === member.id
                   )
                   return (
-                    <tr key={member.id} className="hover:bg-slate-50">
+                    <tr key={member.id} className="hover:bg-background">
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-3">
                           <div className={cn(
@@ -596,7 +603,7 @@ export default function ProjectDetailPage({ params }) {
                             {getInitials(member.name)}
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-slate-800">
+                            <p className="text-sm font-medium text-foreground">
                               {member.name}
                             </p>
                             <p className="text-xs text-slate-400">
@@ -606,12 +613,12 @@ export default function ProjectDetailPage({ params }) {
                         </div>
                       </td>
                       <td className="px-5 py-3">
-                        <span className="text-xs text-slate-600 capitalize">
+                        <span className="text-xs text-muted-foreground capitalize">
                           {member.role}
                         </span>
                       </td>
                       <td className="px-5 py-3">
-                        <span className="text-sm text-slate-600">
+                        <span className="text-sm text-muted-foreground">
                           {memberTasks.length}
                         </span>
                       </td>

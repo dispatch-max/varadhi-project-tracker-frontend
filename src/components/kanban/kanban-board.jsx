@@ -291,7 +291,12 @@ export function KanbanBoard() {
       )}
 
       {/* Board — horizontal scroll on small screens */}
-      <div className="flex gap-5 overflow-x-auto pb-4">
+<div
+  className="grid gap-5 w-full"
+  style={{
+    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+  }}
+>
         {KANBAN_COLUMNS.map((column) => (
           <KanbanColumn
             key={column.id}

@@ -4,16 +4,56 @@ import { useState, useEffect } from 'react'
 
 import { dashboardApi } from '@/lib/api/dashboard.api'
 
-function SummaryCard({ label, value, sub, color, loading }) {
+import {
+  CheckCircle2,
+  ClipboardList,
+  Clock3,
+  AlertCircle
+} from 'lucide-react'
+
+function SummaryCard({
+  label,
+  value,
+  sub,
+  color,
+  loading,
+  icon: Icon
+}) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 px-5 py-4">
-      {loading ? (
-        <div className="h-8 w-12 bg-slate-100 rounded animate-pulse" />
-      ) : (
-        <p className={`text-2xl font-semibold ${color}`}>{value}</p>
-      )}
-      <p className="text-sm font-medium text-slate-700 mt-0.5">{label}</p>
-      <p className="text-xs text-slate-400 mt-0.5">{sub}</p>
+    <div className="bg-card rounded-2xl border border-border p-5 shadow-sm hover:shadow-md transition-all">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-xs font-medium text-muted-foreground">
+            {label}
+          </p>
+
+          {loading ? (
+            <div className="h-8 w-16 bg-slate-100 rounded animate-pulse mt-2" />
+          ) : (
+            <h3 className={`text-3xl font-bold mt-1 ${color}`}>
+              {value}
+            </h3>
+          )}
+
+          <p className="text-xs text-green-600 font-medium mt-2">
+            {sub}
+          </p>
+        </div>
+
+        <div className="w-12 h-12 rounded-xl bg-background flex items-center justify-center">
+          {Icon && (
+  <Icon className={`w-6 h-6 ${color}`} />
+)}
+        </div>
+      </div>
+
+      <div className="mt-4 h-10 flex items-end gap-1">
+        <div className="h-3 bg-violet-300 rounded flex-1"></div>
+        <div className="h-4 bg-violet-400 rounded flex-1"></div>
+        <div className="h-6 bg-violet-500 rounded flex-1"></div>
+        <div className="h-5 bg-violet-400 rounded flex-1"></div>
+        <div className="h-8 bg-violet-600 rounded flex-1"></div>
+      </div>
     </div>
   )
 }

@@ -1,12 +1,12 @@
-
-
 'use client'
 
 import { useState, useEffect } from 'react'
 import {
-  Upload, Search, Download,
-  Trash2, Filter, Loader2,
-  Folder, FolderPlus, FolderInput, Files, Pencil, X as XIcon
+  Upload, Search, Download, Trash2, Filter, Loader2,
+  Folder, FolderPlus, FolderInput, Files, Pencil, X as XIcon,
+  ChevronRight, HardDrive, Clock, Share2, Archive, FileText,
+  Eye, MoreVertical, LayoutGrid, List, CheckSquare, ChevronDown,
+  ChevronLeft
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -30,24 +30,30 @@ import { foldersApi } from '@/lib/api/folders.api'
 export function DocumentsList() {
   const { user } = useAuthStore()
   const isEmployee = user?.role?.toLowerCase() === 'employee'
-  const canManage = !isEmployee // admin/manager: folders, move, download, delete
+  const canManage = !isEmployee
 
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [documents, setDocuments] = useState([])
 
-  // ─── Folder state ────────────────────────────────────────────────────────
+  // ─── Folder State ────────────────────────────────────────────────────────
   const [folders, setFolders] = useState([])
-  const [selectedFolder, setSelectedFolder] = useState('all') // 'all' | 'root' | folderId
+  const [selectedFolder, setSelectedFolder] = useState('all')
   const [showCreateFolder, setShowCreateFolder] = useState(false)
   const [folderDeleteTarget, setFolderDeleteTarget] = useState(null)
   const [isFolderDeleting, setIsFolderDeleting] = useState(false)
-  const [renamingFolder, setRenamingFolder] = useState(null) // { id, name }
+  const [renamingFolder, setRenamingFolder] = useState(null)
   const [renameValue, setRenameValue] = useState('')
 
-  // Move-document menu state
-  const [moveTargetDoc, setMoveTargetDoc] = useState(null) // doc whose move menu is open
+  // ─── Pagination State ───────────────────────────────────────────────────
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
+
+  // ─── UI / Drawer State ───────────────────────────────────────────────────
+  const [selectedDoc, setSelectedDoc] = useState(null)
+  const [viewMode, setViewMode] = useState('table') // 'table' | 'grid'
+  const [moveTargetDoc, setMoveTargetDoc] = useState(null)
 
   // Delete document dialog state
   const [deleteTarget, setDeleteTarget] = useState(null)
@@ -66,7 +72,7 @@ export function DocumentsList() {
   async function loadDocuments(folder = selectedFolder) {
     try {
       const filters = {}
-      if (folder && folder !== 'all') filters.folderId = folder // 'root' or a uuid
+      if (folder && folder !== 'all') filters.folderId = folder
       const docs = await documentsApi.getAll(filters)
       setDocuments(Array.isArray(docs) ? docs : [])
     } catch (err) {
@@ -80,6 +86,7 @@ export function DocumentsList() {
 
   useEffect(() => {
     loadDocuments(selectedFolder)
+    setCurrentPage(1)
   }, [selectedFolder])
 
   function refreshAll() {
@@ -87,7 +94,12 @@ export function DocumentsList() {
     loadDocuments()
   }
 
-  // ─── Folder actions ──────────────────────────────────────────────────────
+  // Reset pagination when searching or filtering
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [search, typeFilter])
+
+  // ─── Handlers ────────────────────────────────────────────────────────────
   async function handleFolderDelete(id) {
     setIsFolderDeleting(true)
     try {
@@ -126,12 +138,12 @@ export function DocumentsList() {
     }
   }
 
-  // ─── Document actions (unchanged) ────────────────────────────────────────
   async function handleDelete(id) {
     setIsDeleting(true)
     try {
       await documentsApi.delete(id)
       setDeleteTarget(null)
+      if (selectedDoc?.id === id) setSelectedDoc(null)
       refreshAll()
     } catch (err) {
       alert('Failed to delete the document. Please try again.')
@@ -156,7 +168,7 @@ export function DocumentsList() {
     }
   }
 
-  // Client-side search/type filtering (within the selected folder scope)
+  // Filter calculations
   const filtered = documents.filter((doc) => {
     const name = doc.name ?? ''
     const description = doc.description ?? ''
@@ -170,9 +182,27 @@ export function DocumentsList() {
     return matchesSearch && matchesType
   })
 
+  // Pagination Math
+  const totalPages = Math.ceil(filtered.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const paginatedDocs = filtered.slice(startIndex, startIndex + itemsPerPage)
+
+  // Quick Stats
+  const totalFiles = documents.length
+  const pdfCount = documents.filter((d) => d.fileType === 'pdf').length
+  const docCount = documents.filter((d) => ['doc', 'docx'].includes(d.fileType)).length
+  const sheetCount = documents.filter((d) => ['xls', 'xlsx'].includes(d.fileType)).length
+  const imgCount = documents.filter((d) => ['png', 'jpg', 'jpeg'].includes(d.fileType)).length
+  const zipCount = documents.filter((d) => d.fileType === 'zip').length
+
+  // Only meaningful while viewing every folder at once; null hides the hint.
+  // Documents keep their rows when a folder is deleted (folder_id -> NULL), so
+  // this surfaces those "unfiled" files rather than letting them go unnoticed.
   const unfiledCount = selectedFolder === 'all'
     ? documents.filter((d) => !d.folder).length
     : null
+
+  const selectedFolderName = folders.find((f) => f.id === selectedFolder)?.name || 'All Documents'
 
   return (
     <div>
@@ -498,17 +528,17 @@ export function DocumentsList() {
         </div>
       )}
 
-      {/* Delete Document Dialog */}
+      {/* ─── Modals & Alert Dialogs ──────────────────────────────────────── */}
       <AlertDialog
         open={deleteTarget !== null}
         onOpenChange={(open) => { if (!open && !isDeleting) setDeleteTarget(null) }}
       >
         <AlertDialogContent className="rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-base font-semibold text-slate-800">
+            <AlertDialogTitle className="text-base font-semibold text-foreground">
               Delete Document?
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-sm text-slate-500">
+            <AlertDialogDescription className="text-sm text-muted-foreground">
               Are you sure you want to delete this document? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -532,14 +562,13 @@ export function DocumentsList() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Delete Folder Dialog */}
       <AlertDialog
         open={folderDeleteTarget !== null}
         onOpenChange={(open) => { if (!open && !isFolderDeleting) setFolderDeleteTarget(null) }}
       >
         <AlertDialogContent className="rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-base font-semibold text-slate-800">
+            <AlertDialogTitle className="text-base font-semibold text-foreground">
               Delete Folder?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-slate-500">
@@ -567,7 +596,6 @@ export function DocumentsList() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Create Folder Modal */}
       {showCreateFolder && (
         <CreateFolderModal
           onClose={() => setShowCreateFolder(false)}
@@ -575,7 +603,6 @@ export function DocumentsList() {
         />
       )}
 
-      {/* Upload Modal — pass folders + current folder so uploads land in context */}
       {showUploadModal && (
         <UploadModal
           folders={folders}
@@ -589,7 +616,6 @@ export function DocumentsList() {
           }}
         />
       )}
-
     </div>
   )
 }
