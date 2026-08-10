@@ -11,6 +11,24 @@ export const tasksApi = {
     return data.data
   },
 
+  // Aggregate counts for the stats rows (role-scoped server-side).
+  getStats: async () => {
+    const { data } = await apiClient.get('/tasks/stats')
+    return data.data
+  },
+
+  // Counts + percentages per priority level.
+  getPriorityBreakdown: async () => {
+    const { data } = await apiClient.get('/tasks/priority-breakdown')
+    return data.data
+  },
+
+  // Tasks due soon (overdue first). `days` widens the window.
+  getUpcoming: async ({ limit = 5, days = 30 } = {}) => {
+    const { data } = await apiClient.get('/tasks/upcoming', { params: { limit, days } })
+    return data.data
+  },
+
   // Get single task by ID
   getById: async (id) => {
     const { data } = await apiClient.get(`/tasks/${id}`)

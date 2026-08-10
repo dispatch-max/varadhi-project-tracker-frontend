@@ -26,6 +26,12 @@ export const usersApi = {
     return (data?.data ?? []).map(normalizeUser)
   },
 
+  // Team totals + top performers + recently joined (admin/manager only).
+  getStats: async () => {
+    const { data } = await apiClient.get('/users/stats')
+    return data.data
+  },
+
   // Get single user
   getById: async (id) => {
     const { data } = await apiClient.get(`/users/${id}`)
