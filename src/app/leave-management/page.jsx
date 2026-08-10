@@ -208,6 +208,72 @@ export default function ManagerLeavePage() {
     (request) => request.status === 'Rejected'
   )
 
+  // Approved leave whose date range covers today. Replaces a hardcoded "3".
+  const onLeaveToday = requests.filter((request) => {
+    if (request.status !== 'Approved') return false
+    const from = parseDate(request.fromDate)
+    const to = parseDate(request.toDate)
+    if (!from || !to) return false
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    from.setHours(0, 0, 0, 0)
+    to.setHours(0, 0, 0, 0)
+    return from <= today && today <= to
+  })
+
+  // Current-month rollup for the reports modal.
+  const monthlySummary = (() => {
+    const now = new Date()
+    const inMonth = requests.filter((request) => {
+      const from = parseDate(request.fromDate)
+      return (
+        from &&
+        from.getMonth() === now.getMonth() &&
+        from.getFullYear() === now.getFullYear()
+      )
+    })
+    return {
+      total: inMonth.length,
+      approved: inMonth.filter((r) => r.status === 'Approved').length,
+      pending: inMonth.filter((r) => r.status === 'Pending').length,
+      days: inMonth.reduce((sum, r) => sum + (Number(r.days) || 0), 0),
+    }
+  })()
+
+  // Counts per leave type — the closest real grouping to the old
+  // "department" report, since the schema has no department entity.
+  const typeSummary = Object.entries(
+    requests.reduce((acc, request) => {
+      const key = request.leaveType || 'Unspecified'
+      acc[key] = (acc[key] || 0) + 1
+      return acc
+    }, {})
+  )
+    .map(([type, count]) => ({ type, count }))
+    .sort((a, b) => b.count - a.count)
+
+  // Client-side CSV of what the user is already looking at. No export
+  // endpoint exists, and building one is out of scope for stabilization.
+  function exportLeaveCsv() {
+    if (requests.length === 0) return
+    const header = ['Employee', 'Leave Type', 'From', 'To', 'Days', 'Status', 'Reason']
+    const escape = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`
+    const rows = requests.map((r) =>
+      [r.employee, r.leaveType, r.fromDate, r.toDate, r.days, r.status, r.reason]
+        .map(escape)
+        .join(',')
+    )
+    const blob = new Blob([[header.map(escape).join(','), ...rows].join('\n')], {
+      type: 'text/csv;charset=utf-8;',
+    })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `leave-requests-${new Date().toISOString().slice(0, 10)}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
   /* =====================================================
      SEARCH + FILTER
   ===================================================== */
@@ -281,7 +347,14 @@ export default function ManagerLeavePage() {
       return
     }
 
-    alert(`Information request sent to ${selectedRequest?.employee || 'the employee'}`)
+    // There is no "request information" endpoint, and no message is
+    // delivered anywhere. Rather than claiming the request was sent, keep the
+    // note with the request by leaving it Pending and telling the approver
+    // the truth. Wire this to a real endpoint when one exists.
+    alert(
+      'Messaging is not available yet, so this note was not sent. ' +
+      'The request has been left pending — contact the employee directly.'
+    )
     setShowInfoModal(false)
     setSelectedRequest(null)
     setInfoMessage('')
@@ -407,7 +480,7 @@ export default function ManagerLeavePage() {
 
           <StatCard
             title="Team On Leave"
-            value="3"
+            value={onLeaveToday.length}
             subtitle="Today"
             icon={<Users size={20} />}
             bg="bg-blue-50"
@@ -1217,22 +1290,32 @@ export default function ManagerLeavePage() {
 
           <div className="space-y-3">
 
+            {/* Summaries computed from the requests already loaded from the
+                API. There is no reporting endpoint and no department entity in
+                the schema, so these aggregate what genuinely exists rather
+                than promising reports the backend cannot produce. */}
             <ReportCard
-              title="Monthly Leave Report"
-              description="View all team leave requests for a selected month."
+              title="This Month"
+              description={`${monthlySummary.total} request(s) · ${monthlySummary.approved} approved · ${monthlySummary.pending} pending · ${monthlySummary.days} day(s)`}
               icon={<CalendarDays size={20} />}
+              onClick={() => setFilterStatus('All')}
             />
 
             <ReportCard
-              title="Department Leave Report"
-              description="View leave statistics department-wise."
+              title="By Leave Type"
+              description={
+                typeSummary.length > 0
+                  ? typeSummary.map((t) => `${t.type}: ${t.count}`).join(' · ')
+                  : 'No leave requests yet.'
+              }
               icon={<Users size={20} />}
             />
 
             <ReportCard
-              title="Employee Leave Summary"
-              description="Download individual employee leave summary."
+              title="Export Leave Data (CSV)"
+              description="Download every leave request currently listed."
               icon={<FileText size={20} />}
+              onClick={exportLeaveCsv}
             />
 
           </div>
@@ -1360,15 +1443,14 @@ function ReportCard({
   title,
   description,
   icon,
+  onClick,
 }) {
   return (
     <button
-      onClick={() =>
-        alert(
-          `${title} will be connected to the backend.`
-        )
-      }
-      className="flex w-full items-center gap-4 rounded-xl border p-4 text-left transition hover:bg-slate-50"
+      onClick={onClick}
+      type="button"
+      disabled={!onClick}
+      className="flex w-full items-center gap-4 rounded-xl border p-4 text-left transition hover:bg-slate-50 disabled:cursor-default disabled:hover:bg-transparent"
     >
 
       <div className="rounded-xl bg-indigo-50 p-3 text-indigo-600">

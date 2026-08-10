@@ -7,7 +7,6 @@ import { TasksOverview } from '@/components/dashboard/TasksOverview'
 import {UpcomingDeadlines} from '@/components/dashboard/UpcomingDeadlines'
 import { NotificationsCard } from '@/components/dashboard/NotificationsCard'
 import { CalendarCard } from '@/components/dashboard/CalendarCard'
-import { GithubActivity } from '@/components/dashboard/GithubActivity'
 import { GanttPreview } from '@/components/dashboard/GanttPreview'
 import { ChevronDown } from "lucide-react";
 
@@ -85,13 +84,8 @@ export default function DashboardPage() {
       {/* Stats Cards */}
 <div className="grid grid-cols-12 gap-6">
 
-  {/* GithubActivity */}
-  <div className="col-span-12 lg:col-span-6">
-    <GithubActivity />
-  </div>
-
   {/* GanttPreview */}
-  <div className="col-span-12 lg:col-span-6">
+  <div className="col-span-12">
     <GanttPreview />
   </div>
 
