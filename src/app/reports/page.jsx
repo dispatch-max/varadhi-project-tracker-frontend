@@ -8,8 +8,6 @@ import { TeamProductivityCard } from '@/components/reports/team-productivity-car
 import { TaskCompletionChart } from '@/components/reports/task-completion-chart'
 import { ResourceUtilizationCard } from '@/components/reports/resource-utilization-card'
 import { RiskAnalysisCard } from '@/components/reports/risk-analysis-card'
-import { ScheduledReportsCard } from '@/components/reports/scheduled-reports-card'
-import { ExportCenterCard } from '@/components/reports/export-center-card'
 import { BusinessIntelligenceCard } from '@/components/reports/business-intelligence-card'
 export const metadata = {
   title: 'Reports',
@@ -51,9 +49,7 @@ export default function ReportsPage() {
   <RiskAnalysisCard />
 </div>
 
-<div className="grid lg:grid-cols-3 gap-5">
-  <ScheduledReportsCard />
-  <ExportCenterCard />
+<div className="grid gap-5">
   <BusinessIntelligenceCard />
 </div>
 
