@@ -360,9 +360,17 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 
 import {
-  LayoutDashboard, FolderOpen, ListChecks,
-  Kanban, Files, BarChart3, Users, Settings,
-  LogOut, ChevronLeft, ChevronRight
+  LayoutDashboard,
+  FolderKanban,
+  ListChecks,
+  KanbanSquare,
+  Files,
+  BarChart3,
+  Users,
+  Settings,
+  LogOut,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 
 import { useState } from 'react'
@@ -383,7 +391,7 @@ const ICON_MAP = {
   Settings,
 }
 
-export function Sidebar() {
+export function Sidebar({ collapsed, setCollapsed }) {
   const pathname = usePathname()
   const router = useRouter()
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import {
   Search,
