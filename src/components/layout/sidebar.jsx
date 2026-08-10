@@ -404,6 +404,9 @@ export function Sidebar() {
 
   const { user, clearAuth } = useAuthStore()
 
+  // Collapsed rail (w-16) vs full sidebar (w-60), toggled by the chevron button.
+  const [collapsed, setCollapsed] = useState(false)
+
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   // Holds { count } while the unsynced-changes warning is on screen. Logging
   // out is blocked until the user explicitly confirms the loss.
