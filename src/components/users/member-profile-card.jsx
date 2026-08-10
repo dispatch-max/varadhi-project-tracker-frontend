@@ -1,150 +1,70 @@
 'use client'
 
-import {
-  X,
-  Mail,
-  MapPin,
-  Calendar,
-  ClipboardList,
-  FolderOpen,
-  Users,
-  Shield,
-  CheckCircle
-} from 'lucide-react'
+import Link from 'next/link'
+import { Mail, Shield } from 'lucide-react'
+import { useAuthStore } from '@/store/auth.store'
+import { useHasMounted } from '@/hooks/use-has-mounted'
+import { getInitials, getAvatarColor, cn } from '@/utils'
 
+// Was a static card hardcoded to "John Doe / john.doe@example.com". Now shows
+// the actual signed-in user from the auth store.
 export function MemberProfileCard() {
+  const { user } = useAuthStore()
+  const mounted = useHasMounted()
+
+  // Auth state is persisted to storage and hydrated client-side, so render a
+  // skeleton until mount to avoid a server/client markup mismatch.
+  if (!mounted) {
+    return (
+      <div className="bg-card border border-border rounded-xl p-5">
+        <div className="flex animate-pulse flex-col items-center gap-3">
+          <div className="h-16 w-16 rounded-full bg-slate-100" />
+          <div className="h-4 w-28 rounded bg-slate-100" />
+          <div className="h-3 w-36 rounded bg-slate-100" />
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="bg-card border border-border rounded-xl p-5">
+        <p className="text-sm text-muted-foreground">Not signed in.</p>
+      </div>
+    )
+  }
+
   return (
     <div className="bg-card border border-border rounded-xl p-5">
-
-      {/* Header */}
-      <div className="flex items-start justify-between mb-5">
-        <h3 className="text-lg font-semibold text-foreground">
-          Member Profile
-        </h3>
-
-        <button>
-          <X className="w-4 h-4 text-slate-400" />
-        </button>
-      </div>
-
-      {/* User */}
-      <div className="flex gap-4">
-        <div className="relative">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center text-white text-2xl font-semibold">
-            JD
-          </div>
-
-          <div className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-green-500 border-2 border-white" />
+      <div className="flex flex-col items-center text-center">
+        <div
+          className={cn(
+            'flex h-16 w-16 items-center justify-center rounded-full text-lg font-semibold text-white',
+            getAvatarColor(user.name || '?')
+          )}
+        >
+          {getInitials(user.name || '?')}
         </div>
 
-        <div>
-          <h2 className="text-2xl font-semibold text-foreground">
-            John Doe
-          </h2>
+        <h3 className="mt-3 text-base font-semibold text-foreground">{user.name}</h3>
 
-          <span className="inline-flex mt-1 px-2 py-1 rounded-md bg-blue-100 text-blue-700 text-xs font-medium">
-            Manager
-          </span>
+        <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-violet-50 px-2.5 py-0.5 text-xs font-medium capitalize text-violet-700">
+          <Shield className="h-3 w-3" />
+          {user.role}
+        </span>
 
-          <div className="mt-3 space-y-2">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Mail className="w-4 h-4" />
-              john.doe@example.com
-            </div>
+        <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Mail className="h-3.5 w-3.5" />
+          <span className="truncate">{user.email}</span>
+        </p>
 
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <MapPin className="w-4 h-4" />
-              Hyderabad, India
-            </div>
-
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar className="w-4 h-4" />
-              Joined on Jul 24, 2024
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Divider */}
-      <div className="border-t border-slate-100 my-6" />
-
-      {/* Overview */}
-      <h4 className="text-sm font-semibold text-foreground mb-4">
-        Overview
-      </h4>
-
-      <div className="space-y-4">
-
-        <div className="flex justify-between">
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
-            <ClipboardList className="w-4 h-4" />
-            Tasks Completed
-          </div>
-
-          <span className="text-sm font-medium text-foreground">
-            24
-          </span>
-        </div>
-
-        <div className="flex justify-between">
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
-            <FolderOpen className="w-4 h-4" />
-            Active Projects
-          </div>
-
-          <span className="text-sm font-medium text-foreground">
-            3
-          </span>
-        </div>
-
-        <div className="flex justify-between">
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
-            <Users className="w-4 h-4" />
-            Team
-          </div>
-
-          <span className="text-sm font-medium text-foreground">
-            Development
-          </span>
-        </div>
-
-        <div className="flex justify-between">
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
-            <Shield className="w-4 h-4" />
-            Role
-          </div>
-
-          <span className="text-sm font-medium text-foreground">
-            Manager
-          </span>
-        </div>
-
-        <div className="flex justify-between">
-          <div className="flex items-center gap-2 text-muted-foreground text-sm">
-            <CheckCircle className="w-4 h-4" />
-            Status
-          </div>
-
-          <span className="px-2 py-1 rounded-md bg-green-100 text-green-700 text-xs font-medium">
-            Active
-          </span>
-        </div>
-
-      </div>
-
-      {/* Buttons */}
-      <div className="mt-8 space-y-3">
-
-        <button className="w-full border border-violet-200 bg-violet-50 text-violet-600 py-3 rounded-lg text-sm font-medium hover:bg-violet-100">
+        <Link
+          href="/settings"
+          className="mt-4 w-full rounded-lg border border-border py-2 text-sm font-medium text-foreground transition hover:bg-background"
+        >
           Edit Profile
-        </button>
-
-        <button className="w-full border border-red-200 bg-red-50 text-red-500 py-3 rounded-lg text-sm font-medium hover:bg-red-100">
-          Deactivate User
-        </button>
-
+        </Link>
       </div>
-
     </div>
   )
 }
