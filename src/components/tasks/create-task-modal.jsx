@@ -54,9 +54,6 @@ export function CreateTaskModal({ onClose, onSuccess }) {
     }
   }
 
-  // useEffect(() => {
-  //   loadProjects()
-  // }, [])
     async function loadUsers() {
     setUsersLoading(true)
     setUsersError(false)

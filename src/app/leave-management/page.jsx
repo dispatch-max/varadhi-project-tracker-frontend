@@ -154,6 +154,26 @@ export default function ManagerLeavePage() {
     }
   }
 
+  // Opens the reject dialog for one request. The detail panel is keyed off
+  // `selectedRequest && !showRejectModal && !showInfoModal`, so setting both
+  // together swaps the detail view for the dialog rather than stacking them.
+  const openRejectModal = (request) => {
+    if (!request) return
+    setSelectedRequest(request)
+    setRejectReason('')
+    setShowInfoModal(false)
+    setShowRejectModal(true)
+  }
+
+  // Same contract as openRejectModal, for the "need more information" dialog.
+  const openInformationModal = (request) => {
+    if (!request) return
+    setSelectedRequest(request)
+    setInfoMessage('')
+    setShowRejectModal(false)
+    setShowInfoModal(true)
+  }
+
   const rejectLeave = async () => {
     if (!rejectReason.trim()) {
       alert('Please enter a rejection reason.')
