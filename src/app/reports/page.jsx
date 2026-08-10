@@ -11,8 +11,6 @@ import { RiskAnalysisCard } from '@/components/reports/risk-analysis-card'
 import { ScheduledReportsCard } from '@/components/reports/scheduled-reports-card'
 import { ExportCenterCard } from '@/components/reports/export-center-card'
 import { BusinessIntelligenceCard } from '@/components/reports/business-intelligence-card'
-import { AIReportInsightsCard } from '@/components/reports/ai-report-insights-card'
-import { AIForecastingCard } from '@/components/reports/ai-forecasting-card'
 export const metadata = {
   title: 'Reports',
 }
@@ -48,19 +46,15 @@ export default function ReportsPage() {
   <TaskCompletionChart />
 </div>
 
-<div className="grid lg:grid-cols-3 gap-5">
+<div className="grid lg:grid-cols-2 gap-5">
   <ResourceUtilizationCard />
-  <AIReportInsightsCard />
   <RiskAnalysisCard />
-  
 </div>
 
-<div className="grid lg:grid-cols-4 gap-5">
+<div className="grid lg:grid-cols-3 gap-5">
   <ScheduledReportsCard />
-<ExportCenterCard />
-<BusinessIntelligenceCard />
-  <AIForecastingCard />
-
+  <ExportCenterCard />
+  <BusinessIntelligenceCard />
 </div>
 
 

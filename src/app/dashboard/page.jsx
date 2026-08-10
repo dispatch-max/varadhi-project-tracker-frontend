@@ -5,17 +5,11 @@ import { CalendarSyncWidget } from '@/components/dashboard/calendar-sync-widget'
 import { ProjectHealth } from '@/components/dashboard/ProjectHealth'
 import { TasksOverview } from '@/components/dashboard/TasksOverview'
 import {UpcomingDeadlines} from '@/components/dashboard/UpcomingDeadlines'
-import { AICompanion } from '@/components/dashboard/AICompanion'
 import { NotificationsCard } from '@/components/dashboard/NotificationsCard'
 import { CalendarCard } from '@/components/dashboard/CalendarCard'
 import { GithubActivity } from '@/components/dashboard/GithubActivity'
 import { GanttPreview } from '@/components/dashboard/GanttPreview'
-import {
-  Plus,
-  Bell,
-  Sparkles,
-  ChevronDown,
-} from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 export const metadata = {
   title: 'Dashboard',
@@ -74,20 +68,16 @@ export default function DashboardPage() {
 
       {/* Bottom Row — Activity + Projects */}
 <div className="grid grid-cols-12 gap-6">
-  <div className="col-span-12 lg:col-span-3">
+  <div className="col-span-12 lg:col-span-4">
     <RecentActivity />
   </div>
 
-  <div className="col-span-12 lg:col-span-3">
-    <AICompanion />
-  </div>
-
-  <div className="col-span-12 lg:col-span-3">
+  <div className="col-span-12 lg:col-span-4">
     <NotificationsCard />
   </div>
 
       {/* CalendarCard */}
-  <div className="col-span-12 lg:col-span-3">
+  <div className="col-span-12 lg:col-span-4">
     <CalendarCard />
   </div>
 </div>

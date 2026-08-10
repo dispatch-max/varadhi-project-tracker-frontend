@@ -3,10 +3,8 @@ import { TaskHeader } from '@/components/tasks/task-header'
 import { TaskStats } from '@/components/tasks/task-stats'
 import { TasksList } from '@/components/tasks/tasks-list'
 
-import { TaskOverview } from '@/components/tasks/task-overview'
 import { PriorityBreakdown } from '@/components/tasks/priority-breakdown'
 import { UpcomingDeadlines } from '@/components/tasks/UpcomingDeadlines'
-import { AiTaskInsights } from '@/components/tasks/ai-task-insights'
 
 export default function TasksPage() {
   return (
@@ -40,7 +38,6 @@ export default function TasksPage() {
         <div className="col-span-4 space-y-4 min-h-full">
           <PriorityBreakdown />
           <UpcomingDeadlines />
-          <AiTaskInsights />
         </div>
       </div>
 

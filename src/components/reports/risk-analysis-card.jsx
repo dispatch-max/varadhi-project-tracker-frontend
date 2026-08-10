@@ -39,7 +39,7 @@ export function RiskAnalysisCard() {
         </h3>
 
         <p className="text-sm text-muted-foreground">
-          AI-powered project risk indicators
+          Project risk indicators
         </p>
       </div>
 

@@ -95,10 +95,10 @@ export default function LoginPage() {
             </div>
 
             <div className="bg-card rounded-2xl border border-border shadow-lg p-5 hover:-translate-y-1 hover:shadow-xl transition">
-              <div className="text-3xl">🤖</div>
-              <h3 className="font-semibold mt-3">AI Insights</h3>
+              <div className="text-3xl">🗓️</div>
+              <h3 className="font-semibold mt-3">Leave &amp; Time</h3>
               <p className="text-sm text-muted-foreground mt-2">
-                AI-powered productivity suggestions.
+                Track attendance and manage leave requests.
               </p>
             </div>
 

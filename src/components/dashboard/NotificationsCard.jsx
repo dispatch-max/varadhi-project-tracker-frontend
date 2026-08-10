@@ -52,7 +52,7 @@ export function NotificationsCard() {
           </div>
 
           <h3 className="text-lg font-semibold text-foreground">
-            Smart Notifications
+            Notifications
           </h3>
         </div>
 

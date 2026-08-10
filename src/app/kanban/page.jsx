@@ -1,5 +1,4 @@
 import { KanbanBoard } from '@/components/kanban/kanban-board'
-import { AIInsightsCard } from '@/components/kanban/ai-insights-card'
 import { TeamWorkloadCard } from '@/components/kanban/team-workload-card'
 import { UpcomingDeadlinesCard } from '@/components/kanban/upcoming-deadlines-card'
 import { KanbanStats } from '@/components/kanban/kanban-stats'
@@ -28,8 +27,7 @@ export default function KanbanPage() {
       <KanbanBoard />
 
       {/* Dashboard Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <AIInsightsCard />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <TeamWorkloadCard />
         <UpcomingDeadlinesCard />
       </div>

@@ -347,13 +347,15 @@ export function ProjectsList() {
 
         {/* RIGHT WIDGET PANEL */}
         <div className="space-y-5">
-          {/* AI Insights Card */}
+          {/* Project summary — real counts derived from `statistics`, not AI.
+              Renamed from "AI Project Insights" when the AI surface was
+              removed; the data and behaviour are unchanged. */}
           <div className="bg-gradient-to-br from-violet-600 to-indigo-700 text-white p-5 rounded-2xl shadow-xs space-y-4">
             <div className="flex items-center gap-2.5">
               <div className="p-2 bg-white/20 rounded-xl">
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
-              <h3 className="text-base font-bold">AI Project Insights</h3>
+              <h3 className="text-base font-bold">Project Summary</h3>
             </div>
             <div className="space-y-3 text-xs sm:text-sm text-violet-100">
               <div className="flex items-start gap-2.5">

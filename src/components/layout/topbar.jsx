@@ -77,7 +77,7 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { Search, Sparkles } from 'lucide-react'
+import { Search } from 'lucide-react'
 import { useState } from 'react'
 import { useAuthStore } from '@/store/auth.store'
 import { NAV_ITEMS } from '@/constants'
@@ -127,15 +127,6 @@ export function Topbar() {
         </p>
       </div>
 
-          {/* AI Assistant */}
-    <button className="flex items-center gap-2 px-4 h-10 bg-violet-50 border border-violet-100 rounded-xl text-sm text-violet-600 hover:bg-violet-100">
-      <Sparkles className="w-4 h-4" />
-      AI Assistant
-    </button>
-
-      
-
-    
       {/* Search */}
       <form onSubmit={handleSearchSubmit} className="relative hidden md:block">
         <button
