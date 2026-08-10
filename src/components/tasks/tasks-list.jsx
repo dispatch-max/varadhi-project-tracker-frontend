@@ -1,7 +1,6 @@
 
 'use client'
 import { TaskTabs } from './task-tabs'
-import { TaskToolbar } from './task-toolbar'
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
@@ -158,6 +157,8 @@ export function TasksList() {
   const [search, setSearch] = useState(searchParams.get('search') || '')
   const [statusFilter, setStatusFilter] = useState('all')
   const [priorityFilter, setPriorityFilter] = useState('all')
+  // 'all' | 'mine' — drives the TaskTabs assignee scope.
+  const [scope, setScope] = useState('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
   // Pagination
 const [currentPage, setCurrentPage] = useState(1)
@@ -183,6 +184,9 @@ const TASKS_PER_PAGE = 15
       if (statusFilter !== 'all') filters.status = statusFilter
       if (priorityFilter !== 'all') filters.priority = priorityFilter
       if (search) filters.search = search
+      // "My Tasks" scope. Employees are already restricted to their own rows
+      // server-side, so this only changes what admins/managers see.
+      if (scope === 'mine' && user?.id) filters.assigneeId = user.id
       const response = await tasksApi.getAll(filters)
       setTasks(response.data || [])
     } catch (err) {
@@ -209,7 +213,7 @@ const totalPages = Math.ceil(
 )
     const timer = setTimeout(fetchTasks, 300)
     return () => clearTimeout(timer)
-  }, [search, statusFilter, priorityFilter])
+  }, [search, statusFilter, priorityFilter, scope])
   const indexOfLastTask = currentPage * TASKS_PER_PAGE
 
 const indexOfFirstTask = indexOfLastTask - TASKS_PER_PAGE
@@ -226,6 +230,17 @@ const totalPages = Math.ceil(
 
   return (
     <div>
+
+      {/* Scope tabs — All Tasks / My Tasks */}
+      <div className="mb-4">
+        <TaskTabs
+          active={scope}
+          onChange={(next) => {
+            setScope(next)
+            setCurrentPage(1)
+          }}
+        />
+      </div>
 
       {/* Toolbar */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
