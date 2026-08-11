@@ -385,13 +385,9 @@ export function DocumentsList() {
         ))}
       </div>
 
-      {/* Results */}
-      <p className="text-xs text-slate-400 mb-3">
-        Showing {filtered.length} file{filtered.length !== 1 ? 's' : ''}
-        {unfiledCount !== null && unfiledCount > 0 && (
-          <span className="text-slate-300"> · {unfiledCount} unfiled</span>
-        )}
-      </p>
+<p className="text-xs text-slate-400 mb-3">
+  Showing {filtered.length} file{filtered.length !== 1 ? 's' : ''}
+</p>
 
       {/* Documents Grid */}
       {filtered.length > 0 ? (

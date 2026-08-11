@@ -364,6 +364,7 @@ import {
   Kanban, KanbanSquare, Files, BarChart3, Users, Settings,
   LogOut, ChevronLeft, ChevronRight, Bell,
   CalendarSync, MessageSquare, CalendarDays, Clock3
+ 
 } from 'lucide-react'
 
 import { useState } from 'react'
@@ -398,7 +399,7 @@ const ICON_MAP = {
   Clock3,
 }
 
-export function Sidebar() {
+export function Sidebar({ collapsed, setCollapsed }) {
   const pathname = usePathname()
   const router = useRouter()
 
