@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useAuthStore } from '@/store/auth.store'
 import { authApi } from '@/lib/api/auth.api'
+import { clearOfflineCaches } from '@/lib/offline-cache'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -40,6 +41,19 @@ export function LoginForm() {
     try {
       const { user, token } = await authApi.login(formData)
 
+      // Discard any service-worker cache left by a previous session BEFORE
+      // navigating. This is the real cross-user-leak guarantee: logout clears
+      // caches too, but a browser killed mid-session never runs that path, so
+      // a successful login is the first moment we can be certain a different
+      // person may be about to read the previous user's cached API responses.
+      //
+      // Awaited deliberately — caches.delete() is async, and if router.push
+      // won the race the dashboard could paint from the old user's cache. The
+      // catch keeps a storage failure from ever blocking a valid login;
+      // clearOfflineCaches already swallows its own errors, so this is belt
+      // and braces.
+      await clearOfflineCaches().catch(() => {})
+
       // Save to Zustand store + localStorage
       setAuth(user, token)
 
@@ -50,10 +64,20 @@ export function LoginForm() {
       router.push('/dashboard')
       router.refresh()
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-        'Invalid email or password. Try again.'
-      )
+      // No `response` means the request never reached the server — offline, DNS
+      // failure, or the API is down. Falling through to the credentials message
+      // would tell an offline user their correct password is wrong, and they'd
+      // retype it indefinitely.
+      if (!err.response) {
+        setError(
+          "Can't reach the server. Check your connection and try again."
+        )
+      } else {
+        setError(
+          err.response?.data?.message ||
+          'Invalid email or password. Try again.'
+        )
+      }
     } finally {
       setIsLoading(false)
     }
@@ -107,7 +131,7 @@ export function LoginForm() {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-muted-foreground"
           >
             {showPassword
               ? <EyeOff className="w-4 h-4" />
@@ -128,7 +152,7 @@ export function LoginForm() {
         }
       </Button>
 
-      <p className="text-center text-sm text-slate-500">
+      <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{' '}
         <Link
           href="/auth/register"

@@ -102,7 +102,7 @@ export function ChangePasswordForm() {
         <button
           type="button"
           onClick={() => toggleShow(showField)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-muted-foreground"
         >
           {showPasswords[showField] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
         </button>
@@ -111,8 +111,8 @@ export function ChangePasswordForm() {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-6">
-      <h3 className="text-sm font-semibold text-slate-800 mb-5">
+    <div className="bg-card rounded-xl border border-border p-6">
+      <h3 className="text-sm font-semibold text-foreground mb-5">
         Change Password
       </h3>
 

@@ -63,16 +63,16 @@ export function InviteUserModal({ onClose, onSuccess }) {
       className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-xl">
+      <div className="bg-card rounded-2xl w-full max-w-md shadow-xl">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-          <h2 className="text-base font-semibold text-slate-800">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <h2 className="text-base font-semibold text-foreground">
             Invite Team Member
           </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-50"
+            className="text-slate-400 hover:text-muted-foreground p-1 rounded-lg hover:bg-background"
           >
             <X className="w-4 h-4" />
           </button>
@@ -130,7 +130,7 @@ export function InviteUserModal({ onClose, onSuccess }) {
               value={formData.role}
               onChange={handleChange}
               disabled={isLoading || isSuccess}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-card"
             >
               <option value="employee">Employee</option>
               <option value="manager">Manager</option>
@@ -139,8 +139,8 @@ export function InviteUserModal({ onClose, onSuccess }) {
           </div>
 
           {/* Role descriptions */}
-          <div className="space-y-2 bg-slate-50 rounded-lg p-3">
-            <p className="text-xs font-medium text-slate-600 mb-2">
+          <div className="space-y-2 bg-background rounded-lg p-3">
+            <p className="text-xs font-medium text-muted-foreground mb-2">
               Role permissions:
             </p>
             {[
@@ -158,10 +158,10 @@ export function InviteUserModal({ onClose, onSuccess }) {
               },
             ].map((item) => (
               <div key={item.role} className="flex items-start gap-2">
-                <span className="text-xs font-medium text-slate-700 w-16 flex-shrink-0">
+                <span className="text-xs font-medium text-foreground w-16 flex-shrink-0">
                   {item.role}
                 </span>
-                <span className="text-xs text-slate-500">{item.desc}</span>
+                <span className="text-xs text-muted-foreground">{item.desc}</span>
               </div>
             ))}
           </div>

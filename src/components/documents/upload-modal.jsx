@@ -156,17 +156,17 @@ if (!allowedExtensions.includes(ext)) {
       className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
       onClick={(e) => e.target === e.currentTarget && !isUploading && onClose()}
     >
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-xl">
+      <div className="bg-card rounded-2xl w-full max-w-md shadow-xl">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-          <h2 className="text-base font-semibold text-slate-800">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <h2 className="text-base font-semibold text-foreground">
             Upload Document
           </h2>
           <button
             onClick={onClose}
             disabled={isUploading}
-            className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-50 disabled:opacity-50"
+            className="text-slate-400 hover:text-muted-foreground p-1 rounded-lg hover:bg-background disabled:opacity-50"
           >
             <X className="w-4 h-4" />
           </button>
@@ -201,12 +201,12 @@ if (!allowedExtensions.includes(ext)) {
                 border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all
                 ${isDragOver
                   ? 'border-violet-400 bg-violet-50'
-                  : 'border-slate-200 hover:border-violet-300 hover:bg-slate-50'
+                  : 'border-border hover:border-violet-300 hover:bg-background'
                 }
               `}
             >
               <Upload className="w-8 h-8 text-slate-300 mx-auto mb-3" />
-              <p className="text-sm font-medium text-slate-600 mb-1">
+              <p className="text-sm font-medium text-muted-foreground mb-1">
                 Drop your file here or{' '}
                 <span className="text-violet-600">browse</span>
               </p>
@@ -223,13 +223,13 @@ if (!allowedExtensions.includes(ext)) {
             </div>
           ) : (
             /* Selected File Preview */
-            <div className="border border-slate-200 rounded-xl p-4 flex items-center gap-3">
+            <div className="border border-border rounded-xl p-4 flex items-center gap-3">
               <FileIcon
                 fileType={getFileExtension(selectedFile.name)}
                 size="md"
               />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-800 truncate">
+                <p className="text-sm font-medium text-foreground truncate">
                   {selectedFile.name}
                 </p>
                 <p className="text-xs text-slate-400 mt-0.5">
@@ -271,7 +271,7 @@ if (!allowedExtensions.includes(ext)) {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               disabled={isUploading}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 placeholder:text-slate-400"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 placeholder:text-slate-400"
             />
           </div>
 
@@ -285,7 +285,7 @@ if (!allowedExtensions.includes(ext)) {
     value={projectId}
     onChange={(e) => setProjectId(e.target.value)}
     disabled={isUploading || projectsLoading}
-    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+    className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-card"
   >
     <option value="">
       {projectsLoading ? 'Loading projects...' : 'Select a project...'}
@@ -322,7 +322,7 @@ if (!allowedExtensions.includes(ext)) {
     value={folderId}
     onChange={(e) => setFolderId(e.target.value)}
     disabled={isUploading}
-    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+    className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-card"
   >
     <option value="">No folder (All Files)</option>
 
@@ -342,7 +342,7 @@ if (!allowedExtensions.includes(ext)) {
               value={folderId}
               onChange={(e) => setFolderId(e.target.value)}
               disabled={isUploading}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-card"
             >
               <option value="">No folder (All Files)</option>
               {folders.map((f) => (

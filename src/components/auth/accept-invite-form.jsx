@@ -124,7 +124,7 @@ export function AcceptInviteForm() {
   // ─── Verifying state ──────────────────────────────────────────────────────
   if (verifying) {
     return (
-      <div className="flex items-center justify-center py-8 text-slate-500">
+      <div className="flex items-center justify-center py-8 text-muted-foreground">
         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
         Verifying your invite…
       </div>
@@ -138,7 +138,7 @@ export function AcceptInviteForm() {
         <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3">
           {verifyError}
         </div>
-        <p className="text-center text-sm text-slate-500">
+        <p className="text-center text-sm text-muted-foreground">
           Already have an account?{' '}
           <Link href="/auth/login" className="text-violet-600 font-medium hover:underline">
             Sign in
@@ -201,7 +201,7 @@ export function AcceptInviteForm() {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-muted-foreground"
           >
             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
@@ -226,7 +226,7 @@ export function AcceptInviteForm() {
           <button
             type="button"
             onClick={() => setShowConfirm(!showConfirm)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-muted-foreground"
           >
             {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
@@ -247,7 +247,7 @@ export function AcceptInviteForm() {
           : 'Join the team'}
       </Button>
 
-      <p className="text-center text-sm text-slate-500">
+      <p className="text-center text-sm text-muted-foreground">
         Already have an account?{' '}
         <Link href="/auth/login" className="text-violet-600 font-medium hover:underline">
           Sign in

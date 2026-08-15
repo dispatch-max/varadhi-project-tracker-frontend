@@ -16,6 +16,25 @@ export const reportsApi = {
   },
 
   // Per-project completed vs total (horizontal bar chart)
+  // Task load + completion grouped by users.role — this schema has no team
+  // or department entity, so role is the real grouping.
+  getRoleUtilization: async () => {
+    const { data } = await apiClient.get('/reports/role-utilization')
+    return data.data
+  },
+
+  // Period-over-period deltas computed from tasks.completed_at/created_at.
+  getBusinessIntelligence: async () => {
+    const { data } = await apiClient.get('/reports/business-intelligence')
+    return data.data
+  },
+
+  // Risk levels derived from overdue counts and project end dates.
+  getRiskAnalysis: async () => {
+    const { data } = await apiClient.get('/reports/risk-analysis')
+    return data.data
+  },
+
   getProjectCompletion: async () => {
     const { data } = await apiClient.get('/reports/project-completion')
     return data.data
