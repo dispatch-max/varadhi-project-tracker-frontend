@@ -54,9 +54,6 @@ export function CreateTaskModal({ onClose, onSuccess }) {
     }
   }
 
-  // useEffect(() => {
-  //   loadProjects()
-  // }, [])
     async function loadUsers() {
     setUsersLoading(true)
     setUsersError(false)
@@ -123,16 +120,16 @@ export function CreateTaskModal({ onClose, onSuccess }) {
       className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-card rounded-2xl w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 sticky top-0 bg-white rounded-t-2xl">
-          <h2 className="text-base font-semibold text-slate-800">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border sticky top-0 bg-card rounded-t-2xl">
+          <h2 className="text-base font-semibold text-foreground">
             Create New Task
           </h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-50"
+            className="text-slate-400 hover:text-muted-foreground p-1 rounded-lg hover:bg-background"
           >
             <X className="w-4 h-4" />
           </button>
@@ -174,7 +171,7 @@ export function CreateTaskModal({ onClose, onSuccess }) {
               onChange={handleChange}
               disabled={isLoading}
               rows={3}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none placeholder:text-slate-400"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none placeholder:text-slate-400"
             />
           </div>
 
@@ -192,7 +189,7 @@ export function CreateTaskModal({ onClose, onSuccess }) {
                   onChange={handleChange}
                   disabled={isLoading}
                   rows={4}
-                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
+                  className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
               />
           </div>
 
@@ -212,7 +209,7 @@ export function CreateTaskModal({ onClose, onSuccess }) {
                   onChange={handleChange}
                   disabled={isLoading}
                   rows={4}
-                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
+                  className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
                 />
                 </div>
 
@@ -225,7 +222,7 @@ export function CreateTaskModal({ onClose, onSuccess }) {
               value={formData.projectId}
               onChange={handleChange}
               disabled={isLoading || projectsLoading}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-card"
             >
               <option value="">
                 {projectsLoading ? 'Loading projects...' : 'Select a project...'}
@@ -274,7 +271,7 @@ export function CreateTaskModal({ onClose, onSuccess }) {
                 value={formData.type}
                 onChange={handleChange}
                 disabled={isLoading}
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+                className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-card"
               >
                 <option value="feature">Feature</option>
                 <option value="bug">Bug</option>
@@ -292,7 +289,7 @@ export function CreateTaskModal({ onClose, onSuccess }) {
                 value={formData.priority}
                 onChange={handleChange}
                 disabled={isLoading}
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+                className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-card"
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -312,7 +309,7 @@ export function CreateTaskModal({ onClose, onSuccess }) {
                 value={formData.assigneeId}
                 onChange={handleChange}
                 disabled={isLoading || usersLoading}
-                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+                className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-card"
               >
                 <option value="">
                   {usersLoading ? 'Loading users...' : 'Unassigned'}
@@ -364,7 +361,7 @@ export function CreateTaskModal({ onClose, onSuccess }) {
               value={formData.status}
               onChange={handleChange}
               disabled={isLoading}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-card"
             >
               <option value="todo">To Do</option>
               <option value="in_progress">In Progress</option>

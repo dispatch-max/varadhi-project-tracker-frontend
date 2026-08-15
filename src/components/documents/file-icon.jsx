@@ -61,7 +61,7 @@ const FILE_CONFIG = {
 export function FileIcon({ fileType, size = 'md' }) {
   const config = FILE_CONFIG[fileType?.toLowerCase()] || {
     icon: File,
-    bg: 'bg-slate-50',
+    bg: 'bg-background',
     color: 'text-slate-400',
     label: 'FILE',
   }

@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 export default function UnauthorizedPage() {
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="text-center max-w-md">
 
         {/* Icon */}
@@ -11,10 +11,10 @@ export default function UnauthorizedPage() {
         </div>
 
         {/* Message */}
-        <h1 className="text-xl font-semibold text-slate-800 mb-2">
+        <h1 className="text-xl font-semibold text-foreground mb-2">
           Access Denied
         </h1>
-        <p className="text-sm text-slate-500 mb-8 leading-relaxed">
+        <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
           You don&apos;t have permission to view this page.
           Contact your admin if you think this is a mistake.
         </p>

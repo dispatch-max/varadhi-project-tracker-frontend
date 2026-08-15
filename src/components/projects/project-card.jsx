@@ -15,7 +15,7 @@ export function ProjectCard({ project, onUpdated }) {
   )
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-all hover:-translate-y-0.5">
+    <div className="bg-card rounded-xl border border-border p-5 hover:shadow-md transition-all hover:-translate-y-0.5">
 
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
@@ -33,27 +33,27 @@ export function ProjectCard({ project, onUpdated }) {
 </span>
           </div>
           <Link href={`/projects/${project.id}`}>
-            <h3 className="text-sm font-semibold text-slate-800 hover:text-violet-600 transition-colors truncate">
+            <h3 className="text-sm font-semibold text-foreground hover:text-violet-600 transition-colors truncate">
               {project.name}
             </h3>
           </Link>
         </div>
         <ProjectCardMenu project={project} onUpdated={onUpdated} />
-        {/* <button className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-50 flex-shrink-0">
+        {/* <button className="text-slate-400 hover:text-muted-foreground p-1 rounded-lg hover:bg-background flex-shrink-0">
           <MoreHorizontal className="w-4 h-4" />
         </button> */}
       </div>
 
       {/* Description */}
-      <p className="text-xs text-slate-500 mb-4 line-clamp-2 leading-relaxed">
+      <p className="text-xs text-muted-foreground mb-4 line-clamp-2 leading-relaxed">
         {project.description || 'No description provided.'}
       </p>
 
       {/* Progress */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-xs text-slate-500">Progress</span>
-          <span className="text-xs font-semibold text-slate-700">
+          <span className="text-xs text-muted-foreground">Progress</span>
+          <span className="text-xs font-semibold text-foreground">
             {progress}%
           </span>
         </div>
@@ -93,7 +93,7 @@ export function ProjectCard({ project, onUpdated }) {
               </div>
             ))}
             {project.members?.length > 3 && (
-              <div className="w-6 h-6 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-xs text-slate-600 font-medium">
+              <div className="w-6 h-6 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-xs text-muted-foreground font-medium">
                 +{project.members.length - 3}
               </div>
             )}

@@ -57,7 +57,7 @@ export function ProjectCardMenu({ project, onUpdated }) {
       <button
         onClick={(e) => { e.preventDefault(); setOpen(!open) }}
         disabled={isLoading}
-        className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-50 disabled:opacity-50"
+        className="p-1 text-slate-400 hover:text-muted-foreground rounded-lg hover:bg-background disabled:opacity-50"
       >
         <MoreHorizontal className="w-4 h-4" />
       </button>
@@ -70,7 +70,7 @@ export function ProjectCardMenu({ project, onUpdated }) {
             className="fixed inset-0 z-10"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute right-0 top-7 w-44 bg-white border border-slate-200 rounded-xl shadow-lg z-20 py-1">
+          <div className="absolute right-0 top-7 w-44 bg-card border border-border rounded-xl shadow-lg z-20 py-1">
 
             {/* View */}
             <button
@@ -79,7 +79,7 @@ export function ProjectCardMenu({ project, onUpdated }) {
                 setOpen(false)
                 router.push(`/projects/${project.id}`)
               }}
-              className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+              className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-background flex items-center gap-2"
             >
               <Eye className="w-3.5 h-3.5 text-slate-400" />
               View Details
@@ -93,7 +93,7 @@ export function ProjectCardMenu({ project, onUpdated }) {
                   setOpen(false)
                   router.push(`/projects/${project.id}?edit=true`)
                 }}
-                className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-background flex items-center gap-2"
               >
                 <Pencil className="w-3.5 h-3.5 text-slate-400" />
                 Edit Project
@@ -104,7 +104,7 @@ export function ProjectCardMenu({ project, onUpdated }) {
             {canEdit && project.status !== 'archived' && (
               <button
                 onClick={(e) => { e.preventDefault(); handleArchive() }}
-                className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-background flex items-center gap-2"
               >
                 <Archive className="w-3.5 h-3.5 text-slate-400" />
                 Archive
