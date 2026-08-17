@@ -399,14 +399,18 @@ const ICON_MAP = {
   Clock3,
 }
 
-export function Sidebar({  }) {
+export function Sidebar({ collapsed: collapsedProp, setCollapsed: setCollapsedProp }) {
   const pathname = usePathname()
   const router = useRouter()
 
   const { user, clearAuth } = useAuthStore()
 
   // Collapsed rail (w-16) vs full sidebar (w-60), toggled by the chevron button.
-  const [collapsed, setCollapsed] = useState(false)
+  // AppShell owns this so the main column can shift with the rail; the local
+  // state is the fallback for rendering Sidebar without those props.
+  const [collapsedLocal, setCollapsedLocal] = useState(false)
+  const collapsed = collapsedProp ?? collapsedLocal
+  const setCollapsed = setCollapsedProp ?? setCollapsedLocal
 
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   // Holds { count } while the unsynced-changes warning is on screen. Logging
@@ -493,31 +497,41 @@ export function Sidebar({  }) {
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 h-screen bg-white border-r border-slate-200 flex flex-col z-20 transition-all duration-300',
+        'fixed rounded-r-2xl left-0 top-0 h-screen bg-white border-r border-slate-200 flex flex-col z-30 transition-all duration-300 ease-in-out',
         collapsed ? 'w-16' : 'w-60'
       )}
     >
-      {/* Logo */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-slate-100">
-        <div className="w-8 h-8 rounded-lg bg-violet-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
-          V
+      {/* Logo Section */}
+      <div className="flex items-center px-4 py-5 border-b border-slate-100">
+        {/* Logo Container */}
+        <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 select-none">
+          <img
+            src="/projectlogo-removebg-preview.png"
+            alt="Varadhi Logo"
+            className="w-full h-full object-contain pointer-events-none mb-2"
+          />
         </div>
+
         {!collapsed && (
           <div>
-            <p className="text-sm font-semibold text-slate-800 leading-tight">
+            <p className="text-base font-semibold text-slate-800 leading-tight">
               Varadhi
             </p>
-            <p className="text-xs text-slate-400">Tracker</p>
+            <p className="text-xs text-slate-500 font-medium">Project Tracker 2.0</p>
           </div>
         )}
+
         <button
+          type="button"
           onClick={() => setCollapsed(!collapsed)}
-          className="ml-auto text-slate-400 hover:text-slate-600 flex-shrink-0"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className="ml-auto text-slate-400 hover:text-slate-600 flex-shrink-0 p-1 hover:bg-slate-100 rounded-md transition"
         >
-          {collapsed
-            ? <ChevronRight className="w-4 h-4" />
-            : <ChevronLeft className="w-4 h-4" />
-          }
+          {collapsed ? (
+            <ChevronRight className="w-4 h-4" />
+          ) : (
+            <ChevronLeft className="w-4 h-4" />
+          )}
         </button>
       </div>
 
@@ -536,7 +550,7 @@ export function Sidebar({  }) {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all',
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative',
                 isActive
                   ? 'bg-violet-50 text-violet-700'
                   : 'text-muted-foreground hover:bg-background hover:text-foreground'

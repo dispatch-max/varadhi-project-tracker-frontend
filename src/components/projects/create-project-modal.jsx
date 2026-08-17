@@ -1,6 +1,6 @@
 'use client'
 
-import { useState,useEffect } from 'react'
+import { useState } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,20 +22,10 @@ export function CreateProjectModal({ onClose, onSuccess }) {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState({})
-const [members, setMembers] = useState([])
-useEffect(() => {
-  async function loadMembers() {
-    try {
-      const res = await projectsApi.getMembers()
-      setMembers(res.data)
-    } catch (error) {
-      console.log("Failed to load members", error)
-    }
-  }
 
-  loadMembers()
-}, [])
-
+  // Manager picker and member checkboxes both read from this one fetch; the
+  // old separate projectsApi.getMembers() effect duplicated the same /users
+  // request and its result was no longer rendered anywhere.
   const { users, isLoading: usersLoading, error: usersError, reload: reloadUsers } = useUsers()
   const { privileged, employees } = groupUsersForManagerPicker(users)
   const selectableMembers = activeUsers(users)

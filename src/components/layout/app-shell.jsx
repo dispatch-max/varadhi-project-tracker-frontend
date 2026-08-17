@@ -10,14 +10,24 @@ import { SyncConflicts } from '@/components/shared/sync-conflicts'
 import { cn } from '@/utils'
 
 export function AppShell({ children }) {
+  // Owned here rather than inside Sidebar: the main column has to shift with
+  // the rail, so both need to read the same value. Sidebar keeps working
+  // standalone because it falls back to its own state when no prop is passed.
+  const [collapsed, setCollapsed] = useState(false)
+
   return (
     <div className="min-h-screen bg-slate-50">
 
       {/* Sidebar */}
-      <Sidebar />
+      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
 
       {/* Main content — pushed right to make room for sidebar */}
-      <div className="ml-60 flex flex-col min-h-screen transition-all duration-300">
+      <div
+        className={cn(
+          'flex flex-col min-h-screen min-w-0 transition-all duration-300 ease-in-out',
+          collapsed ? 'ml-16' : 'ml-60'
+        )}
+      >
 
         {/* Topbar */}
         <Topbar />
