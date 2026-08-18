@@ -12,6 +12,7 @@ import {
   FileText,
   Filter,
   Info,
+  Plus,
   Search,
   Users,
   X,
@@ -21,6 +22,19 @@ import {
 } from 'lucide-react'
 
 import { leaveManagementApi } from '@/lib/api/leave-management.api'
+import { useAuthStore } from '@/store/auth.store'
+
+// The `type` values the backend stores in leave_requests.type. The column is
+// VARCHAR(30) with no CHECK constraint, but these are the values the list and
+// the "By Leave Type" report already group on, so the form has to emit the
+// same vocabulary rather than inventing new labels.
+const LEAVE_TYPES = [
+  { value: 'casual', label: 'Casual Leave' },
+  { value: 'sick', label: 'Sick Leave' },
+  { value: 'earned', label: 'Earned Leave' },
+  { value: 'annual', label: 'Annual Leave' },
+  { value: 'unpaid', label: 'Unpaid Leave' },
+]
 
 const formatDate = (value) => {
   if (!value) return ''
@@ -85,6 +99,22 @@ export default function ManagerLeavePage() {
 
   const [showReports, setShowReports] = useState(false)
 
+  // Apply Leave form. `dayType` is captured for the reason line only — the
+  // leave_requests table has no day_type column, so persisting it separately
+  // would silently drop it.
+  const [showApplyModal, setShowApplyModal] = useState(false)
+  const [applyForm, setApplyForm] = useState({
+    leaveType: 'casual',
+    fromDate: '',
+    toDate: '',
+    dayType: 'Full Day',
+    reason: '',
+  })
+  const [applyErrors, setApplyErrors] = useState({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const { user } = useAuthStore()
+
   const [rejectReason, setRejectReason] = useState('')
 
   const [infoMessage, setInfoMessage] = useState('')
@@ -107,6 +137,93 @@ export default function ManagerLeavePage() {
       console.error('Failed to load leave requests:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  function openApplyModal() {
+    setApplyForm({
+      leaveType: 'casual',
+      fromDate: '',
+      toDate: '',
+      dayType: 'Full Day',
+      reason: '',
+    })
+    setApplyErrors({})
+    setShowApplyModal(true)
+  }
+
+  function closeApplyModal() {
+    if (isSubmitting) return
+    setShowApplyModal(false)
+    setApplyErrors({})
+  }
+
+  function updateApplyField(field, value) {
+    setApplyForm((previous) => ({ ...previous, [field]: value }))
+    setApplyErrors((previous) => ({ ...previous, [field]: '' }))
+  }
+
+  // Mirrors the server's own checks (both dates present, range not reversed,
+  // reason non-empty) so the common mistakes are caught before the round trip.
+  // The server still validates independently — this is not the only gate.
+  function validateApplyForm() {
+    const errors = {}
+    if (!applyForm.fromDate) errors.fromDate = 'From date is required.'
+    if (!applyForm.toDate) errors.toDate = 'To date is required.'
+    if (!applyForm.reason.trim()) errors.reason = 'Reason is required.'
+
+    if (applyForm.fromDate && applyForm.toDate) {
+      const from = new Date(applyForm.fromDate)
+      const to = new Date(applyForm.toDate)
+      if (!Number.isNaN(from.getTime()) && !Number.isNaN(to.getTime()) && to < from) {
+        errors.toDate = 'To date cannot be earlier than the from date.'
+      }
+    }
+
+    setApplyErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  async function submitLeaveRequest(event) {
+    event.preventDefault()
+    if (!validateApplyForm()) return
+
+    setIsSubmitting(true)
+    try {
+      // Only the four fields the backend accepts. `days` is computed
+      // server-side and `user_id` comes from the auth token, so neither is
+      // sent from here. Half Day is noted in the reason text because
+      // leave_requests has no column for it.
+      const reason = applyForm.dayType === 'Half Day'
+        ? `[Half Day] ${applyForm.reason.trim()}`
+        : applyForm.reason.trim()
+
+      const created = await leaveManagementApi.create({
+        startDate: applyForm.fromDate,
+        endDate: applyForm.toDate,
+        type: applyForm.leaveType,
+        reason,
+      })
+
+      // Prepend the row the API returned rather than a locally-built object,
+      // so the list shows exactly what was persisted (id, computed days,
+      // server status). Falls back to a reload if the response is empty.
+      if (created && created.id) {
+        setRequests((previous) => [mapLeaveRequest(created), ...previous])
+      } else {
+        await loadRequests()
+      }
+
+      setShowApplyModal(false)
+    } catch (error) {
+      console.error('Failed to create leave request:', error)
+      setApplyErrors({
+        submit:
+          error?.response?.data?.message ||
+          'Could not submit the leave request. Please try again.',
+      })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -434,14 +551,30 @@ export default function ManagerLeavePage() {
             </p>
           </div>
 
-          <button
-            onClick={() => setShowReports(true)}
-            className="flex items-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm font-medium shadow-sm transition hover:bg-slate-50"
-          >
-            <Download size={17} />
+          <div className="flex flex-wrap items-center gap-3">
 
-            Leave Reports
-          </button>
+            <button
+              onClick={() => setShowReports(true)}
+              className="flex items-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm font-medium shadow-sm transition hover:bg-slate-50"
+            >
+              <Download size={17} />
+
+              Leave Reports
+            </button>
+
+            {/* Anyone signed in can apply for their own leave — the backend
+                takes user_id from the token, so this is not a privileged
+                action. Approve/reject stay manager-gated as before. */}
+            <button
+              onClick={openApplyModal}
+              className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
+            >
+              <Plus size={17} />
+
+              Apply Leave
+            </button>
+
+          </div>
 
         </div>
 
@@ -1276,6 +1409,197 @@ export default function ManagerLeavePage() {
           </Modal>
 
         )}
+
+      {/* =================================================
+          APPLY LEAVE MODAL
+      ================================================= */}
+
+      {showApplyModal && (
+
+        <Modal
+          title="Apply Leave"
+          onClose={closeApplyModal}
+        >
+
+          <form onSubmit={submitLeaveRequest} className="space-y-5">
+
+            {/* Employee — read-only. The backend derives user_id from the
+                auth token, so this is shown for confirmation and never sent. */}
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                Employee Name
+              </label>
+              <input
+                type="text"
+                value={user?.name || 'Current user'}
+                readOnly
+                disabled
+                className="w-full cursor-not-allowed rounded-xl border bg-slate-50 px-4 py-2.5 text-sm text-slate-500"
+              />
+              <p className="mt-1 text-xs text-slate-400">
+                Leave is always applied for the signed-in user.
+              </p>
+            </div>
+
+            {/* Leave Type */}
+            <div>
+              <label
+                htmlFor="leaveType"
+                className="mb-1.5 block text-sm font-medium text-slate-700"
+              >
+                Leave Type
+              </label>
+              <select
+                id="leaveType"
+                value={applyForm.leaveType}
+                onChange={(event) => updateApplyField('leaveType', event.target.value)}
+                disabled={isSubmitting}
+                className="w-full rounded-xl border bg-white px-4 py-2.5 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+              >
+                {LEAVE_TYPES.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Dates */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+              <div>
+                <label
+                  htmlFor="fromDate"
+                  className="mb-1.5 block text-sm font-medium text-slate-700"
+                >
+                  From Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="fromDate"
+                  type="date"
+                  value={applyForm.fromDate}
+                  onChange={(event) => updateApplyField('fromDate', event.target.value)}
+                  disabled={isSubmitting}
+                  className={`w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition focus:ring-2 ${
+                    applyErrors.fromDate
+                      ? 'border-red-400 focus:border-red-500 focus:ring-red-100'
+                      : 'focus:border-indigo-500 focus:ring-indigo-100'
+                  }`}
+                />
+                {applyErrors.fromDate && (
+                  <p className="mt-1 text-xs text-red-600">{applyErrors.fromDate}</p>
+                )}
+              </div>
+
+              <div>
+                <label
+                  htmlFor="toDate"
+                  className="mb-1.5 block text-sm font-medium text-slate-700"
+                >
+                  To Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="toDate"
+                  type="date"
+                  value={applyForm.toDate}
+                  min={applyForm.fromDate || undefined}
+                  onChange={(event) => updateApplyField('toDate', event.target.value)}
+                  disabled={isSubmitting}
+                  className={`w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition focus:ring-2 ${
+                    applyErrors.toDate
+                      ? 'border-red-400 focus:border-red-500 focus:ring-red-100'
+                      : 'focus:border-indigo-500 focus:ring-indigo-100'
+                  }`}
+                />
+                {applyErrors.toDate && (
+                  <p className="mt-1 text-xs text-red-600">{applyErrors.toDate}</p>
+                )}
+              </div>
+
+            </div>
+
+            {/* Day Type */}
+            <div>
+              <span className="mb-1.5 block text-sm font-medium text-slate-700">
+                Day Type
+              </span>
+              <div className="flex gap-3">
+                {['Full Day', 'Half Day'].map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => updateApplyField('dayType', option)}
+                    disabled={isSubmitting}
+                    className={`flex-1 rounded-xl border px-4 py-2.5 text-sm font-medium transition ${
+                      applyForm.dayType === option
+                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+                        : 'bg-white text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Reason */}
+            <div>
+              <label
+                htmlFor="reason"
+                className="mb-1.5 block text-sm font-medium text-slate-700"
+              >
+                Reason <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                id="reason"
+                rows={4}
+                value={applyForm.reason}
+                onChange={(event) => updateApplyField('reason', event.target.value)}
+                disabled={isSubmitting}
+                placeholder="Enter the reason for your leave..."
+                className={`w-full resize-none rounded-xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${
+                  applyErrors.reason
+                    ? 'border-red-400 focus:border-red-500 focus:ring-red-100'
+                    : 'focus:border-indigo-500 focus:ring-indigo-100'
+                }`}
+              />
+              {applyErrors.reason && (
+                <p className="mt-1 text-xs text-red-600">{applyErrors.reason}</p>
+              )}
+            </div>
+
+            {applyErrors.submit && (
+              <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+                {applyErrors.submit}
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3">
+
+              <button
+                type="button"
+                onClick={closeApplyModal}
+                disabled={isSubmitting}
+                className="rounded-xl border px-5 py-2.5 text-sm font-medium hover:bg-slate-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-60"
+              >
+                {isSubmitting ? 'Applying...' : 'Apply Leave'}
+              </button>
+
+            </div>
+
+          </form>
+
+        </Modal>
+
+      )}
 
       {/* =================================================
           LEAVE REPORTS MODAL
