@@ -369,7 +369,8 @@ import {
   Users,
   Settings,
   LogOut,
-  ChevronLeft,
+  ChevronLeft,  
+CalendarCheck2,
   ChevronRight
 } from 'lucide-react'
 
@@ -387,6 +388,7 @@ const ICON_MAP = {
   LayoutKanban: KanbanSquare,
   Files,
   BarChart3,
+  CalendarCheck2,
   Users,
   Settings,
 }

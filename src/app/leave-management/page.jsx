@@ -18,6 +18,7 @@ import {
   XCircle,
   Clock3,
   MessageSquare,
+  CalendarCheck2,
 } from 'lucide-react'
 
 import { leaveManagementApi } from '@/lib/api/leave-management.api'
