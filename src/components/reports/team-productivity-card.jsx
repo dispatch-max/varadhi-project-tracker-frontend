@@ -1,101 +1,122 @@
 'use client'
 
-import {
-  TrendingUp,
-  Users,
-  Palette,
-  ShieldCheck,
-  Briefcase
-} from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ShieldCheck, Briefcase, Users } from 'lucide-react'
+import { reportsApi } from '@/lib/api/reports.api'
+
+const ROLE_META = {
+  admin: {
+    label: 'Admins',
+    icon: ShieldCheck,
+    color: 'bg-violet-600',
+    iconBg: 'bg-violet-100',
+    iconColor: 'text-violet-600',
+  },
+  manager: {
+    label: 'Managers',
+    icon: Briefcase,
+    color: 'bg-blue-600',
+    iconBg: 'bg-blue-100',
+    iconColor: 'text-blue-600',
+  },
+  employee: {
+    label: 'Employees',
+    icon: Users,
+    color: 'bg-emerald-600',
+    iconBg: 'bg-emerald-100',
+    iconColor: 'text-emerald-600',
+  },
+}
+
+function Shell({ children }) {
+  return (
+    <div className="rounded-xl border border-border bg-card p-5">
+      <div className="mb-4">
+        <h3 className="font-semibold text-foreground">Team Productivity</h3>
+        <p className="text-xs text-muted-foreground">Completion rate by role</p>
+      </div>
+      {children}
+    </div>
+  )
+}
 
 export function TeamProductivityCard() {
-  const teams = [
-    {
-      name: 'Developers',
-      progress: 92,
-      icon: Users,
-      color: 'bg-violet-600',
-      iconBg: 'bg-violet-100',
-      iconColor: 'text-violet-600',
-    },
-    {
-      name: 'Design Team',
-      progress: 85,
-      icon: Palette,
-      color: 'bg-emerald-500',
-      iconBg: 'bg-emerald-100',
-      iconColor: 'text-emerald-600',
-    },
-    {
-      name: 'QA Team',
-      progress: 78,
-      icon: ShieldCheck,
-      color: 'bg-amber-500',
-      iconBg: 'bg-amber-100',
-      iconColor: 'text-amber-600',
-    },
-    {
-      name: 'Managers',
-      progress: 88,
-      icon: Briefcase,
-      color: 'bg-blue-500',
-      iconBg: 'bg-blue-100',
-      iconColor: 'text-blue-600',
-    },
-  ]
+  const [rows, setRows] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        const data = await reportsApi.getRoleUtilization()
+        // Completion rate is meaningless for a role with no assigned tasks.
+        if (!cancelled) setRows((data ?? []).filter((r) => r.totalTasks > 0))
+      } catch {
+        if (!cancelled) setError('Failed to load team productivity.')
+      } finally {
+        if (!cancelled) setIsLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [])
+
+  if (isLoading) {
+    return (
+      <Shell>
+        <div className="space-y-4">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="flex animate-pulse items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-slate-100" />
+              <div className="h-2 flex-1 rounded-full bg-slate-100" />
+            </div>
+          ))}
+        </div>
+      </Shell>
+    )
+  }
+
+  if (error) {
+    return (
+      <Shell>
+        <p className="text-sm text-muted-foreground">{error}</p>
+      </Shell>
+    )
+  }
+
+  if (rows.length === 0) {
+    return (
+      <Shell>
+        <p className="py-4 text-sm text-muted-foreground">No assigned tasks yet.</p>
+      </Shell>
+    )
+  }
 
   return (
-    <div className="bg-card rounded-2xl border border-border p-6 h-full">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-base font-semibold text-foreground">
-            Team Productivity
-          </h3>
-
-          <p className="text-sm text-muted-foreground">
-            Tasks completed this sprint
-          </p>
-        </div>
-
-        <button className="text-xs font-medium text-violet-600 hover:text-violet-700">
-          View Details
-        </button>
-      </div>
-
-      <div className="space-y-5">
-        {teams.map((team) => {
-          const Icon = team.icon
-
+    <Shell>
+      <div className="space-y-4">
+        {rows.map((row) => {
+          const meta = ROLE_META[row.role] ?? ROLE_META.employee
+          const Icon = meta.icon
           return (
-            <div
-              key={team.name}
-              className="flex items-center gap-3"
-            >
-              <div
-                className={`w-8 h-8 rounded-lg flex items-center justify-center ${team.iconBg}`}
-              >
-                <Icon
-                  className={`w-4 h-4 ${team.iconColor}`}
-                />
+            <div key={row.role} className="flex items-center gap-3">
+              <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${meta.iconBg}`}>
+                <Icon className={`h-4 w-4 ${meta.iconColor}`} />
               </div>
 
-              <div className="flex-1">
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm font-medium text-foreground">
-                    {team.name}
-                  </span>
-
-                  <span className="text-sm font-semibold text-muted-foreground">
-                    {team.progress}%
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-foreground">{meta.label}</span>
+                  <span className="text-muted-foreground">
+                    {row.completedTasks}/{row.totalTasks} · {row.completionRate}%
                   </span>
                 </div>
 
-                <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                <div className="mt-1 h-2 overflow-hidden rounded-full bg-slate-100">
                   <div
-                    className={`h-full rounded-full ${team.color}`}
-                    style={{
-                      width: `${team.progress}%`,
-                    }}
+                    className={`h-full rounded-full ${meta.color}`}
+                    style={{ width: `${row.completionRate}%` }}
                   />
                 </div>
               </div>
@@ -103,6 +124,6 @@ export function TeamProductivityCard() {
           )
         })}
       </div>
-    </div>
+    </Shell>
   )
 }

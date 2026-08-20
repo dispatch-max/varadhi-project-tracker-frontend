@@ -92,7 +92,7 @@
 // }
 
 
-import { format, formatDistanceToNow, isAfter, isValid, parseISO, toDate } from 'date-fns'
+import { format, isAfter, isValid, parseISO, toDate } from 'date-fns'
 
 // ─── Tailwind class merging ────────────────────────────────────────────────────
 export function cn(...classes) {
@@ -115,9 +115,47 @@ export function formatDate(date, pattern = 'MMM dd, yyyy', fallback = '—') {
   return parsed ? format(parsed, pattern) : fallback
 }
 
+const SECOND = 1000
+const MINUTE = 60 * SECOND
+const HOUR = 60 * MINUTE
+const DAY = 24 * HOUR
+
+// Fine-grained "time ago" — date-fns's formatDistanceToNow never says
+// "X seconds ago" (it rounds anything under a minute to "less than a minute
+// ago"), so this is a small custom implementation instead. Falls back to an
+// absolute date past a week old, where "23 days ago" stops being useful.
 export function formatRelativeTime(date, fallback = '—') {
   const parsed = toValidDate(date)
-  return parsed ? formatDistanceToNow(parsed, { addSuffix: true }) : fallback
+  if (!parsed) return fallback
+
+  const diffMs = Date.now() - parsed.getTime()
+  if (diffMs < 0) return formatDate(parsed) // clock skew / future timestamp — show the date, don't guess
+
+  if (diffMs < SECOND) return 'just now'
+  if (diffMs < MINUTE) {
+    const n = Math.floor(diffMs / SECOND)
+    return `${n} second${n === 1 ? '' : 's'} ago`
+  }
+  if (diffMs < HOUR) {
+    const n = Math.floor(diffMs / MINUTE)
+    return `${n} minute${n === 1 ? '' : 's'} ago`
+  }
+  if (diffMs < DAY) {
+    const n = Math.floor(diffMs / HOUR)
+    return `${n} hour${n === 1 ? '' : 's'} ago`
+  }
+  if (diffMs < 7 * DAY) {
+    const n = Math.floor(diffMs / DAY)
+    return `${n} day${n === 1 ? '' : 's'} ago`
+  }
+  return formatDate(parsed)
+}
+
+// Exact timestamp for tooltips ("correct exact timestamps when needed"),
+// paired with formatRelativeTime everywhere relative time is displayed.
+export function formatExactTime(date, fallback = '—') {
+  const parsed = toValidDate(date)
+  return parsed ? format(parsed, "MMM dd, yyyy 'at' hh:mm a") : fallback
 }
 
 export function isOverdue(dueDate) {

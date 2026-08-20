@@ -195,6 +195,13 @@ export function DocumentsList() {
   const imgCount = documents.filter((d) => ['png', 'jpg', 'jpeg'].includes(d.fileType)).length
   const zipCount = documents.filter((d) => d.fileType === 'zip').length
 
+  // Only meaningful while viewing every folder at once; null hides the hint.
+  // Documents keep their rows when a folder is deleted (folder_id -> NULL), so
+  // this surfaces those "unfiled" files rather than letting them go unnoticed.
+  const unfiledCount = selectedFolder === 'all'
+    ? documents.filter((d) => !d.folder).length
+    : null
+
   const selectedFolderName = folders.find((f) => f.id === selectedFolder)?.name || 'All Documents'
 
   return (
@@ -361,29 +368,164 @@ export function DocumentsList() {
         </Button>
       </div>
 
-      {/* Stats Row */}
+      {/* ─── Metrics Banner ──────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
         {[
-          { label: 'Total Files', value: documents.length },
-          { label: 'PDFs', value: documents.filter((d) => d.fileType === 'pdf').length },
-          { label: 'Documents', value: documents.filter((d) => ['doc', 'docx'].includes(d.fileType)).length },
-          { label: 'Spreadsheets', value: documents.filter((d) => ['xls', 'xlsx'].includes(d.fileType)).length },
-          { label: 'Images', value: documents.filter((d) => ['png', 'jpg', 'jpeg'].includes(d.fileType)).length },
-          { label: 'Archives', value: documents.filter((d) => d.fileType === 'zip').length },
-        ].map((stat) => (
-          <div key={stat.label} className="bg-white rounded-xl border border-slate-200 px-4 py-3">
-            <p className="text-xl font-semibold text-slate-800">{stat.value}</p>
-            <p className="text-xs text-slate-400 mt-0.5">{stat.label}</p>
-          </div>
-        ))}
+          { label: 'Total Documents', value: totalFiles, icon: FileText, color: 'bg-violet-50 text-violet-600' },
+          { label: 'Storage Used', value: formatFileSize(documents.reduce((acc, d) => acc + (d.fileSize || 0), 0)), icon: HardDrive, color: 'bg-blue-50 text-blue-600' },
+          { label: 'Docs & PDFs', value: pdfCount + docCount, icon: Clock, color: 'bg-emerald-50 text-emerald-600' },
+          { label: 'Spreadsheets', value: sheetCount, icon: Share2, color: 'bg-amber-50 text-amber-600' },
+          { label: 'Images', value: imgCount, icon: Share2, color: 'bg-pink-50 text-pink-600' },
+          { label: 'Archives', value: zipCount, icon: Archive, color: 'bg-slate-100 text-slate-600' },
+        ].map((stat) => {
+          const Icon = stat.icon
+          return (
+            <div key={stat.label} className="p-4 bg-white rounded-xl border border-slate-200 flex items-center space-x-3 shadow-xs">
+              <div className={cn('p-3 rounded-xl shrink-0', stat.color)}>
+                <Icon className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xl font-bold text-slate-800 truncate">{stat.value}</p>
+                <p className="text-xs text-slate-400">{stat.label}</p>
+              </div>
+            </div>
+          )
+        })}
       </div>
 
-<p className="text-xs text-slate-400 mb-3">
-  Showing {filtered.length} file{filtered.length !== 1 ? 's' : ''}
-</p>
+      {/* ─── Breadcrumb + View Toggle ────────────────────────────────────── */}
+      <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3 mb-4">
+        {/* Breadcrumb Path */}
+        <div className="flex items-center space-x-1 text-xs font-medium text-slate-600">
+          <span>Documents</span>
+          <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+          <span className="text-violet-600 font-semibold">{selectedFolderName}</span>
+          {unfiledCount > 0 && (
+            <span className="ml-2 text-slate-400">
+              ({unfiledCount} unfiled)
+            </span>
+          )}
+        </div>
 
-      {/* Documents Grid */}
+        {/* Toggle View */}
+        <div className="flex items-center bg-slate-100 p-0.5 rounded-lg">
+          <button
+            onClick={() => setViewMode('table')}
+            className={cn(
+              'p-1.5 rounded-md text-xs font-medium flex items-center gap-1 transition',
+              viewMode === 'table' ? 'bg-white shadow-xs text-violet-600' : 'text-slate-500 hover:text-slate-800'
+            )}
+          >
+            <List className="w-3.5 h-3.5" /> Table
+          </button>
+          <button
+            onClick={() => setViewMode('grid')}
+            className={cn(
+              'p-1.5 rounded-md text-xs font-medium flex items-center gap-1 transition',
+              viewMode === 'grid' ? 'bg-white shadow-xs text-violet-600' : 'text-slate-500 hover:text-slate-800'
+            )}
+          >
+            <LayoutGrid className="w-3.5 h-3.5" /> Grid
+          </button>
+        </div>
+      </div>
+
+      <p className="text-xs text-slate-400 mb-3">
+        Showing {filtered.length} file{filtered.length !== 1 ? 's' : ''}
+      </p>
+
+      {/* Documents — table or grid */}
       {filtered.length > 0 ? (
+        viewMode === 'table' ? (
+        <div className="bg-white rounded-xl border border-slate-200 shadow-xs flex flex-col overflow-hidden">
+          <div className="max-h-[520px] overflow-y-auto overflow-x-auto relative custom-scrollbar">
+            <table className="w-full text-left text-xs border-collapse min-w-[650px]">
+              <thead className="sticky top-0 z-10 bg-slate-50 border-b border-slate-200 font-semibold text-slate-500 uppercase tracking-wider shadow-xs">
+                <tr>
+                  <th className="p-3">Name</th>
+                  <th className="p-3">Project</th>
+                  <th className="p-3">Folder</th>
+                  <th className="p-3">Uploader</th>
+                  <th className="p-3">Date</th>
+                  <th className="p-3">Size</th>
+                  <th className="p-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {paginatedDocs.map((doc) => (
+                  <tr key={doc.id} className="hover:bg-slate-50/80 transition">
+                    <td className="p-3 font-medium text-slate-800">
+                      <div className="flex items-center space-x-2">
+                        <FileIcon fileType={doc.fileType} size="sm" />
+                        <span className="truncate max-w-[180px]" title={doc.name}>{doc.name}</span>
+                      </div>
+                    </td>
+                    <td className="p-3 text-slate-500 whitespace-nowrap">{doc.project?.name || '-'}</td>
+                    <td className="p-3 text-slate-500 whitespace-nowrap">{doc.folder?.name || 'Unfiled'}</td>
+                    <td className="p-3 text-slate-500 whitespace-nowrap">{doc.uploadedBy?.name || 'Unknown'}</td>
+                    <td className="p-3 text-slate-500 whitespace-nowrap">{formatDate(doc.createdAt, 'MMM dd')}</td>
+                    <td className="p-3 text-slate-500 whitespace-nowrap">{formatFileSize(doc.fileSize)}</td>
+                    <td className="p-3 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end space-x-1 text-slate-400">
+                        {/* Download stays available to everyone; mutating
+                            actions remain admin/manager-only, matching the
+                            grid view's permission rules. */}
+                        <button
+                          onClick={() => handleDownload(doc)}
+                          className="p-1 hover:text-violet-600 rounded transition"
+                          title="Download"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </button>
+                        {canManage && (
+                          <button
+                            onClick={() => setDeleteTarget(doc)}
+                            className="p-1 hover:text-red-600 rounded transition"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination Bar */}
+          <div className="flex items-center justify-between px-4 py-2.5 border-t border-slate-100 bg-slate-50/60">
+            <p className="text-xs text-slate-500">
+              Showing <span className="font-semibold text-slate-700">{filtered.length > 0 ? startIndex + 1 : 0}</span> to{' '}
+              <span className="font-semibold text-slate-700">
+                {Math.min(startIndex + itemsPerPage, filtered.length)}
+              </span>{' '}
+              of <span className="font-semibold text-slate-700">{filtered.length}</span> documents
+            </p>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+              <span className="text-xs font-semibold text-slate-600 px-2">
+                {currentPage} / {totalPages || 1}
+              </span>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                disabled={currentPage === totalPages || totalPages === 0}
+                className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filtered.map((doc) => (
             <div
@@ -503,6 +645,7 @@ export function DocumentsList() {
             </div>
           ))}
         </div>
+        )
       ) : (
         <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
           <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3">

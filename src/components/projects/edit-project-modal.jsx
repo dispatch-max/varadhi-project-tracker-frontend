@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { projectsApi } from '@/lib/api/projects.api'
+import { useUsers, groupUsersForManagerPicker } from '@/hooks/use-users'
 
 export function EditProjectModal({ project, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
@@ -14,9 +15,13 @@ export function EditProjectModal({ project, onClose, onSuccess }) {
     status:      project.status      || 'active',
     startDate:   project.startDate   ? project.startDate.split('T')[0] : '',
     endDate:     project.endDate     ? project.endDate.split('T')[0]   : '',
+    managerId:   project.manager?.id || '',
   })
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors]       = useState({})
+
+  const { users, isLoading: usersLoading } = useUsers()
+  const { privileged, employees } = groupUsersForManagerPicker(users)
 
   function handleChange(e) {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -55,7 +60,7 @@ export function EditProjectModal({ project, onClose, onSuccess }) {
       className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-card rounded-2xl w-full max-w-md shadow-xl">
+      <div className="bg-card rounded-2xl w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
@@ -123,6 +128,43 @@ export function EditProjectModal({ project, onClose, onSuccess }) {
               <option value="on_hold">On Hold</option>
               <option value="completed">Completed</option>
               <option value="archived">Archived</option>
+            </select>
+          </div>
+
+          {/* Project Manager — changing this notifies the team, all admins,
+              and the outgoing manager. */}
+          <div className="space-y-1.5">
+            <Label htmlFor="managerId">Project Manager</Label>
+            <select
+              id="managerId"
+              name="managerId"
+              value={formData.managerId}
+              onChange={handleChange}
+              disabled={isLoading || usersLoading}
+              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+            >
+              {/* Only offered when the project has no manager yet. The update
+                  endpoint COALESCEs managerId, so an empty value cannot clear
+                  an existing manager — showing it would be a silent no-op. */}
+              {(!project.manager || usersLoading) && (
+                <option value="">
+                  {usersLoading ? 'Loading users...' : 'Unassigned'}
+                </option>
+              )}
+              {privileged.length > 0 && (
+                <optgroup label="Managers & Admins">
+                  {privileged.map((u) => (
+                    <option key={u.id} value={u.id}>{u.name}</option>
+                  ))}
+                </optgroup>
+              )}
+              {employees.length > 0 && (
+                <optgroup label="Employees">
+                  {employees.map((u) => (
+                    <option key={u.id} value={u.id}>{u.name}</option>
+                  ))}
+                </optgroup>
+              )}
             </select>
           </div>
 

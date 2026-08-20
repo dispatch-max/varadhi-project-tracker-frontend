@@ -76,13 +76,24 @@ export const USER_ROLE_COLORS = {
 // ─── Navigation ────────────────────────────────────────────────────────────────
 export const NAV_ITEMS = [
   { label: 'Dashboard',  href: '/dashboard',  icon: 'LayoutDashboard', roles: ['admin', 'manager', 'employee'] },
+  // hidden: reachable only via the bell dropdown's "View all notifications" —
+  // kept in NAV_ITEMS (not deleted) so Topbar's title lookup still resolves
+  // 'Notifications' when this route is open; sidebar filters `hidden` out.
+  { label: 'Notifications', href: '/notifications', icon: 'Bell',      roles: ['admin', 'manager', 'employee'], hidden: true },
   { label: 'Projects',   href: '/projects',   icon: 'FolderOpen',      roles: ['admin', 'manager', 'employee'] },
   { label: 'Tasks',      href: '/tasks',       icon: 'ListChecks',      roles: ['admin', 'manager', 'employee'] },
   { label: 'Kanban',     href: '/kanban',      icon: 'LayoutKanban',    roles: ['admin', 'manager', 'employee'] },
+  // Module 4. Every role: a calendar connection is personal, so an employee
+  // syncing their own deadlines needs this as much as a manager does.
+  { label: 'Calendar',   href: '/calendar',    icon: 'CalendarSync',    roles: ['admin', 'manager', 'employee'] },
   { label: 'Documents',  href: '/documents',   icon: 'Files',           roles: ['admin', 'manager', 'employee'] },
   { label: 'Leave',      href: '/leave-management', icon: 'CalendarDays', roles: ['admin', 'manager', 'employee'] },
   { label: 'Time',       href: '/time-management', icon: 'Clock3', roles: ['admin', 'manager', 'employee'] },
   { label: 'Reports',    href: '/reports',     icon: 'BarChart3',       roles: ['admin', 'manager'] },
+  // Module 5. Admin/manager only, matching the backend's restrictTo on
+  // /api/teams — a webhook posts a whole project's activity to a channel, so
+  // configuring one is an administrative act, not a personal preference.
+  { label: 'Teams',      href: '/teams',       icon: 'MessageSquare',   roles: ['admin', 'manager'] },
   { label: 'Users',      href: '/users',       icon: 'Users',           roles: ['admin'] },
   { label: 'Settings',   href: '/settings',    icon: 'Settings',        roles: ['admin', 'manager', 'employee'] },
 ]

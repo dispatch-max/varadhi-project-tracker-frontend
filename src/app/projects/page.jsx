@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { ProjectsList } from '@/components/projects/projects-list'
 
 export const metadata = {
@@ -18,8 +19,12 @@ export default function ProjectsPage() {
         </p>
       </div>
 
-      {/* Projects List */}
-      <ProjectsList />
+      {/* Projects List — Suspense required: ProjectsList reads useSearchParams()
+          (topbar search hand-off) and this page is statically prerendered. */}
+      <Suspense fallback={null}>
+        <ProjectsList />
+      </Suspense>
+
     </div>
   )
 }

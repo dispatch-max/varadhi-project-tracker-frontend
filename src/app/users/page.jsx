@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { UsersList } from '@/components/users/users-list'
 import { RecentlyJoinedCard } from '@/components/users/recently-joined-card'
 import { TopPerformersCard } from '@/components/users/top-performers-card'
@@ -28,9 +29,15 @@ export default function UsersPage() {
       </div>
 
 <div className="grid lg:grid-cols-[260px_1fr_320px] gap-5">
-  <TeamsFiltersCard />
+  {/* Suspense required: TeamsFiltersCard reads useSearchParams() and this
+      page is statically prerendered. */}
+  <Suspense fallback={null}>
+    <TeamsFiltersCard />
+  </Suspense>
 
-  <UsersList />
+  <Suspense fallback={null}>
+    <UsersList />
+  </Suspense>
 
   <MemberProfileCard />
 </div>

@@ -1,120 +1,108 @@
 'use client'
 
-import {
-  Users,
-  Shield,
-  User,
-  Mail,
-  Clock3,
-  Folder,
-  Plus
-} from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Users, Shield, User, Mail } from 'lucide-react'
+import { usersApi } from '@/lib/api/users.api'
+
+// Each filter maps to a query the /users list already understands, so the
+// buttons now actually filter instead of being decorative.
+const FILTERS = [
+  { key: 'all', label: 'All Members', icon: Users, query: {} },
+  { key: 'manager', label: 'Managers', icon: Shield, query: { role: 'manager' } },
+  { key: 'employee', label: 'Employees', icon: User, query: { role: 'employee' } },
+  { key: 'invited', label: 'Pending Invites', icon: Mail, query: { status: 'invited' } },
+]
 
 export function TeamsFiltersCard() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [totals, setTotals] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  const activeRole = searchParams.get('role')
+  const activeStatus = searchParams.get('status')
+  const active =
+    activeStatus === 'invited'
+      ? 'invited'
+      : activeRole === 'manager'
+        ? 'manager'
+        : activeRole === 'employee'
+          ? 'employee'
+          : 'all'
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        const data = await usersApi.getStats()
+        if (!cancelled) setTotals(data?.totals ?? null)
+      } catch {
+        // Counts are supplementary; the filters still work without them.
+      } finally {
+        if (!cancelled) setIsLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [])
+
+  const countFor = (key) => {
+    if (!totals) return null
+    if (key === 'all') return totals.total
+    if (key === 'manager') return totals.managers
+    if (key === 'employee') return totals.employees
+    if (key === 'invited') return totals.invited
+    return null
+  }
+
+  function applyFilter(filter) {
+    const params = new URLSearchParams()
+    Object.entries(filter.query).forEach(([k, v]) => params.set(k, v))
+    const qs = params.toString()
+    router.push(qs ? `/users?${qs}` : '/users')
+  }
+
   return (
     <div className="bg-card border border-border rounded-xl p-5">
+      <h3 className="text-lg font-semibold text-foreground mb-5">Teams &amp; Filters</h3>
 
-      {/* Title */}
-      <h3 className="text-lg font-semibold text-foreground mb-5">
-        Teams & Filters
-      </h3>
-
-      {/* Filters */}
       <div className="space-y-1">
+        {FILTERS.map((filter) => {
+          const Icon = filter.icon
+          const isActive = active === filter.key
+          const count = countFor(filter.key)
 
-        <button className="w-full flex items-center justify-between px-3 py-3 rounded-lg bg-violet-50 text-violet-700">
-          <div className="flex items-center gap-3">
-            <Users className="w-4 h-4" />
-            <span className="text-sm font-medium">All Members</span>
-          </div>
-          <span className="text-sm font-semibold">13</span>
-        </button>
+          return (
+            <button
+              key={filter.key}
+              type="button"
+              onClick={() => applyFilter(filter)}
+              aria-pressed={isActive}
+              className={`flex w-full items-center justify-between rounded-lg px-3 py-3 transition ${
+                isActive ? 'bg-violet-50 text-violet-700' : 'hover:bg-background'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Icon className={`h-4 w-4 ${isActive ? '' : 'text-muted-foreground'}`} />
+                <span className={`text-sm ${isActive ? 'font-medium' : 'text-foreground'}`}>
+                  {filter.label}
+                </span>
+              </div>
 
-        <button className="w-full flex items-center justify-between px-3 py-3 rounded-lg hover:bg-background">
-          <div className="flex items-center gap-3">
-            <Shield className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm text-foreground">Managers</span>
-          </div>
-          <span className="text-sm text-muted-foreground">4</span>
-        </button>
-
-        <button className="w-full flex items-center justify-between px-3 py-3 rounded-lg hover:bg-background">
-          <div className="flex items-center gap-3">
-            <User className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm text-foreground">Employees</span>
-          </div>
-          <span className="text-sm text-muted-foreground">8</span>
-        </button>
-
-        <button className="w-full flex items-center justify-between px-3 py-3 rounded-lg hover:bg-background">
-          <div className="flex items-center gap-3">
-            <Mail className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm text-foreground">
-              Pending Invites
-            </span>
-          </div>
-          <span className="text-sm text-muted-foreground">1</span>
-        </button>
-
-        <button className="w-full flex items-center justify-between px-3 py-3 rounded-lg hover:bg-background">
-          <div className="flex items-center gap-3">
-            <Clock3 className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm text-foreground">Inactive</span>
-          </div>
-          <span className="text-sm text-muted-foreground">1</span>
-        </button>
+              {isLoading ? (
+                <span className="h-4 w-6 animate-pulse rounded bg-slate-100" />
+              ) : (
+                <span
+                  className={`text-sm ${isActive ? 'font-semibold' : 'text-muted-foreground'}`}
+                >
+                  {count ?? '—'}
+                </span>
+              )}
+            </button>
+          )
+        })}
       </div>
-
-      {/* Divider */}
-      <div className="border-t border-slate-100 my-6" />
-
-      {/* Departments Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Folder className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm font-semibold text-foreground">
-            Departments
-          </span>
-        </div>
-
-        <button>
-          <Plus className="w-4 h-4 text-muted-foreground" />
-        </button>
-      </div>
-
-      {/* Departments */}
-      <div className="space-y-4">
-
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-foreground">
-            Development
-          </span>
-          <span className="text-sm text-muted-foreground">6</span>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-foreground">
-            Design
-          </span>
-          <span className="text-sm text-muted-foreground">2</span>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-foreground">
-            QA
-          </span>
-          <span className="text-sm text-muted-foreground">3</span>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-foreground">
-            Management
-          </span>
-          <span className="text-sm text-muted-foreground">2</span>
-        </div>
-
-      </div>
-
     </div>
   )
 }

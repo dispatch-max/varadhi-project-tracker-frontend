@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import {
   Search, UserPlus, MoreHorizontal,
   ShieldCheck, Shield, User,
@@ -47,8 +48,12 @@ const STATUS_CONFIG = {
 
 export function UsersList() {
   const { user: currentUser } = useAuthStore()
+  const searchParams = useSearchParams()
   const [search, setSearch] = useState('')
-  const [roleFilter, setRoleFilter] = useState('all')
+  // Seeded from the URL so the TeamsFiltersCard buttons (which push
+  // ?role=/?status=) actually filter this list.
+  const [roleFilter, setRoleFilter] = useState(searchParams.get('role') || 'all')
+  const statusFilter = searchParams.get('status') || ''
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [users, setUsers] = useState([])
@@ -89,7 +94,10 @@ export function UsersList() {
       email.toLowerCase().includes(search.toLowerCase())
     const matchesRole =
       roleFilter === 'all' || u.role === roleFilter
-    return matchesSearch && matchesRole
+    // Status comes from the URL only (the sidebar's "Pending Invites"), so it
+    // has no dropdown of its own.
+    const matchesStatus = !statusFilter || u.status === statusFilter
+    return matchesSearch && matchesRole && matchesStatus
   })
 
   // Persist role change to the backend, then refetch so UI matches the DB.
