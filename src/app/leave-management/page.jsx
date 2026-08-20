@@ -36,6 +36,18 @@ const LEAVE_TYPES = [
   { value: 'unpaid', label: 'Unpaid Leave' },
 ]
 
+// Wire values the backend accepts for dayType, paired with their labels.
+const DAY_TYPES = [
+  { value: 'full_day', label: 'Full Day' },
+  { value: 'half_day', label: 'Half Day' },
+]
+
+// Rows come back with the wire value; the table and detail panel show the
+// label. Anything unrecognised (including a legacy row saved before dayType
+// existed) falls back to Full Day.
+const formatDayType = (value) =>
+  DAY_TYPES.find((option) => option.value === value)?.label || 'Full Day'
+
 const formatDate = (value) => {
   if (!value) return ''
   return new Date(value).toLocaleDateString('en-IN', {
@@ -61,7 +73,7 @@ const mapLeaveRequest = (row) => ({
   fromDate: formatDate(row.startDate),
   toDate: formatDate(row.endDate),
   days: row.days || 1,
-  dayType: row.dayType || 'Full Day',
+  dayType: formatDayType(row.dayType),
   reason: row.reason || 'No reason provided',
   appliedOn: row.createdAt
     ? new Date(row.createdAt).toLocaleString('en-IN', {
@@ -99,15 +111,15 @@ export default function ManagerLeavePage() {
 
   const [showReports, setShowReports] = useState(false)
 
-  // Apply Leave form. `dayType` is captured for the reason line only — the
-  // leave_requests table has no day_type column, so persisting it separately
-  // would silently drop it.
+  // Apply Leave form. `dayType` holds the backend's own wire values
+  // ('full_day' / 'half_day') rather than display labels, so the payload needs
+  // no translation at submit time.
   const [showApplyModal, setShowApplyModal] = useState(false)
   const [applyForm, setApplyForm] = useState({
     leaveType: 'casual',
     fromDate: '',
     toDate: '',
-    dayType: 'Full Day',
+    dayType: 'full_day',
     reason: '',
   })
   const [applyErrors, setApplyErrors] = useState({})
@@ -145,7 +157,7 @@ export default function ManagerLeavePage() {
       leaveType: 'casual',
       fromDate: '',
       toDate: '',
-      dayType: 'Full Day',
+      dayType: 'full_day',
       reason: '',
     })
     setApplyErrors({})
@@ -159,15 +171,43 @@ export default function ManagerLeavePage() {
   }
 
   function updateApplyField(field, value) {
-    setApplyForm((previous) => ({ ...previous, [field]: value }))
-    setApplyErrors((previous) => ({ ...previous, [field]: '' }))
+    setApplyForm((previous) => {
+      const next = { ...previous, [field]: value }
+
+      // Half day is a single date, so keep the two dates locked together
+      // rather than making the user discover the rule through a validation
+      // error: selecting Half Day collapses the range onto the from date,
+      // and editing either date afterwards carries the other along.
+      const goingHalfDay = field === 'dayType' && value === 'half_day'
+      const editingDateWhileHalfDay =
+        next.dayType === 'half_day' && (field === 'fromDate' || field === 'toDate')
+
+      if (goingHalfDay && next.fromDate) {
+        next.toDate = next.fromDate
+      } else if (editingDateWhileHalfDay) {
+        if (field === 'fromDate') next.toDate = value
+        else next.fromDate = value
+      }
+
+      return next
+    })
+
+    setApplyErrors((previous) => ({
+      ...previous,
+      [field]: '',
+      // The half-day mismatch is reported on dayType but can be resolved by
+      // changing either date, so clear it whenever any of the three moves.
+      dayType: '',
+    }))
   }
 
-  // Mirrors the server's own checks (both dates present, range not reversed,
-  // reason non-empty) so the common mistakes are caught before the round trip.
-  // The server still validates independently — this is not the only gate.
+  // Mirrors the server's own rules so the common mistakes are caught before
+  // the round trip. The server still validates independently — this is a
+  // convenience gate, not the authority.
   function validateApplyForm() {
     const errors = {}
+
+    if (!applyForm.leaveType) errors.leaveType = 'Leave type is required.'
     if (!applyForm.fromDate) errors.fromDate = 'From date is required.'
     if (!applyForm.toDate) errors.toDate = 'To date is required.'
     if (!applyForm.reason.trim()) errors.reason = 'Reason is required.'
@@ -175,8 +215,20 @@ export default function ManagerLeavePage() {
     if (applyForm.fromDate && applyForm.toDate) {
       const from = new Date(applyForm.fromDate)
       const to = new Date(applyForm.toDate)
-      if (!Number.isNaN(from.getTime()) && !Number.isNaN(to.getTime()) && to < from) {
+      const datesValid =
+        !Number.isNaN(from.getTime()) && !Number.isNaN(to.getTime())
+
+      if (datesValid && to < from) {
         errors.toDate = 'To date cannot be earlier than the from date.'
+      } else if (
+        datesValid &&
+        applyForm.dayType === 'half_day' &&
+        applyForm.fromDate !== applyForm.toDate
+      ) {
+        // Backend rejects a half day spanning a range; say so here rather
+        // than letting it come back as a generic 400.
+        errors.dayType =
+          'Half Day applies to a single date — set From and To to the same day, or choose Full Day.'
       }
     }
 
@@ -190,31 +242,23 @@ export default function ManagerLeavePage() {
 
     setIsSubmitting(true)
     try {
-      // Only the four fields the backend accepts. `days` is computed
-      // server-side and `user_id` comes from the auth token, so neither is
-      // sent from here. Half Day is noted in the reason text because
-      // leave_requests has no column for it.
-      const reason = applyForm.dayType === 'Half Day'
-        ? `[Half Day] ${applyForm.reason.trim()}`
-        : applyForm.reason.trim()
-
-      const created = await leaveManagementApi.create({
+      // Exactly the five fields the backend accepts. No employee name, user
+      // id, status or days: the requester comes from the JWT and `days` is
+      // computed server-side.
+      await leaveManagementApi.create({
         startDate: applyForm.fromDate,
         endDate: applyForm.toDate,
         type: applyForm.leaveType,
-        reason,
+        reason: applyForm.reason.trim(),
+        dayType: applyForm.dayType,
       })
 
-      // Prepend the row the API returned rather than a locally-built object,
-      // so the list shows exactly what was persisted (id, computed days,
-      // server status). Falls back to a reload if the response is empty.
-      if (created && created.id) {
-        setRequests((previous) => [mapLeaveRequest(created), ...previous])
-      } else {
-        await loadRequests()
-      }
-
+      // Close first so the list isn't re-rendering behind an open dialog,
+      // then refetch: a full reload keeps the table, the status tabs and
+      // every derived count (Team On Leave, monthly summary, type summary)
+      // consistent with what the server actually stored.
       setShowApplyModal(false)
+      await loadRequests()
     } catch (error) {
       console.error('Failed to create leave request:', error)
       setApplyErrors({
@@ -373,10 +417,10 @@ export default function ManagerLeavePage() {
   // endpoint exists, and building one is out of scope for stabilization.
   function exportLeaveCsv() {
     if (requests.length === 0) return
-    const header = ['Employee', 'Leave Type', 'From', 'To', 'Days', 'Status', 'Reason']
+    const header = ['Employee', 'Leave Type', 'From', 'To', 'Day Type', 'Days', 'Status', 'Reason']
     const escape = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`
     const rows = requests.map((r) =>
-      [r.employee, r.leaveType, r.fromDate, r.toDate, r.days, r.status, r.reason]
+      [r.employee, r.leaveType, r.fromDate, r.toDate, r.dayType, r.days, r.status, r.reason]
         .map(escape)
         .join(',')
     )
@@ -1524,22 +1568,30 @@ export default function ManagerLeavePage() {
                 Day Type
               </span>
               <div className="flex gap-3">
-                {['Full Day', 'Half Day'].map((option) => (
+                {DAY_TYPES.map((option) => (
                   <button
-                    key={option}
+                    key={option.value}
                     type="button"
-                    onClick={() => updateApplyField('dayType', option)}
+                    onClick={() => updateApplyField('dayType', option.value)}
                     disabled={isSubmitting}
                     className={`flex-1 rounded-xl border px-4 py-2.5 text-sm font-medium transition ${
-                      applyForm.dayType === option
+                      applyForm.dayType === option.value
                         ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
                         : 'bg-white text-slate-600 hover:bg-slate-50'
                     }`}
                   >
-                    {option}
+                    {option.label}
                   </button>
                 ))}
               </div>
+              {applyErrors.dayType && (
+                <p className="mt-1 text-xs text-red-600">{applyErrors.dayType}</p>
+              )}
+              {applyForm.dayType === 'half_day' && (
+                <p className="mt-1 text-xs text-slate-400">
+                  Half Day applies to a single date.
+                </p>
+              )}
             </div>
 
             {/* Reason */}
