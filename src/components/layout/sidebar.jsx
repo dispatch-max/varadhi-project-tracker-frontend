@@ -360,26 +360,11 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 
 import {
-<<<<<<< HEAD
-  LayoutDashboard,
-  FolderKanban,
-  ListChecks,
-  KanbanSquare,
-  Files,
-  BarChart3,
-  Users,
-  Settings,
-  LogOut,
-  ChevronLeft,  
-CalendarCheck2,
-  ChevronRight
-=======
   LayoutDashboard, FolderOpen, FolderKanban, ListChecks,
   Kanban, KanbanSquare, Files, BarChart3, Users, Settings,
   LogOut, ChevronLeft, ChevronRight, Bell,
   CalendarSync, MessageSquare, CalendarDays, Clock3
   
->>>>>>> origin/feature/ui-suhailar
 } from 'lucide-react'
 
 import { useState } from 'react'
