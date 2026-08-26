@@ -17,7 +17,9 @@ import {
   Table2,
   TrendingUp,
   Users,
-  MoreVertical
+  MoreVertical,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 import {
   ExportModal,
@@ -33,11 +35,10 @@ import { useHasMounted } from '@/hooks/use-has-mounted'
 
 function ProjectSkeleton() {
   return (
-    <div className="project-stat-card animate-pulse space-y-3">
-      <div className="h-5 w-40 rounded bg-slate-200"></div>
-      <div className="h-4 rounded bg-slate-100"></div>
-      <div className="h-4 w-3/4 rounded bg-slate-100"></div>
-      <div className="h-2 rounded-full bg-slate-100"></div>
+    <div className="animate-pulse space-y-2 p-2.5 bg-white rounded-lg border border-slate-200/80">
+      <div className="h-3.5 w-28 rounded bg-slate-200"></div>
+      <div className="h-2.5 rounded bg-slate-100"></div>
+      <div className="h-2.5 w-3/4 rounded bg-slate-100"></div>
     </div>
   )
 }
@@ -59,7 +60,7 @@ export function ProjectsList() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [selectedDeadlineDate, setSelectedDeadlineDate] = useState('')
-
+  const [currentPage, setCurrentPage] = useState(1)
   const [view, setView] = useState('table')
   const [showCreateModal, setShowCreateModal] = useState(false)
 
@@ -89,7 +90,10 @@ export function ProjectsList() {
     return () => clearTimeout(timer)
   }, [search])
 
-  // Calculate statistics dynamically from all returned projects
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [statusFilter, search])
+
   const statistics = useMemo(() => {
     const total = allProjects.length
     const active = allProjects.filter(p => p.status === 'active' || p.status === 'in_progress').length
@@ -105,7 +109,6 @@ export function ProjectsList() {
     return { total, active, completed, hold, overdue }
   }, [allProjects])
 
-  // Filter projects dynamically based on the selected tab (including computed Overdue status)
   const displayedProjects = useMemo(() => {
     const now = new Date()
 
@@ -125,6 +128,14 @@ export function ProjectsList() {
       return project.status === statusFilter
     })
   }, [allProjects, statusFilter])
+
+  const itemsPerPage = 10
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const totalPages = Math.ceil(displayedProjects.length / itemsPerPage)
+  
+  const paginatedProjects = useMemo(() => {
+    return displayedProjects.slice(startIndex, startIndex + itemsPerPage)
+  }, [displayedProjects, startIndex, itemsPerPage])
 
   const upcomingProjects = useMemo(() => {
     const now = new Date()
@@ -152,82 +163,10 @@ export function ProjectsList() {
   }, [allProjects, selectedDeadlineDate])
 
   return (
-    <div className="w-full space-y-6 text-slate-800">
+    <div className="w-full space-y-2 text-slate-800 pt-0 mt-0">
       
-      {/* HEADER TOOLBAR SECTION */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          
-          {/* Left Title */}
-          <div className="flex flex-col justify-center shrink-0">
-            <h2 className="text-2xl font-bold text-slate-900 tracking-tight leading-none">Projects</h2>
-            <p className="text-xs font-medium text-slate-500 mt-1.5">Plan, track and deliver projects successfully.</p>
-          </div>
-
-          {/* Right Action Bar */}
-          <div className="flex flex-wrap items-center gap-3 md:justify-end">
-            
-            {/* Search Input */}
-            <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search projects..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full h-10 pl-9 pr-4 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
-              />
-            </div>
-
-            {/* View Toggle */}
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl h-10 shrink-0">
-              <button
-                type="button"
-                onClick={() => setView("grid")}
-                className={`p-1.5 rounded-lg transition ${
-                  view === "grid" ? "bg-white text-violet-600 shadow-xs font-semibold" : "text-slate-500 hover:text-slate-800"
-                }`}
-                title="Grid View"
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setView("table")}
-                className={`p-1.5 rounded-lg transition ${
-                  view === "table" ? "bg-white text-violet-600 shadow-xs font-semibold" : "text-slate-500 hover:text-slate-800"
-                }`}
-                title="Table View"
-              >
-                <Table2 className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Export Button */}
-            <button 
-              onClick={() => setShowExport(true)} 
-              className="h-10 px-3.5 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl border border-slate-200 flex items-center gap-2 transition shrink-0"
-            >
-              <Download className="w-4 h-4 text-slate-500" />
-              Export
-            </button>
-
-            {/* New Project CTA */}
-            {canCreate && (
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="h-10 px-4 rounded-xl bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white text-sm font-semibold inline-flex items-center gap-2 transition shrink-0 shadow-xs"
-              >
-                <Plus className="w-4 h-4" />
-                New Project
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
       {/* TOP KPI STAT CARDS */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-2.5">
         {[
           { title: 'Total Projects', value: statistics.total, subText: '+3 this month', icon: FolderKanban, color: 'bg-violet-50 text-violet-600' },
           { title: 'Active Projects', value: statistics.active, subText: '75% of total', icon: TrendingUp, color: 'bg-emerald-50 text-emerald-600' },
@@ -239,15 +178,15 @@ export function ProjectsList() {
           return (
             <div 
               key={item.title} 
-              className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs flex items-center justify-between"
+              className="bg-white border border-slate-200/80 rounded-xl p-2.5 shadow-xs flex items-center justify-between"
             >
               <div>
-                <p className="text-xs font-semibold text-slate-500">{item.title}</p>
-                <p className="text-2xl font-bold text-slate-900 mt-1">{item.value}</p>
-                <p className="text-xs font-medium text-slate-400 mt-1">{item.subText}</p>
+                <p className="text-[11px] font-semibold text-slate-500 leading-none">{item.title}</p>
+                <p className="text-lg font-bold text-slate-900 mt-1 leading-none">{item.value}</p>
+                <p className="text-[10px] font-medium text-slate-400 mt-1 leading-none">{item.subText}</p>
               </div>
-              <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${item.color}`}>
-                <Icon className="w-5 h-5" />
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${item.color}`}>
+                <Icon className="w-4 h-4" />
               </div>
             </div>
           )
@@ -255,30 +194,30 @@ export function ProjectsList() {
       </div>
 
       {/* MIDDLE ANALYTICS SECTION */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
         {/* Project Health Overview */}
-        <div className="project-panel p-5 space-y-4">
-          <h3 className="project-panel-title">Project Health Overview</h3>
-          <div className="flex items-center gap-5">
-            <div className="relative w-24 h-24 flex items-center justify-center rounded-full border-[10px] border-emerald-500 border-t-amber-500 border-r-red-400 shrink-0">
+        <div className="bg-white border border-slate-200/80 rounded-xl p-3 shadow-xs space-y-2">
+          <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wide">Project Health Overview</h3>
+          <div className="flex items-center gap-3">
+            <div className="relative w-16 h-16 flex items-center justify-center rounded-full border-[6px] border-emerald-500 border-t-amber-500 border-r-red-400 shrink-0">
               <div className="text-center">
-                <p className="text-2xl font-bold text-slate-900 leading-none">{statistics.total}</p>
-                <p className="text-xs text-slate-400 font-semibold uppercase mt-1">Total</p>
+                <p className="text-base font-bold text-slate-900 leading-none">{statistics.total}</p>
+                <p className="text-[9px] text-slate-400 font-semibold uppercase mt-0.5">Total</p>
               </div>
             </div>
-            <div className="space-y-2 text-xs text-slate-600 flex-1">
-              <div className="flex justify-between items-center"><span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>Completed</span><span className="font-semibold text-slate-800">{statistics.completed}</span></div>
-              <div className="flex justify-between items-center"><span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>Active</span><span className="font-semibold text-slate-800">{statistics.active}</span></div>
-              <div className="flex justify-between items-center"><span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-red-400"></span>Overdue</span><span className="font-semibold text-slate-800">{statistics.overdue}</span></div>
-              <div className="flex justify-between items-center"><span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-slate-300"></span>On Hold</span><span className="font-semibold text-slate-800">{statistics.hold}</span></div>
+            <div className="space-y-1 text-[11px] text-slate-600 flex-1">
+              <div className="flex justify-between items-center"><span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500"></span>Completed</span><span className="font-semibold text-slate-800">{statistics.completed}</span></div>
+              <div className="flex justify-between items-center"><span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-500"></span>Active</span><span className="font-semibold text-slate-800">{statistics.active}</span></div>
+              <div className="flex justify-between items-center"><span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-400"></span>Overdue</span><span className="font-semibold text-slate-800">{statistics.overdue}</span></div>
+              <div className="flex justify-between items-center"><span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-slate-300"></span>On Hold</span><span className="font-semibold text-slate-800">{statistics.hold}</span></div>
             </div>
           </div>
         </div>
 
         {/* Dynamic Status Distribution */}
-        <div className="project-panel p-5 space-y-3">
-          <h3 className="project-panel-title">Status Distribution</h3>
-          <div className="space-y-3 text-xs">
+        <div className="bg-white border border-slate-200/80 rounded-xl p-3 shadow-xs space-y-2">
+          <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wide">Status Distribution</h3>
+          <div className="space-y-1.5 text-[11px]">
             {[
               { label: 'Active', value: statistics.active, color: 'bg-emerald-500' },
               { label: 'Completed', value: statistics.completed, color: 'bg-blue-500' },
@@ -288,11 +227,11 @@ export function ProjectsList() {
               const percent = statistics.total === 0 ? 0 : Math.round((item.value / statistics.total) * 100)
               return (
                 <div key={item.label}>
-                  <div className="flex justify-between text-slate-600 mb-1 font-medium text-xs">
+                  <div className="flex justify-between text-slate-600 mb-0.5 font-medium">
                     <span>{item.label}</span>
                     <span className="font-semibold text-slate-800">{item.value} ({percent}%)</span>
                   </div>
-                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
                     <div className={`h-full ${item.color} rounded-full transition-all duration-300`} style={{ width: `${percent}%` }}></div>
                   </div>
                 </div>
@@ -302,14 +241,14 @@ export function ProjectsList() {
         </div>
 
         {/* Working Calendar & Upcoming Deadlines Widget */}
-        <div className="project-panel p-5 space-y-3">
+        <div className="bg-white border border-slate-200/80 rounded-xl p-3 shadow-xs space-y-2">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="project-panel-title">Upcoming Deadlines</h3>
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wide">Upcoming Deadlines</h3>
               {selectedDeadlineDate && (
                 <button 
                   onClick={() => setSelectedDeadlineDate('')} 
-                  className="text-xs text-violet-600 hover:underline mt-0.5"
+                  className="text-[10px] text-violet-600 hover:underline"
                 >
                   Clear filter
                 </button>
@@ -320,10 +259,10 @@ export function ProjectsList() {
               <button 
                 type="button" 
                 onClick={() => dateInputRef.current?.showPicker()}
-                className="p-1.5 hover:bg-slate-100 rounded-lg transition"
+                className="p-1 hover:bg-slate-100 rounded-md transition"
                 title="Filter by Date"
               >
-                <CalendarDays className="w-5 h-5 text-violet-600" />
+                <CalendarDays className="w-4 h-4 text-violet-600" />
               </button>
               <input 
                 ref={dateInputRef}
@@ -336,36 +275,87 @@ export function ProjectsList() {
           </div>
 
           {upcomingProjects.length > 0 ? (
-            <div className="space-y-3 text-xs">
+            <div className="space-y-1.5 text-[11px]">
               {upcomingProjects.map(project => (
-                <div key={project.id} className="flex items-center justify-between border-b border-slate-100 pb-2.5 last:border-0 last:pb-0">
+                <div key={project.id} className="flex items-center justify-between border-b border-slate-100 pb-1 last:border-0 last:pb-0">
                   <div className="min-w-0 pr-2">
-                    <p className="font-semibold text-slate-800 text-xs sm:text-sm truncate">{project.name}</p>
-                    <p className="text-xs text-slate-400 mt-0.5">{project.manager?.name || 'Unassigned'}</p>
+                    <p className="font-semibold text-slate-800 truncate">{project.name}</p>
+                    <p className="text-[10px] text-slate-400">{project.manager?.name || 'Unassigned'}</p>
                   </div>
-                  <span className="shrink-0 px-2.5 py-1 text-xs font-semibold bg-violet-50 text-violet-700 rounded-lg border border-violet-100">
+                  <span className="shrink-0 px-2 py-0.5 text-[10px] font-semibold bg-violet-50 text-violet-700 rounded-md border border-violet-100">
                     {new Date(project.endDate).toLocaleDateString()}
                   </span>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="py-8 text-center text-xs text-slate-400">
+            <div className="py-4 text-center text-[11px] text-slate-400">
               {selectedDeadlineDate ? "No projects due on this date" : "No upcoming deadlines"}
             </div>
           )}
         </div>
       </div>
 
-      {/* MAIN DATA SECTION */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+      <div className="bg-white border border-slate-200/80 rounded-xl p-2.5 shadow-xs">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            {/* View Toggle */}
+            <div className="flex items-center bg-slate-100 p-0.5 rounded-md">
+              <button
+                type="button"
+                onClick={() => setView("table")}
+                className={`px-2 py-1 rounded text-xs font-medium flex items-center gap-1 transition ${
+                  view === "table" ? "bg-white shadow-xs text-violet-600" : "text-slate-500 hover:text-slate-800"
+                }`}
+                title="Table View"
+              >
+                <Table2 className="w-3.5 h-3.5" /> Table
+              </button>
+              <button
+                type="button"
+                onClick={() => setView("grid")}
+                className={`px-2 py-1 rounded text-xs font-medium flex items-center gap-1 transition ${
+                  view === "grid" ? "bg-white shadow-xs text-violet-600" : "text-slate-500 hover:text-slate-800"
+                }`}
+                title="Grid View"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" /> Grid
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Export Button */}
+            <button 
+              onClick={() => setShowExport(true)} 
+              className="h-8 px-3 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg border border-slate-200 flex items-center gap-1.5 transition shrink-0"
+            >
+              <Download className="w-3.5 h-3.5 text-slate-500" />
+              Export
+            </button>
+
+            {/* New Project CTA */}
+            {canCreate && (
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="h-8 px-3 rounded-lg bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white text-xs font-semibold inline-flex items-center gap-1.5 transition shrink-0 shadow-xs"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                New Project
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+     {/* MAIN DATA SECTION */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-3 items-start">
         
         {/* MAIN PROJECTS TABLE/GRID */}
-        <div className="xl:col-span-2 project-panel p-5 space-y-4">
-          
+        <div className="xl:col-span-2 min-w-0 bg-white border border-slate-200/80 rounded-xl p-3 shadow-xs space-y-3">
           {/* TAB FILTERS */}
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3 text-sm">
-            <div className="flex space-x-6 overflow-x-auto">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2 text-xs">
+            <div className="flex space-x-4 overflow-x-auto">
               {[
                 { id: 'all', label: `All (${statistics.total})` },
                 { id: 'active', label: `Active (${statistics.active})` },
@@ -376,7 +366,7 @@ export function ProjectsList() {
                 <button
                   key={tab.id}
                   onClick={() => setStatusFilter(tab.id)}
-                  className={`pb-2 font-semibold text-sm whitespace-nowrap transition-colors border-b-2 ${
+                  className={`pb-1 font-semibold whitespace-nowrap transition-colors border-b-2 ${
                     statusFilter === tab.id
                       ? 'border-violet-600 text-violet-600'
                       : 'border-transparent text-slate-400 hover:text-slate-600'
@@ -390,7 +380,7 @@ export function ProjectsList() {
 
           {/* LOADING STATE */}
           {isLoading && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-1">
               {Array.from({ length: 4 }).map((_, i) => (
                 <ProjectSkeleton key={i} />
               ))}
@@ -401,27 +391,28 @@ export function ProjectsList() {
           {!isLoading && displayedProjects.length > 0 && (
             <>
               {view === "grid" ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {displayedProjects.map((project) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {paginatedProjects.map((project) => (
                     <ProjectCard key={project.id} project={project} onUpdated={fetchProjects} />
                   ))}
                 </div>
               ) : (
-                <div className="w-full overflow-x-auto">
-                  <div className="w-full overflow-x-auto rounded-xl border border-slate-200/80">
-                    <table className="w-full text-left border-collapse min-w-[700px]">
-                      <thead>
-                        <tr className="border-b border-slate-200 bg-slate-50/80 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                          <th className="py-3 px-4">Project Name</th>
-                          <th className="py-3 px-4">Manager</th>
-                          <th className="py-3 px-4">Team</th>
-                          <th className="py-3 px-4">Deadline</th>
-                          <th className="py-3 px-4">Status</th>
-                          <th className="py-3 px-4 text-right">Actions</th>
+                <div className="w-full overflow-hidden rounded-lg border border-slate-200/80">
+                  <div className="w-full overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse min-w-[550px]">
+                      <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-500 uppercase tracking-wider">
+                        <tr>
+                          <th className="p-2 w-10 text-center">#</th>
+                          <th className="p-2">Project Name</th>
+                          <th className="p-2">Manager</th>
+                          <th className="p-2">Team</th>
+                          <th className="p-2">Deadline</th>
+                          <th className="p-2">Status</th>
+                          <th className="p-2 text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 bg-white">
-                        {displayedProjects.map((project) => {
+                        {paginatedProjects.map((project, index) => {
                           const statusStyles = {
                             active: 'bg-emerald-50 text-emerald-700 border-emerald-200',
                             in_progress: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -433,76 +424,66 @@ export function ProjectsList() {
                           return (
                             <tr 
                               key={project.id} 
-                              className="hover:bg-slate-50/80 transition-colors"
+                              className="hover:bg-slate-50/80 cursor-pointer transition"
                             >
-                              {/* Project Title & Description */}
-                              <td className="py-3.5 px-4">
+                              <td className="p-2 text-center text-slate-400 font-medium text-[11px]">
+                                {startIndex + index + 1}
+                              </td>
+                              <td className="p-2">
                                 <Link 
                                   href={`/projects/${project.id}`}
                                   className="block group"
                                 >
-                                  <p className="font-bold text-slate-900 text-sm group-hover:text-violet-600 transition-colors">
+                                  <p className="font-semibold text-slate-900 group-hover:text-violet-600 transition-colors text-xs">
                                     {project.name}
                                   </p>
-                                  <p className="text-xs text-slate-500 line-clamp-1 mt-0.5 max-w-[240px]">
+                                  <p className="text-[11px] text-slate-400 line-clamp-1 max-w-[180px]">
                                     {project.description || "No description provided"}
                                   </p>
                                 </Link>
                               </td>
-
-                              {/* Manager */}
-                              <td className="py-3.5 px-4 text-sm text-slate-700 font-medium whitespace-nowrap">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-6 h-6 rounded-full bg-violet-100 text-violet-700 text-xs font-bold flex items-center justify-center">
+                              <td className="p-2 text-slate-700 font-medium whitespace-nowrap">
+                                <div className="flex items-center gap-1.5">
+                                  <div className="w-5 h-5 rounded-full bg-violet-100 text-violet-700 text-[10px] font-bold flex items-center justify-center shrink-0">
                                     {project.manager?.name?.[0] || 'U'}
                                   </div>
-                                  <span>{project.manager?.name || "Unassigned"}</span>
+                                  <span className="text-[11px]">{project.manager?.name || "Unassigned"}</span>
                                 </div>
                               </td>
-
-                              {/* Members Badge */}
-                              <td className="py-3.5 px-4 whitespace-nowrap">
-                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-medium text-xs">
-                                  <Users className="w-3.5 h-3.5 text-slate-400" />
-                                  {project.members?.length || 0} members
+                              <td className="p-2 whitespace-nowrap">
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-medium text-[11px]">
+                                  <Users className="w-3 h-3 text-slate-400" />
+                                  {project.members?.length || 0}
                                 </span>
                               </td>
-
-                              {/* Deadline */}
-                              <td className="py-3.5 px-4 text-sm text-slate-600 font-medium whitespace-nowrap">
+                              <td className="p-2 text-slate-500 whitespace-nowrap text-[11px]">
                                 {project.endDate ? (
-                                  <span className="flex items-center gap-1.5">
-                                    <CalendarDays className="w-3.5 h-3.5 text-slate-400" />
+                                  <span className="flex items-center gap-1">
+                                    <CalendarDays className="w-3 h-3 text-slate-400" />
                                     {new Date(project.endDate).toLocaleDateString()}
                                   </span>
                                 ) : (
                                   <span className="text-slate-400">No deadline</span>
                                 )}
                               </td>
-
-                              {/* Status Badge */}
-                              <td className="py-3.5 px-4 whitespace-nowrap">
-                                <span className={`inline-block px-2.5 py-1 text-xs font-semibold border rounded-lg capitalize ${statusStyles}`}>
+                              <td className="p-2 whitespace-nowrap">
+                                <span className={`inline-block px-1.5 py-0.5 text-[10px] font-semibold border rounded capitalize ${statusStyles}`}>
                                   {project.status ? project.status.replace("_", " ") : "Draft"}
                                 </span>
                               </td>
-
-                              {/* Interactive Action Menu */}
-                              <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                                <div className="flex items-center justify-end gap-2">
+                              <td className="p-2 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                                <div className="flex items-center justify-end gap-1">
                                   <Link 
                                     href={`/projects/${project.id}`}
-                                    className="px-3 py-1.5 text-xs font-semibold text-violet-600 hover:bg-violet-50 rounded-lg transition inline-block"
+                                    className="px-1.5 py-0.5 text-[11px] font-semibold text-violet-600 hover:bg-violet-50 rounded transition inline-block"
                                   >
-                                    View Details
+                                    View
                                   </Link>
                                   <button 
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                    }}
-                                    className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="text-slate-400 hover:text-slate-700 p-0.5 rounded hover:bg-slate-100 transition"
                                   >
-                                    <MoreVertical className="w-4 h-4" />
+                                    <MoreVertical className="w-3.5 h-3.5" />
                                   </button>
                                 </div>
                               </td>
@@ -512,6 +493,41 @@ export function ProjectsList() {
                       </tbody>
                     </table>
                   </div>
+
+                  {/* PAGINATION FOOTER */}
+                  <div className="flex items-center justify-between px-3 py-2 border-t border-slate-100 bg-slate-50/60">
+                    <p className="text-[11px] text-slate-500">
+                      Showing{' '}
+                      <span className="font-semibold text-slate-700">
+                        {displayedProjects.length > 0 ? startIndex + 1 : 0}
+                      </span>{' '}
+                      to{' '}
+                      <span className="font-semibold text-slate-700">
+                        {Math.min(startIndex + itemsPerPage, displayedProjects.length)}
+                      </span>{' '}
+                      of <span className="font-semibold text-slate-700">{displayedProjects.length}</span> projects
+                    </p>
+
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                        disabled={currentPage === 1}
+                        className="p-1 rounded border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                      >
+                        <ChevronLeft className="w-3 h-3" />
+                      </button>
+                      <span className="text-[11px] font-semibold text-slate-600 px-1.5">
+                        {currentPage} / {totalPages || 1}
+                      </span>
+                      <button
+                        onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                        disabled={currentPage === totalPages || totalPages === 0}
+                        className="p-1 rounded border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                      >
+                        <ChevronRight className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
             </>
@@ -519,14 +535,14 @@ export function ProjectsList() {
 
           {/* EMPTY STATE */}
           {!isLoading && displayedProjects.length === 0 && (
-            <div className="py-14 text-center flex flex-col items-center">
-              <FolderKanban className="w-12 h-12 text-slate-300 mb-2" />
-              <p className="text-base font-semibold text-slate-800">No Projects Found</p>
-              <p className="text-xs sm:text-sm text-slate-400 max-w-xs mt-1">There are no projects matching your search or status filter.</p>
+            <div className="py-8 text-center flex flex-col items-center">
+              <FolderKanban className="w-8 h-8 text-slate-300 mb-1.5" />
+              <p className="text-sm font-semibold text-slate-800">No Projects Found</p>
+              <p className="text-xs text-slate-400 max-w-xs mt-0.5">There are no projects matching your search or status filter.</p>
               {canCreate && (
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="mt-4 h-10 px-4 rounded-xl bg-violet-600 text-white text-sm font-semibold inline-flex items-center gap-2"
+                  className="mt-3 h-8 px-3 rounded-lg bg-violet-600 text-white text-xs font-semibold inline-flex items-center gap-1.5"
                 >
                   Create Project
                 </button>
@@ -536,71 +552,70 @@ export function ProjectsList() {
         </div>
 
         {/* RIGHT WIDGET PANEL */}
-        <div className="space-y-5">
+        <div className="space-y-3 min-w-0">
           {/* AI Insights Card */}
-          <div className="bg-gradient-to-br from-violet-600 to-indigo-700 text-white p-5 rounded-2xl shadow-xs space-y-4">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-white/20 rounded-xl">
-                <Sparkles className="w-5 h-5 text-white" />
+          <div className="bg-gradient-to-br from-violet-600 to-indigo-700 text-white p-3 rounded-xl shadow-xs space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-white/20 rounded-lg">
+                <Sparkles className="w-4 h-4 text-white" />
               </div>
-              <h3 className="text-base font-bold">AI Project Insights</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider">AI Insights</h3>
             </div>
-            <div className="space-y-3 text-xs sm:text-sm text-violet-100">
-              <div className="flex items-start gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0 mt-0.5" />
-                <span><strong>{statistics.completed}</strong> project(s) completed successfully.</span>
+            <div className="space-y-1.5 text-[11px] text-violet-100">
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300 shrink-0 mt-0.5" />
+                <span><strong>{statistics.completed}</strong> project(s) completed.</span>
               </div>
-              <div className="flex items-start gap-2.5">
-                <Clock3 className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />
-                <span><strong>{statistics.active}</strong> project(s) actively in progress.</span>
+              <div className="flex items-start gap-2">
+                <Clock3 className="w-3.5 h-3.5 text-amber-300 shrink-0 mt-0.5" />
+                <span><strong>{statistics.active}</strong> project(s) active in progress.</span>
               </div>
-              <div className="flex items-start gap-2.5">
-                <AlertTriangle className="w-4 h-4 text-red-300 shrink-0 mt-0.5" />
-                <span><strong>{statistics.overdue}</strong> project(s) require immediate attention.</span>
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-3.5 h-3.5 text-red-300 shrink-0 mt-0.5" />
+                <span><strong>{statistics.overdue}</strong> project(s) overdue.</span>
               </div>
             </div>
           </div>
 
           {/* Quick Actions Panel */}
-          <div className="project-panel p-5 space-y-4">
-            <h3 className="project-panel-title">Quick Actions</h3>
-            <div className="grid grid-cols-2 gap-3">
+          <div className="bg-white border border-slate-200/80 rounded-xl p-3 shadow-xs space-y-2">
+            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wide">Quick Actions</h3>
+            <div className="grid grid-cols-2 gap-2">
               {canCreate && (
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="p-3 border border-slate-100 rounded-xl hover:bg-slate-50 transition text-left space-y-1.5"
+                  className="p-2 border border-slate-100 rounded-lg hover:bg-slate-50 transition text-left space-y-1"
                 >
-                  <Plus className="w-5 h-5 text-violet-600" />
-                  <p className="text-xs sm:text-sm font-bold text-slate-800">New Project</p>
+                  <Plus className="w-4 h-4 text-violet-600" />
+                  <p className="text-xs font-bold text-slate-800">New Project</p>
                 </button>
               )}
               <button
                 onClick={() => setShowExport(true)}
-                className="p-3 border border-slate-100 rounded-xl hover:bg-slate-50 transition text-left space-y-1.5"
+                className="p-2 border border-slate-100 rounded-lg hover:bg-slate-50 transition text-left space-y-1"
               >
-                <Download className="w-5 h-5 text-blue-600" />
-                <p className="text-xs sm:text-sm font-bold text-slate-800">Export Report</p>
+                <Download className="w-4 h-4 text-blue-600" />
+                <p className="text-xs font-bold text-slate-800">Export Report</p>
               </button>
               <button
                 onClick={() => setShowAnalytics(true)}
-                className="p-3 border border-slate-100 rounded-xl hover:bg-slate-50 transition text-left space-y-1.5"
+                className="p-2 border border-slate-100 rounded-lg hover:bg-slate-50 transition text-left space-y-1"
               >
-                <TrendingUp className="w-5 h-5 text-emerald-600" />
-                <p className="text-xs sm:text-sm font-bold text-slate-800">Analytics</p>
+                <TrendingUp className="w-4 h-4 text-emerald-600" />
+                <p className="text-xs font-bold text-slate-800">Analytics</p>
               </button>
               <button
                 onClick={() => setShowTeam(true)}
-                className="p-3 border border-slate-100 rounded-xl hover:bg-slate-50 transition text-left space-y-1.5"
+                className="p-2 border border-slate-100 rounded-lg hover:bg-slate-50 transition text-left space-y-1"
               >
-                <Users className="w-5 h-5 text-amber-600" />
-                <p className="text-xs sm:text-sm font-bold text-slate-800">Team Members</p>
+                <Users className="w-4 h-4 text-amber-600" />
+                <p className="text-xs font-bold text-slate-800">Team Members</p>
               </button>
             </div>
           </div>
         </div>
 
       </div>
-
       {/* MODALS */}
       <ExportModal open={showExport} onClose={() => setShowExport(false)} projects={allProjects} />
       <AnalyticsModal open={showAnalytics} onClose={() => setShowAnalytics(false)} projects={allProjects} />

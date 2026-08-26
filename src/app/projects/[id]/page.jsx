@@ -25,22 +25,20 @@ import {
 // ─── Skeleton ──────────────────────────────────────────────────────────────────
 function PageSkeleton() {
   return (
-    <div className="space-y-6 animate-pulse">
+    <div className="space-y-4 animate-pulse">
       <div className="flex items-center gap-3">
         <div className="h-4 w-24 bg-slate-200 rounded" />
       </div>
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <div className="h-7 w-64 bg-slate-200 rounded mb-3" />
-        <div className="h-4 w-full bg-slate-100 rounded mb-2" />
-        <div className="h-4 w-2/3 bg-slate-100 rounded" />
-      </div>
-      <div className="grid grid-cols-3 gap-4">
-        {[1, 2, 3].map(i => (
-          <div key={i} className="bg-white rounded-xl border border-slate-200 p-4">
-            <div className="h-7 w-12 bg-slate-200 rounded mb-2" />
-            <div className="h-3 w-20 bg-slate-100 rounded" />
+      <div className="grid grid-cols-12 gap-4">
+        <div className="col-span-12 lg:col-span-5 space-y-4">
+          <div className="h-10 bg-slate-200 rounded-lg" />
+          <div className="grid grid-cols-2 gap-3">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="h-24 bg-slate-200 rounded-xl" />
+            ))}
           </div>
-        ))}
+        </div>
+        <div className="col-span-12 lg:col-span-7 h-64 bg-slate-200 rounded-xl" />
       </div>
     </div>
   )
@@ -71,11 +69,9 @@ export default function ProjectDetailPage({ params }) {
     setIsLoading(true)
     setError(null)
     try {
-      // 1. Fetch project details via API helper
       const projectRes = await projectsApi.getById(id)
       const projectData = projectRes?.data || projectRes
 
-      // 2. Fetch project tasks using the project data tasks or safe fallback endpoint
       let tasksData = projectData?.tasks || []
       
       if (!tasksData.length) {
@@ -130,7 +126,7 @@ export default function ProjectDetailPage({ params }) {
         <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mx-auto mb-3">
           <FolderOpen className="w-5 h-5 text-red-400" />
         </div>
-        <p className="text-sm font-medium text-slate-700 mb-1">
+        <p className="text-sm font-medium text-foreground mb-1">
           Project not found
         </p>
         <p className="text-xs text-slate-400 mb-4">
@@ -150,7 +146,6 @@ export default function ProjectDetailPage({ params }) {
   const totalTasksCount = project.tasksCount ?? tasks.length
   const progress = calcProgress(completedTasksCount, totalTasksCount)
 
-  // Task breakdown by status
   const tasksByStatus = {
     todo: tasks.filter(t => t.status === 'todo').length,
     in_progress: tasks.filter(t => t.status === 'in_progress').length,
@@ -159,202 +154,212 @@ export default function ProjectDetailPage({ params }) {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-4 w-full min-w-0">
 
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm">
+      <div className="flex items-center gap-2 text-xs">
         <Link
           href="/projects"
-          className="flex items-center gap-1.5 text-slate-500 hover:text-slate-700 transition-colors"
+          className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-3.5 h-3.5" />
           Projects
         </Link>
         <span className="text-slate-300">/</span>
-        <span className="text-slate-700 font-medium truncate">
+        <span className="text-foreground font-medium truncate">
           {project.name}
         </span>
       </div>
 
-      {/* Header Card */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            {/* Status + Name */}
-            <div className="flex items-center gap-3 mb-2 flex-wrap">
-              <span className={cn(
-                'text-xs px-2 py-0.5 rounded-md font-medium capitalize',
-                PROJECT_STATUS_COLORS[project.status] || 'bg-slate-100 text-slate-700'
-              )}>
-                {PROJECT_STATUS_LABELS[project.status] || project.status}
-              </span>
+      {/* ── Top Wireframe Split View Layout ── */}
+      <div className="grid grid-cols-12 gap-4 items-stretch">
+
+        {/* Left Side Container: Original Tabs (Top-Left) + 2x2 Stats Cards Grid (Bottom-Left) */}
+        <div className="col-span-12 lg:col-span-5 flex flex-col justify-between space-y-3">
+          
+          {/* Original Underline Tabs Style */}
+          <div className="flex gap-1 border-b border-border">
+            {['overview', 'tasks', 'members'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={cn(
+                  'px-4 py-2 text-sm font-medium capitalize border-b-2 -mb-px transition-colors',
+                  activeTab === tab
+                    ? 'border-violet-600 text-violet-600'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {tab}
+                {tab === 'tasks' && (
+                  <span className="ml-1.5 text-xs bg-slate-100 text-muted-foreground px-1.5 py-0.5 rounded-full">
+                    {tasks.length}
+                  </span>
+                )}
+                {tab === 'members' && (
+                  <span className="ml-1.5 text-xs bg-slate-100 text-muted-foreground px-1.5 py-0.5 rounded-full">
+                    {project.members?.length || 0}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* 2x2 Grid Stats Cards */}
+          <div className="grid grid-cols-2 gap-3 flex-1">
+            {[
+              {
+                icon: ListChecks,
+                label: 'Total Tasks',
+                value: project.tasksCount,
+                color: 'bg-slate-50 text-slate-500'
+              },
+              {
+                icon: CheckCircle2,
+                label: 'Completed',
+                value: tasksByStatus.completed,
+                color: 'bg-green-50 text-green-500'
+              },
+              {
+                icon: Clock,
+                label: 'In Progress',
+                value: tasksByStatus.in_progress,
+                color: 'bg-amber-50 text-amber-500'
+              },
+              {
+                icon: Users,
+                label: 'Members',
+                value: project.members?.length || 0,
+                color: 'bg-violet-50 text-violet-500'
+              },
+            ].map((stat) => {
+              const Icon = stat.icon
+              return (
+                <div
+                  key={stat.label}
+                  className="bg-card rounded-xl border border-border p-3.5 flex flex-col justify-between"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground font-medium">{stat.label}</span>
+                    <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center', stat.color)}>
+                      <Icon className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                  <p className="text-xl font-semibold text-foreground mt-2">
+                    {stat.value}
+                  </p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Right Side Header Box: Wide Progress Bar & Action Buttons */}
+        <div className="col-span-12 lg:col-span-7 bg-card rounded-xl border border-border p-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className={cn(
+                    'text-[10px] px-2 py-0.5 rounded-md font-semibold uppercase tracking-wider',
+                    PROJECT_STATUS_COLORS[project.status] || 'bg-slate-100 text-slate-700'
+                  )}>
+                    {PROJECT_STATUS_LABELS[project.status] || project.status}
+                  </span>
+                </div>
+                <h1 className="text-xl font-bold text-foreground truncate">
+                  {project.name}
+                </h1>
+              </div>
+
+              {/* Action Buttons */}
+              {canEdit && (
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    onClick={() => setShowEditModal(true)}
+                    className="flex items-center gap-1 px-2.5 py-1 text-xs text-muted-foreground border border-border rounded-lg hover:bg-background transition-colors"
+                  >
+                    <Pencil className="w-3 h-3" />
+                    Edit
+                  </button>
+                  {project.status !== 'archived' && (
+                    <button
+                      onClick={handleArchive}
+                      className="flex items-center gap-1 px-2.5 py-1 text-xs text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                    >
+                      <Archive className="w-3 h-3" />
+                      Archive
+                    </button>
+                  )}
+                  {canDelete && (
+                    <button
+                      onClick={handleDelete}
+                      className="flex items-center gap-1 px-2.5 py-1 text-xs text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      Delete
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
-            <h1 className="text-2xl font-semibold text-slate-800 mb-2">
-              {project.name}
-            </h1>
+
             {project.description && (
-              <p className="text-sm text-slate-500 leading-relaxed">
+              <p className="text-xs text-muted-foreground leading-relaxed mt-2 line-clamp-2">
                 {project.description}
               </p>
             )}
           </div>
 
-          {/* Action buttons */}
-          {canEdit && (
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <button
-                onClick={() => setShowEditModal(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-              >
-                <Pencil className="w-3.5 h-3.5" />
-                Edit
-              </button>
-              {project.status !== 'archived' && (
-                <button
-                  onClick={handleArchive}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-                >
-                  <Archive className="w-3.5 h-3.5" />
-                  Archive
-                </button>
-              )}
-              {canDelete && (
-                <button
-                  onClick={handleDelete}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  Delete
-                </button>
+          {/* Progress Section */}
+          <div className="mt-4 pt-4 border-t border-slate-100">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs text-muted-foreground font-medium">Overall Progress</span>
+              <span className="text-xs font-bold text-foreground">
+                {progress}%
+              </span>
+            </div>
+            <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+              <div
+                className={cn(
+                  'h-full rounded-full transition-all duration-700',
+                  progress === 100
+                    ? 'bg-green-500'
+                    : progress > 60
+                    ? 'bg-violet-500'
+                    : progress > 30
+                    ? 'bg-amber-400'
+                    : 'bg-red-400'
+                )}
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-xs text-slate-400">
+                {completedTasksCount} of {totalTasksCount} tasks completed
+              </span>
+              {project.endDate && (
+                <span className="text-xs text-slate-400 flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  Due {formatDate(project.endDate)}
+                </span>
               )}
             </div>
-          )}
-        </div>
-
-        {/* Progress Bar */}
-        <div className="mt-5 pt-5 border-t border-slate-100">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-slate-500">Overall Progress</span>
-            <span className="text-xs font-semibold text-slate-700">
-              {progress}%
-            </span>
-          </div>
-          <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-            <div
-              className={cn(
-                'h-full rounded-full transition-all duration-700',
-                progress === 100
-                  ? 'bg-green-500'
-                  : progress > 60
-                  ? 'bg-violet-500'
-                  : progress > 30
-                  ? 'bg-amber-400'
-                  : 'bg-red-400'
-              )}
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <div className="flex items-center justify-between mt-1.5">
-            <span className="text-xs text-slate-400">
-              {completedTasksCount} of {totalTasksCount} tasks completed
-            </span>
-            {project.endDate && (
-              <span className="text-xs text-slate-400 flex items-center gap-1">
-                <Calendar className="w-3 h-3" />
-                Due {formatDate(project.endDate)}
-              </span>
-            )}
           </div>
         </div>
+
       </div>
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          {
-            icon: ListChecks,
-            label: 'Total Tasks',
-            value: totalTasksCount,
-            color: 'bg-slate-50 text-slate-500'
-          },
-          {
-            icon: CheckCircle2,
-            label: 'Completed',
-            value: tasksByStatus.completed,
-            color: 'bg-green-50 text-green-500'
-          },
-          {
-            icon: Clock,
-            label: 'In Progress',
-            value: tasksByStatus.in_progress,
-            color: 'bg-amber-50 text-amber-500'
-          },
-          {
-            icon: Users,
-            label: 'Members',
-            value: project.members?.length || 0,
-            color: 'bg-violet-50 text-violet-500'
-          },
-        ].map((stat) => {
-          const Icon = stat.icon
-          return (
-            <div
-              key={stat.label}
-              className="bg-white rounded-xl border border-slate-200 p-4"
-            >
-              <div className={cn(
-                'w-8 h-8 rounded-lg flex items-center justify-center mb-3',
-                stat.color
-              )}>
-                <Icon className="w-4 h-4" />
-              </div>
-              <p className="text-2xl font-semibold text-slate-800 leading-none mb-1">
-                {stat.value}
-              </p>
-              <p className="text-xs text-slate-500">{stat.label}</p>
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-1 border-b border-slate-200">
-        {['overview', 'tasks', 'members'].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={cn(
-              'px-4 py-2.5 text-sm font-medium capitalize border-b-2 -mb-px transition-colors',
-              activeTab === tab
-                ? 'border-violet-600 text-violet-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700'
-            )}
-          >
-            {tab}
-            {tab === 'tasks' && (
-              <span className="ml-1.5 text-xs bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full">
-                {tasks.length}
-              </span>
-            )}
-            {tab === 'members' && (
-              <span className="ml-1.5 text-xs bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full">
-                {project.members?.length || 0}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* ── Tab: Overview ── */}
+      {/* ── Active Tab Content Area ── */}
       {activeTab === 'overview' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           {/* Project Info */}
-          <div className="bg-white rounded-xl border border-slate-200 p-5">
-            <h3 className="text-sm font-semibold text-slate-800 mb-4">
+          <div className="bg-card rounded-xl border border-border p-4">
+            <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3">
               Project Info
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {[
                 { label: 'Manager', value: project.manager?.name || 'Unassigned' },
                 { label: 'Status', value: PROJECT_STATUS_LABELS[project.status] || project.status },
@@ -364,7 +369,7 @@ export default function ProjectDetailPage({ params }) {
               ].map((item) => (
                 <div key={item.label} className="flex items-center justify-between">
                   <span className="text-xs text-slate-400">{item.label}</span>
-                  <span className="text-xs font-medium text-slate-700">
+                  <span className="text-xs font-medium text-foreground">
                     {item.value}
                   </span>
                 </div>
@@ -373,11 +378,11 @@ export default function ProjectDetailPage({ params }) {
           </div>
 
           {/* Task Status Breakdown */}
-          <div className="bg-white rounded-xl border border-slate-200 p-5">
-            <h3 className="text-sm font-semibold text-slate-800 mb-4">
+          <div className="bg-card rounded-xl border border-border p-4">
+            <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider mb-3">
               Task Status Breakdown
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {Object.entries(tasksByStatus).map(([status, count]) => {
                 const total = totalTasksCount || 1
                 const pct = Math.round((count / total) * 100)
@@ -391,9 +396,9 @@ export default function ProjectDetailPage({ params }) {
                   <div key={status}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs text-slate-500">
-                        {TASK_STATUS_LABELS[status] || status}
+                        {TASK_STATUS_LABELS[status]}
                       </span>
-                      <span className="text-xs font-medium text-slate-600">
+                      <span className="text-xs font-medium text-muted-foreground">
                         {count} ({pct}%)
                       </span>
                     </div>
@@ -413,40 +418,28 @@ export default function ProjectDetailPage({ params }) {
 
       {/* ── Tab: Tasks ── */}
       {activeTab === 'tasks' && (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div className="bg-card rounded-xl border border-border overflow-hidden">
           {tasks.length === 0 ? (
-            <div className="text-center py-16">
+            <div className="text-center py-12">
               <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                 <ListChecks className="w-5 h-5 text-slate-400" />
               </div>
-              <p className="text-sm font-medium text-slate-600">No tasks yet</p>
+              <p className="text-sm font-medium text-muted-foreground">No tasks yet</p>
               <p className="text-xs text-slate-400 mt-1">
                 Create tasks from the Tasks page
               </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">
-                      Task
-                    </th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">
-                      Type
-                    </th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">
-                      Priority
-                    </th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">
-                      Status
-                    </th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500">
-                      Assignee
-                    </th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 whitespace-nowrap">
-                      Due Date
-                    </th>
+                  <tr className="border-b border-slate-100 bg-slate-50/50">
+                    <th className="text-left px-4 py-2.5 font-semibold text-muted-foreground">Task</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-muted-foreground">Type</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-muted-foreground">Priority</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-muted-foreground">Status</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-muted-foreground">Assignee</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-muted-foreground whitespace-nowrap">Due Date</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -456,55 +449,34 @@ export default function ProjectDetailPage({ params }) {
                       task.status !== 'completed' &&
                       isOverdue(task.dueDate)
                     return (
-                      <tr
-                        key={task.id}
-                        className="hover:bg-slate-50 transition-colors"
-                      >
-                        <td className="px-4 py-3">
-                          <p className="text-sm font-medium text-slate-800 truncate max-w-xs">
-                            {task.title}
-                          </p>
+                      <tr key={task.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-4 py-2.5">
+                          <p className="font-medium text-foreground truncate max-w-xs">{task.title}</p>
                         </td>
-                        <td className="px-4 py-3">
-                          <TypeBadge type={task.type} />
-                        </td>
-                        <td className="px-4 py-3">
-                          <PriorityBadge priority={task.priority} />
-                        </td>
-                        <td className="px-4 py-3">
-                          <StatusBadge status={task.status} />
-                        </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-2.5"><TypeBadge type={task.type} /></td>
+                        <td className="px-4 py-2.5"><PriorityBadge priority={task.priority} /></td>
+                        <td className="px-4 py-2.5"><StatusBadge status={task.status} /></td>
+                        <td className="px-4 py-2.5">
                           {task.assignee ? (
                             <div className="flex items-center gap-2">
-                              <div className={cn(
-                                'w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0',
-                                getAvatarColor(task.assignee.name)
-                              )}>
+                              <div className={cn('w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-semibold shrink-0', getAvatarColor(task.assignee.name))}>
                                 {getInitials(task.assignee.name)}
                               </div>
-                              <span className="text-xs text-slate-600 whitespace-nowrap">
-                                {task.assignee.name}
-                              </span>
+                              <span className="text-muted-foreground whitespace-nowrap">{task.assignee.name}</span>
                             </div>
                           ) : (
-                            <span className="text-xs text-slate-400">
-                              Unassigned
-                            </span>
+                            <span className="text-slate-400">Unassigned</span>
                           )}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-2.5">
                           {task.dueDate ? (
-                            <div className={cn(
-                              'flex items-center gap-1 text-xs whitespace-nowrap',
-                              overdue ? 'text-red-500' : 'text-slate-500'
-                            )}>
+                            <div className={cn('flex items-center gap-1 whitespace-nowrap', overdue ? 'text-red-500' : 'text-muted-foreground')}>
                               {overdue && <AlertTriangle className="w-3 h-3" />}
                               <Calendar className="w-3 h-3" />
                               {formatDate(task.dueDate, 'MMM dd')}
                             </div>
                           ) : (
-                            <span className="text-xs text-slate-400">—</span>
+                            <span className="text-slate-400">—</span>
                           )}
                         </td>
                       </tr>
@@ -519,71 +491,44 @@ export default function ProjectDetailPage({ params }) {
 
       {/* ── Tab: Members ── */}
       {activeTab === 'members' && (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div className="bg-card rounded-xl border border-border overflow-hidden">
           {!project.members?.length ? (
-            <div className="text-center py-16">
+            <div className="text-center py-12">
               <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                 <Users className="w-5 h-5 text-slate-400" />
               </div>
-              <p className="text-sm font-medium text-slate-600">No members yet</p>
+              <p className="text-sm font-medium text-muted-foreground">No members yet</p>
             </div>
           ) : (
-            <table className="w-full">
+            <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50">
-                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-500">
-                    Member
-                  </th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-500">
-                    Role
-                  </th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-500">
-                    Tasks
-                  </th>
-                  {canEdit && (
-                    <th className="px-5 py-3 text-xs font-medium text-slate-500">
-                      Action
-                    </th>
-                  )}
+                <tr className="border-b border-slate-100 bg-slate-50/50">
+                  <th className="text-left px-4 py-2.5 font-semibold text-muted-foreground">Member</th>
+                  <th className="text-left px-4 py-2.5 font-semibold text-muted-foreground">Role</th>
+                  <th className="text-left px-4 py-2.5 font-semibold text-muted-foreground">Tasks</th>
+                  {canEdit && <th className="px-4 py-2.5 font-semibold text-muted-foreground text-right">Action</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {project.members.map((member) => {
-                  const memberTasks = tasks.filter(
-                    t => t.assignee?.id === member.id
-                  )
+                  const memberTasks = tasks.filter(t => t.assignee?.id === member.id)
                   return (
-                    <tr key={member.id} className="hover:bg-slate-50">
-                      <td className="px-5 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className={cn(
-                            'w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0',
-                            getAvatarColor(member.name)
-                          )}>
+                    <tr key={member.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-4 py-2.5">
+                        <div className="flex items-center gap-2.5">
+                          <div className={cn('w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-semibold shrink-0', getAvatarColor(member.name))}>
                             {getInitials(member.name)}
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-slate-800">
-                              {member.name}
-                            </p>
-                            <p className="text-xs text-slate-400">
-                              {member.email}
-                            </p>
+                            <p className="font-medium text-foreground">{member.name}</p>
+                            <p className="text-[10px] text-slate-400">{member.email}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-5 py-3">
-                        <span className="text-xs text-slate-600 capitalize">
-                          {member.role}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3">
-                        <span className="text-sm text-slate-600">
-                          {memberTasks.length}
-                        </span>
-                      </td>
+                      <td className="px-4 py-2.5"><span className="capitalize text-muted-foreground">{member.role}</span></td>
+                      <td className="px-4 py-2.5"><span className="text-muted-foreground">{memberTasks.length}</span></td>
                       {canEdit && (
-                        <td className="px-5 py-3">
+                        <td className="px-4 py-2.5 text-right">
                           {member.id !== project.manager?.id && (
                             <button
                               onClick={async () => {
@@ -595,7 +540,7 @@ export default function ProjectDetailPage({ params }) {
                                   alert('Failed to remove member.')
                                 }
                               }}
-                              className="text-xs text-red-500 hover:text-red-600 hover:underline"
+                              className="text-red-500 hover:text-red-600 hover:underline"
                             >
                               Remove
                             </button>

@@ -6,7 +6,7 @@ export const metadata = {
 
 export default function ProjectsPage() {
   return (
-    <div className="p-6">
+    <div className="p-2.5">
       <ProjectsList />
     </div>
   )
