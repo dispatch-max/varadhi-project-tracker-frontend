@@ -3,6 +3,12 @@ import { LoginForm } from '@/components/auth/login-form'
 export const metadata = {
   title: 'Login',
 }
+import {
+  FolderOpen,
+  Users,
+  BarChart3,
+  CalendarDays,
+} from "lucide-react";
 
 export default function LoginPage() {
   return (
@@ -71,7 +77,8 @@ export default function LoginPage() {
           <div className="grid grid-cols-2 gap-5 mt-10">
 
             <div className="bg-card rounded-2xl border border-border shadow-lg p-5 hover:-translate-y-1 hover:shadow-xl transition">
-              <div className="text-3xl">📁</div>
+
+                <FolderOpen className="h-8 w-8 text-gray-500"strokeWidth={1.8}/>
               <h3 className="font-semibold mt-3">Project Tracking</h3>
               <p className="text-sm text-muted-foreground mt-2">
                 Organize and monitor all projects.
@@ -79,7 +86,7 @@ export default function LoginPage() {
             </div>
 
             <div className="bg-card rounded-2xl border border-border shadow-lg p-5 hover:-translate-y-1 hover:shadow-xl transition">
-              <div className="text-3xl">👥</div>
+                  <Users className="h-8 w-8 text-gray-500"strokeWidth={1.8}/>
               <h3 className="font-semibold mt-3">Team Collaboration</h3>
               <p className="text-sm text-muted-foreground mt-2">
                 Collaborate with your teammates.
@@ -87,7 +94,7 @@ export default function LoginPage() {
             </div>
 
             <div className="bg-card rounded-2xl border border-border shadow-lg p-5 hover:-translate-y-1 hover:shadow-xl transition">
-              <div className="text-3xl">📊</div>
+                 <BarChart3 className="h-8 w-8 text-gray-500"strokeWidth={1.8}/>
               <h3 className="font-semibold mt-3">Reports</h3>
               <p className="text-sm text-muted-foreground mt-2">
                 Generate insights and analytics.
@@ -95,7 +102,7 @@ export default function LoginPage() {
             </div>
 
             <div className="bg-card rounded-2xl border border-border shadow-lg p-5 hover:-translate-y-1 hover:shadow-xl transition">
-              <div className="text-3xl">🗓️</div>
+                  <CalendarDays className="h-8 w-8 text-gray-500"strokeWidth={1.8}/>
               <h3 className="font-semibold mt-3">Leave &amp; Time</h3>
               <p className="text-sm text-muted-foreground mt-2">
                 Track attendance and manage leave requests.

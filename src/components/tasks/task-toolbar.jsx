@@ -12,23 +12,12 @@ export function TaskToolbar() {
   return (
     <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
 
-      {/* Search */}
-      <div className="relative flex-1 min-w-[320px]">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
 
-        <input
-          type="text"
-          placeholder="Search tasks..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-9 pr-4 py-2 text-sm border border-border rounded-lg"
-        />
-      </div>
 
       <select
         value={statusFilter}
         onChange={(e) => setStatusFilter(e.target.value)}
-        className="px-3 py-2 text-sm border border-border rounded-lg"
+        className="px-3 py-1 text-sm border border-border rounded-lg"
       >
         <option value="all">All Status</option>
         <option value="todo">To Do</option>

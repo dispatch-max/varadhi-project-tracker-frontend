@@ -363,7 +363,7 @@ import {
   LayoutDashboard, FolderOpen, FolderKanban, ListChecks,
   Kanban, KanbanSquare, Files, BarChart3, Users, Settings,
   LogOut, ChevronLeft, ChevronRight, Bell,
-  CalendarSync, MessageSquare, CalendarDays, Clock3
+  CalendarSync, MessageSquare, CalendarDays, Clock3,CalendarCheck2,
   
 } from 'lucide-react'
 

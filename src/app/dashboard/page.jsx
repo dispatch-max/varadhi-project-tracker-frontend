@@ -4,11 +4,11 @@ import { ProjectProgress } from '@/components/dashboard/project-progress'
 import { CalendarSyncWidget } from '@/components/dashboard/calendar-sync-widget'
 import { ProjectHealth } from '@/components/dashboard/ProjectHealth'
 import { TasksOverview } from '@/components/dashboard/TasksOverview'
-import {UpcomingDeadlines} from '@/components/dashboard/UpcomingDeadlines'
+import { UpcomingDeadlines } from '@/components/dashboard/UpcomingDeadlines'
 import { NotificationsCard } from '@/components/dashboard/NotificationsCard'
-import { CalendarCard } from '@/components/dashboard/CalendarCard'
 import { GanttPreview } from '@/components/dashboard/GanttPreview'
-import { ChevronDown } from "lucide-react";
+
+import { ChevronDown } from 'lucide-react'
 
 export const metadata = {
   title: 'Dashboard',
@@ -16,92 +16,293 @@ export const metadata = {
 
 export default function DashboardPage() {
   return (
-    <div className="space-y-6">
-{/* Page Header */}
-<div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-8">
+    <main
+      className="
+        box-border
+        h-[calc(100dvh-60px)]
+        max-h-[calc(100dvh-60px)]
+        min-h-0
+        w-full
+        min-w-0
+        overflow-hidden
+        overscroll-none
+        bg-slate-50
+      "
+    >
+      {/* =====================================================
+          DASHBOARD WRAPPER
 
-  {/* Left Side */}
-  <div>
-    <h1 className="text-3xl font-bold text-foreground">
-      Project Dashboard
-    </h1>
+          IMPORTANT:
+          h-full + min-h-0 + overflow-hidden
 
-    <p className="mt-1 text-sm text-muted-foreground">
-      Welcome back, Varadhi Team
-    </p>
-  </div>
+          Nothing inside this wrapper is allowed to increase
+          the page height.
+      ====================================================== */}
 
-  {/* Right Side */}
-  <div className="flex items-center gap-3">
+      <div
+        className="
+          mx-auto
+          flex
+          h-full
+          max-h-full
+          min-h-0
+          w-full
+          min-w-0
+          max-w-[1500px]
+          flex-col
+          overflow-hidden
+          px-4
+          pb-2
+        "
+      >
+        {/* =================================================
+            TOP FILTER
+        ================================================== */}
 
-    {/* This Week */}
-    <button className="flex items-center gap-2 px-4 h-10 bg-card border border-border rounded-xl text-sm text-foreground hover:bg-background">
-      This week
-      <ChevronDown className="w-4 h-4" />
-    </button>
+        <div
+          className="
+            mb-2
+            flex
+            h-7
+            min-h-0
+            shrink-0
+            items-center
+            justify-end
+            overflow-hidden
+          "
+        >
+          <button
+            type="button"
+            className="
+              flex
+              h-7
+              shrink-0
+              items-center
+              gap-1.5
+              rounded-lg
+              border
+              border-slate-200
+              bg-white
+              px-3
+              text-[11px]
+              font-medium
+              text-slate-700
+              shadow-sm
+              transition
+              hover:bg-slate-50
+            "
+          >
+            This week
 
-  </div>
+            <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+          </button>
+        </div>
 
-</div>
+        {/* =================================================
+            STATS
+            FIXED HEIGHT
+        ================================================== */}
 
-      {/* Stats Cards */}
-      <StatsCards />
-<div className="grid grid-cols-12 gap-6">
+        <section
+          className="
+            mb-2
+            h-[82px]
+            min-h-[82px]
+            shrink-0
+            overflow-hidden
+          "
+        >
+          <div className="h-full min-h-0 w-full min-w-0 overflow-hidden">
+            <StatsCards />
+          </div>
+        </section>
 
-  {/* Project Health */}
-  <div className="col-span-12 lg:col-span-3">
-    <ProjectHealth />
-  </div>
+        {/* =================================================
+            MAIN DASHBOARD
 
-  {/* Tasks Overview */}
-  <div className="col-span-12 lg:col-span-3">
-    <TasksOverview />
-  </div>
+            Uses ALL remaining height.
+            No page-level scrolling.
+        ================================================== */}
 
-  {/* Upcoming Deadlines */}
-  <div className="col-span-12 lg:col-span-6">
-    <UpcomingDeadlines />
-  </div>
+        <section
+          className="
+            grid
+            h-full
+            min-h-0
+            min-w-0
+            flex-1
+            gap-2
+            overflow-hidden
+          "
+          style={{
+            gridTemplateRows:
+              'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)',
+          }}
+        >
+          {/* =================================================
+              ROW 1
 
-</div>
+              Project Health
+              Tasks Overview
+              Upcoming Deadlines
+          ================================================== */}
 
-      {/* Bottom Row — Activity + Projects */}
-<div className="grid grid-cols-12 gap-6">
-  <div className="col-span-12 lg:col-span-4">
-    <RecentActivity />
-  </div>
+          <div
+            className="
+              grid
+              h-full
+              min-h-0
+              min-w-0
+              gap-2
+              overflow-hidden
+            "
+            style={{
+              gridTemplateColumns:
+                'minmax(0,1fr) minmax(0,1fr) minmax(0,1.7fr)',
+            }}
+          >
+            {/* PROJECT HEALTH */}
 
-  <div className="col-span-12 lg:col-span-4">
-    <NotificationsCard />
-  </div>
+            <div
+              className="
+                h-full
+                max-h-full
+                min-h-0
+                min-w-0
+                overflow-hidden
+              "
+            >
+              <ProjectHealth />
+            </div>
 
-      {/* CalendarCard */}
-  <div className="col-span-12 lg:col-span-4">
-    <CalendarCard />
-  </div>
-</div>
+            {/* TASKS OVERVIEW */}
 
-      {/* Stats Cards */}
-<div className="grid grid-cols-12 gap-6">
+            <div
+              className="
+                h-full
+                max-h-full
+                min-h-0
+                min-w-0
+                overflow-hidden
+              "
+            >
+              <TasksOverview />
+            </div>
 
-  {/* GanttPreview */}
-  <div className="col-span-12">
-    <GanttPreview />
-  </div>
+            {/* UPCOMING DEADLINES */}
 
-</div>
+            <div
+              className="
+                h-full
+                max-h-full
+                min-h-0
+                min-w-0
+                overflow-hidden
+              "
+            >
+              <UpcomingDeadlines />
+            </div>
+          </div>
 
-      {/* Project progress + calendar sync. Both were dropped by the V2.0
-          dashboard rewrite; re-added here so the existing project rollup and
-          the calendar-connection widget stay reachable. */}
-<div className="grid grid-cols-12 gap-6">
-  <div className="col-span-12 lg:col-span-6">
-    <ProjectProgress />
-  </div>
-  <div className="col-span-12 lg:col-span-6">
-    <CalendarSyncWidget />
-  </div>
-</div>
-    </div>
+          {/* =================================================
+              ROW 2
+
+              Recent Activity
+              Project Progress
+              Notifications
+              Calendar Sync
+          ================================================== */}
+
+          <div
+            className="
+              grid
+              h-full
+              min-h-0
+              min-w-0
+              gap-2
+              overflow-hidden
+            "
+            style={{
+              gridTemplateColumns:
+                'repeat(4,minmax(0,1fr))',
+            }}
+          >
+            {/* RECENT ACTIVITY */}
+
+            <div
+              className="
+                h-full
+                max-h-full
+                min-h-0
+                min-w-0
+                overflow-hidden
+              "
+            >
+              <RecentActivity />
+            </div>
+
+            {/* PROJECT PROGRESS */}
+
+            <div
+              className="
+                h-full
+                max-h-full
+                min-h-0
+                min-w-0
+                overflow-hidden
+              "
+            >
+              <ProjectProgress />
+            </div>
+
+            {/* NOTIFICATIONS */}
+
+            <div
+              className="
+                h-full
+                max-h-full
+                min-h-0
+                min-w-0
+                overflow-hidden
+              "
+            >
+              <NotificationsCard />
+            </div>
+
+            {/* CALENDAR SYNC */}
+
+            <div
+              className="
+                h-full
+                max-h-full
+                min-h-0
+                min-w-0
+                overflow-hidden
+              "
+            >
+              <CalendarSyncWidget />
+            </div>
+          </div>
+
+          {/* =================================================
+              ROW 3
+
+              GANTT — FULL WIDTH
+          ================================================== */}
+
+          <div
+            className="
+              h-full
+              max-h-full
+              min-h-0
+              min-w-0
+              overflow-hidden
+            "
+          >
+            <GanttPreview />
+          </div>
+        </section>
+      </div>
+    </main>
   )
 }

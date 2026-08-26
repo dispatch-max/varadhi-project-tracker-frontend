@@ -13,19 +13,6 @@ import {
 import { calendarApi } from '@/lib/api/calendar.api'
 import { formatDate, formatRelativeTime } from '@/utils'
 
-/**
- * Dashboard Calendar Sync widget.
- *
- * Styled with the raw-div card convention the sibling dashboard components use
- * (stats-cards, recent-activity, project-progress) rather than the shadcn Card
- * used on /calendar — a widget that looked different from the two cards beside
- * it would read as bolted on, which is the opposite of the intent.
- *
- * Shows sync state honestly: a per-event tick distinguishes "mirrored to your
- * calendar" from "queued for the next sweep", so a user can tell at a glance
- * whether their calendar is actually current.
- */
-
 const PRIORITY_BAR = {
   critical: 'bg-red-400',
   high: 'bg-orange-400',
@@ -43,8 +30,14 @@ export function CalendarSyncWidget() {
   const load = useCallback(async () => {
     setIsLoading(true)
     setError(false)
+
     try {
-      setData(await calendarApi.getUpcomingEvents({ limit: MAX_ROWS, days: 14 }))
+      const result = await calendarApi.getUpcomingEvents({
+        limit: MAX_ROWS,
+        days: 14,
+      })
+
+      setData(result)
     } catch {
       setError(true)
     } finally {
@@ -53,7 +46,6 @@ export function CalendarSyncWidget() {
   }, [])
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     load()
   }, [load])
 
@@ -61,118 +53,335 @@ export function CalendarSyncWidget() {
   const connected = Boolean(data?.connected)
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-6">
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <h3 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
-            <CalendarSync className="w-4 h-4 text-slate-400" />
-            Calendar Sync
-          </h3>
-          <p className="text-xs text-slate-500 mt-0.5">
-            {connected
-              ? data?.lastSyncedAt
-                ? `Last synced ${formatRelativeTime(data.lastSyncedAt)}`
-                : 'Connected — first sync pending'
-              : 'Not connected'}
-          </p>
+    <div
+      className="
+        flex h-full min-h-0 flex-col
+        overflow-hidden
+        rounded-2xl
+        border border-slate-200
+        bg-white
+        shadow-sm
+      "
+    >
+      {/* =========================================
+          FIXED HEADER
+      ========================================== */}
+      <div
+        className="
+          flex h-[32px] shrink-0
+          items-center justify-between
+          border-b border-slate-100
+          px-3
+        "
+      >
+        <div className="flex min-w-0 items-center gap-1.5">
+          <div
+            className="
+              flex h-5 w-5 shrink-0
+              items-center justify-center
+              rounded-full
+              bg-violet-50
+            "
+          >
+            <CalendarSync className="h-3 w-3 text-violet-600" />
+          </div>
+
+          <div className="min-w-0">
+            <h3
+              className="
+                truncate
+                text-[10px]
+                font-semibold
+                leading-none
+                text-slate-700
+              "
+            >
+              Calendar Sync
+            </h3>
+
+            {connected && data?.lastSyncedAt && (
+              <p
+                className="
+                  mt-0.5 truncate
+                  text-[7px]
+                  leading-none
+                  text-slate-400
+                "
+              >
+                Last synced {formatRelativeTime(data.lastSyncedAt)}
+              </p>
+            )}
+          </div>
         </div>
 
         <Link
           href="/calendar"
-          className="text-xs font-medium text-violet-600 hover:text-violet-700 flex items-center gap-0.5"
+          className="
+            flex shrink-0
+            items-center gap-0.5
+            text-[8px]
+            font-medium
+            text-violet-600
+            hover:text-violet-700
+          "
         >
           {connected ? 'Manage' : 'Connect'}
-          <ChevronRight className="w-3.5 h-3.5" />
+
+          <ChevronRight className="h-2.5 w-2.5" />
         </Link>
       </div>
 
+      {/* =========================================
+          LOADING
+      ========================================== */}
       {isLoading ? (
-        <div className="space-y-2">
-          <div className="h-10 animate-pulse rounded-lg bg-slate-100" />
-          <div className="h-10 animate-pulse rounded-lg bg-slate-100" />
-          <div className="h-10 animate-pulse rounded-lg bg-slate-100" />
+        <div className="min-h-0 flex-1 space-y-1.5 p-2.5">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="
+                h-[24px]
+                animate-pulse
+                rounded-lg
+                bg-slate-100
+              "
+            />
+          ))}
         </div>
       ) : error ? (
-        <p role="status" className="text-sm text-red-600">
-          Couldn&apos;t load calendar sync.{' '}
-          <button type="button" onClick={load} className="underline underline-offset-2">
-            Retry
-          </button>
-        </p>
-      ) : !connected ? (
-        <div className="text-center py-6">
-          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-slate-50">
-            <CalendarSync className="h-5 w-5 text-slate-400" />
-          </div>
-          <p className="text-sm text-slate-600">No calendar connected</p>
-          <p className="mt-0.5 text-xs text-slate-500">
-            Sync your deadlines to Google or Outlook so they show up where you
-            plan your day.
+
+        /* =======================================
+           ERROR
+        ======================================== */
+
+        <div
+          className="
+            flex min-h-0 flex-1
+            items-center justify-center
+            px-3 text-center
+          "
+        >
+          <p className="text-[8px] text-red-500">
+            Couldn&apos;t load calendar sync.{' '}
+
+            <button
+              type="button"
+              onClick={load}
+              className="
+                font-medium
+                underline
+                underline-offset-2
+              "
+            >
+              Retry
+            </button>
           </p>
+        </div>
+      ) : !connected ? (
+
+        /* =======================================
+           NOT CONNECTED
+        ======================================== */
+
+        <div
+          className="
+            flex min-h-0 flex-1
+            flex-col
+            items-center justify-center
+            px-3
+            text-center
+          "
+        >
+          <div
+            className="
+              mb-1.5
+              flex h-7 w-7
+              items-center justify-center
+              rounded-full
+              bg-violet-50
+            "
+          >
+            <CalendarSync className="h-3.5 w-3.5 text-violet-500" />
+          </div>
+
+          <p className="text-[9px] font-medium text-slate-600">
+            No calendar connected
+          </p>
+
+          <p className="mt-0.5 text-[7px] text-slate-400">
+            Connect Google or Outlook
+          </p>
+
           <Link
             href="/calendar"
-            className="mt-3 inline-block rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-700"
+            className="
+              mt-1.5
+              rounded-md
+              bg-violet-600
+              px-2 py-1
+              text-[7px]
+              font-medium
+              text-white
+              hover:bg-violet-700
+            "
           >
-            Connect a calendar
+            Connect calendar
           </Link>
         </div>
       ) : events.length === 0 ? (
-        <p className="py-6 text-center text-sm text-slate-500">
-          Nothing due in the next two weeks.
-        </p>
-      ) : (
-        <ul className="space-y-2">
-          {events.slice(0, MAX_ROWS).map((event) => (
-            <li key={event.sourceId}>
-              <Link
-                href={event.link}
-                className="flex items-center gap-3 rounded-lg border border-slate-100 p-2.5 transition-colors hover:bg-slate-50"
-              >
-                <span
-                  className={`h-8 w-1 shrink-0 rounded-full ${
-                    PRIORITY_BAR[event.priority] || PRIORITY_BAR.low
-                  }`}
-                  aria-hidden="true"
-                />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium text-slate-800">
-                    {event.title}
-                  </span>
-                  <span className="block truncate text-xs text-slate-500">
-                    {formatDate(event.dueDate, 'EEE, MMM dd')}
-                    {event.projectName ? ` · ${event.projectName}` : ''}
-                  </span>
-                </span>
-                <span
-                  className="shrink-0"
-                  title={event.synced ? `Synced to ${event.provider}` : 'Queued for next sync'}
-                >
-                  {event.synced ? (
-                    <CircleCheck className="h-4 w-4 text-emerald-600" />
-                  ) : (
-                    <CircleDashed className="h-4 w-4 text-slate-300" />
-                  )}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
 
-      {connected && data?.providers?.length > 0 && (
-        <p className="mt-3 flex items-center gap-1.5 border-t border-slate-100 pt-3 text-xs text-slate-500">
-          {events.some((e) => !e.synced) ? (
-            <>
-              <TriangleAlert className="h-3.5 w-3.5 text-amber-500" />
-              Some items are waiting for the next sync (runs every 5 minutes).
-            </>
-          ) : (
-            <>
-              <CircleCheck className="h-3.5 w-3.5 text-emerald-600" />
-              Everything is up to date on {data.providers.join(' and ')}.
-            </>
+        /* =======================================
+           CONNECTED - NO EVENTS
+        ======================================== */
+
+        <div
+          className="
+            flex min-h-0 flex-1
+            flex-col
+            items-center justify-center
+            px-3
+            text-center
+          "
+        >
+          <CircleCheck className="mb-1.5 h-5 w-5 text-emerald-500" />
+
+          <p className="text-[9px] font-medium text-slate-600">
+            Everything is up to date
+          </p>
+
+          <p className="mt-0.5 text-[7px] text-slate-400">
+            Nothing due in the next two weeks.
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* =====================================
+              EVENT LIST
+              ONLY THIS AREA SCROLLS
+          ====================================== */}
+          <div
+            className="
+              min-h-0 flex-1
+              overflow-y-auto
+              overscroll-contain
+              px-2.5 py-1.5
+            "
+          >
+            <div className="space-y-1">
+              {events.slice(0, MAX_ROWS).map((event) => (
+                <Link
+                  key={event.sourceId}
+                  href={event.link}
+                  className="
+                    flex h-[25px]
+                    items-center gap-2
+                    rounded-lg
+                    border border-slate-100
+                    bg-slate-50/60
+                    px-2
+                    transition-colors
+                    hover:bg-slate-50
+                  "
+                >
+                  {/* PRIORITY */}
+                  <span
+                    className={`
+                      h-4 w-[3px]
+                      shrink-0
+                      rounded-full
+                      ${
+                        PRIORITY_BAR[event.priority] ||
+                        PRIORITY_BAR.low
+                      }
+                    `}
+                  />
+
+                  {/* EVENT */}
+                  <div className="min-w-0 flex-1">
+                    <p
+                      className="
+                        truncate
+                        text-[8px]
+                        font-medium
+                        leading-none
+                        text-slate-700
+                      "
+                    >
+                      {event.title}
+                    </p>
+
+                    <p
+                      className="
+                        mt-0.5 truncate
+                        text-[6.5px]
+                        leading-none
+                        text-slate-400
+                      "
+                    >
+                      {formatDate(
+                        event.dueDate,
+                        'EEE, MMM dd'
+                      )}
+
+                      {event.projectName
+                        ? ` · ${event.projectName}`
+                        : ''}
+                    </p>
+                  </div>
+
+                  {/* SYNC STATUS */}
+                  <div
+                    className="shrink-0"
+                    title={
+                      event.synced
+                        ? `Synced to ${event.provider}`
+                        : 'Queued for next sync'
+                    }
+                  >
+                    {event.synced ? (
+                      <CircleCheck className="h-3 w-3 text-emerald-500" />
+                    ) : (
+                      <CircleDashed className="h-3 w-3 text-slate-300" />
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* =====================================
+              FIXED BOTTOM STATUS
+          ====================================== */}
+          {data?.providers?.length > 0 && (
+            <div
+              className="
+                flex h-[24px] shrink-0
+                items-center gap-1.5
+                border-t border-slate-100
+                px-3
+              "
+            >
+              {events.some((event) => !event.synced) ? (
+                <>
+                  <TriangleAlert className="h-3 w-3 shrink-0 text-amber-500" />
+
+                  <p className="truncate text-[7px] text-slate-400">
+                    Some items are waiting for sync.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <CircleCheck className="h-3 w-3 shrink-0 text-emerald-500" />
+
+                  <p className="truncate text-[7px] text-slate-400">
+                    Everything is up to date on{' '}
+                    {data.providers.join(' and ')}.
+                  </p>
+                </>
+              )}
+            </div>
           )}
-        </p>
+        </>
       )}
     </div>
   )

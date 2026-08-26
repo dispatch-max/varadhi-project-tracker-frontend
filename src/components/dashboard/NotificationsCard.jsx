@@ -5,33 +5,56 @@ import Link from 'next/link'
 import { Bell, MoreHorizontal } from 'lucide-react'
 import { notificationsApi } from '@/lib/api/notifications.api'
 
-// Backend priorities are low | normal | high | urgent (see NOTIFICATION_TYPES).
 const PRIORITY_STYLES = {
-  urgent: { label: 'Urgent', text: 'text-red-700', dot: 'bg-red-600' },
-  high: { label: 'High', text: 'text-red-600', dot: 'bg-red-500' },
-  normal: { label: 'Normal', text: 'text-yellow-600', dot: 'bg-yellow-500' },
-  low: { label: 'Low', text: 'text-green-600', dot: 'bg-green-500' },
+  urgent: {
+    label: 'Urgent',
+    text: 'text-red-700',
+    dot: 'bg-red-600',
+  },
+  high: {
+    label: 'High',
+    text: 'text-red-600',
+    dot: 'bg-red-500',
+  },
+  normal: {
+    label: 'Normal',
+    text: 'text-yellow-600',
+    dot: 'bg-yellow-500',
+  },
+  low: {
+    label: 'Low',
+    text: 'text-green-600',
+    dot: 'bg-green-500',
+  },
 }
 
 function Shell({ children }) {
   return (
     <div
       className="
-        relative overflow-hidden h-[320px] rounded-3xl border border-white/30
-        bg-gradient-to-br from-violet-100/80 via-purple-50/60 to-blue-100/70
-        backdrop-blur-xl shadow-[0_8px_32px_rgba(139,92,246,0.15)] p-6
+        flex h-full min-h-0 flex-col
+        overflow-hidden rounded-2xl
+        border border-violet-100
+        bg-gradient-to-br
+        from-violet-100/80
+        via-purple-50/60
+        to-blue-100/70
+        shadow-sm
       "
     >
-      <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-violet-300/20 blur-3xl" />
+      <div className="flex h-[30px] shrink-0 items-center justify-between border-b border-white/50 px-3">
 
-      <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-violet-500">
-            <Bell className="h-4 w-4 text-white" />
+        <div className="flex items-center gap-1.5">
+          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-violet-500">
+            <Bell className="h-3 w-3 text-white" />
           </div>
-          <h3 className="text-lg font-semibold text-foreground">Notifications</h3>
+
+          <h3 className="text-[11px] font-semibold text-slate-800">
+            Notifications
+          </h3>
         </div>
-        <MoreHorizontal className="h-4 w-4 text-slate-400" />
+
+        <MoreHorizontal className="h-3.5 w-3.5 text-slate-400" />
       </div>
 
       {children}
@@ -46,32 +69,43 @@ export function NotificationsCard() {
 
   useEffect(() => {
     let cancelled = false
+
     async function load() {
       try {
-        // Unread only — a dashboard card showing already-read items is noise.
-        // The backend expects `unreadOnly=true` (notifications.controller.js:54).
-        const { notifications } = await notificationsApi.list({ limit: 3, unreadOnly: true })
-        if (!cancelled) setItems(notifications ?? [])
+        const { notifications } =
+          await notificationsApi.list({
+            limit: 3,
+            unreadOnly: true,
+          })
+
+        if (!cancelled) {
+          setItems(notifications ?? [])
+        }
       } catch {
-        if (!cancelled) setError('Failed to load notifications.')
+        if (!cancelled) {
+          setError('Failed to load notifications.')
+        }
       } finally {
-        if (!cancelled) setIsLoading(false)
+        if (!cancelled) {
+          setIsLoading(false)
+        }
       }
     }
+
     load()
-    return () => { cancelled = true }
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   if (isLoading) {
     return (
       <Shell>
-        <div className="space-y-3">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="h-[52px] animate-pulse rounded-2xl border border-white/40 bg-card/70"
-            />
-          ))}
+        <div className="flex flex-1 items-center justify-center">
+          <p className="text-[9px] text-slate-400">
+            Loading...
+          </p>
         </div>
       </Shell>
     )
@@ -80,17 +114,10 @@ export function NotificationsCard() {
   if (error) {
     return (
       <Shell>
-        <p className="text-sm text-muted-foreground">{error}</p>
-      </Shell>
-    )
-  }
-
-  if (items.length === 0) {
-    return (
-      <Shell>
-        <div className="flex h-[180px] flex-col items-center justify-center gap-1 text-center">
-          <p className="text-sm text-muted-foreground">You&apos;re all caught up.</p>
-          <p className="text-xs text-slate-400">No unread notifications.</p>
+        <div className="flex flex-1 items-center justify-center">
+          <p className="text-[9px] text-slate-500">
+            {error}
+          </p>
         </div>
       </Shell>
     )
@@ -98,27 +125,41 @@ export function NotificationsCard() {
 
   return (
     <Shell>
-      <div className="space-y-3">
-        {items.map((item) => {
-          const style = PRIORITY_STYLES[item.priority] ?? PRIORITY_STYLES.normal
-          const body = (
-            <div className="flex items-center gap-3 rounded-2xl border border-white/40 bg-card/70 px-4 py-3 backdrop-blur-md">
-              <div className={`h-2.5 w-2.5 shrink-0 rounded-full ${style.dot}`} />
-              <p className="line-clamp-2 text-sm text-foreground">
-                <span className={`font-medium ${style.text}`}>{style.label}:</span>{' '}
-                {item.title || item.message}
-              </p>
-            </div>
-          )
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2">
+        <div className="space-y-1.5">
+          {items.map((item) => {
+            const style =
+              PRIORITY_STYLES[item.priority] ??
+              PRIORITY_STYLES.normal
 
-          return item.linkTo ? (
-            <Link key={item.id} href={item.linkTo} className="block transition hover:opacity-80">
-              {body}
-            </Link>
-          ) : (
-            <div key={item.id}>{body}</div>
-          )
-        })}
+            const body = (
+              <div className="flex items-start gap-2 rounded-lg border border-white/50 bg-white/70 px-2 py-1.5">
+                <span
+                  className={`mt-1 h-1.5 w-1.5 shrink-0 rounded-full ${style.dot}`}
+                />
+
+                <p className="line-clamp-2 text-[8px] leading-[1.2] text-slate-700">
+                  <span
+                    className={`font-semibold ${style.text}`}
+                  >
+                    {style.label}:
+                  </span>{' '}
+                  {item.title || item.message}
+                </p>
+              </div>
+            )
+
+            return item.linkTo ? (
+              <Link key={item.id} href={item.linkTo}>
+                {body}
+              </Link>
+            ) : (
+              <div key={item.id}>
+                {body}
+              </div>
+            )
+          })}
+        </div>
       </div>
     </Shell>
   )

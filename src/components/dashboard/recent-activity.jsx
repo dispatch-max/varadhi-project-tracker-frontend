@@ -5,19 +5,6 @@ import { dashboardApi } from '@/lib/api/dashboard.api'
 import { getInitials, getAvatarColor, cn } from '@/utils'
 import { RelativeTime } from '@/components/shared/relative-time'
 
-// Skeleton loader
-function ActivitySkeleton() {
-  return (
-    <div className="flex items-start gap-3 animate-pulse">
-      <div className="w-7 h-7 rounded-full bg-slate-100 flex-shrink-0 mt-0.5" />
-      <div className="flex-1">
-        <div className="h-3 bg-slate-100 rounded w-full mb-1.5" />
-        <div className="h-3 bg-slate-100 rounded w-20" />
-      </div>
-    </div>
-  )
-}
-
 export function RecentActivity() {
   const [activity, setActivity] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -27,56 +14,79 @@ export function RecentActivity() {
       try {
         const data = await dashboardApi.getActivity()
         setActivity(data)
-      } catch (err) {
+      } catch {
         setActivity([])
       } finally {
         setIsLoading(false)
       }
     }
+
     fetchActivity()
   }, [])
 
   return (
-    <div className="bg-card rounded-xl border border-border p-5 h-[320px] overflow-y-auto">
-      
-      <h3 className="text-sm font-semibold text-foreground mb-4">
-        Recent Activity 
-      </h3>
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+
+      {/* FIXED HEADER */}
+      <div className="flex h-[30px] shrink-0 items-center border-b border-slate-100 px-3">
+        <h3 className="text-[11px] font-semibold text-slate-800">
+          Recent Activity
+        </h3>
+      </div>
 
       {isLoading ? (
-        <div className="space-y-4">
-          {Array.from({ length: 5 }).map((_, i) => <ActivitySkeleton key={i} />)}
+        <div className="flex min-h-0 flex-1 items-center justify-center">
+          <p className="text-[9px] text-slate-400">
+            Loading...
+          </p>
         </div>
       ) : activity.length === 0 ? (
-        <p className="text-xs text-slate-400 text-center py-8">
-          No recent activity yet.
-        </p>
+        <div className="flex min-h-0 flex-1 items-center justify-center">
+          <p className="text-[9px] text-slate-400">
+            No recent activity yet.
+          </p>
+        </div>
       ) : (
-        <div className="space-y-4">
-          {activity.map((item) => (
-            <div key={item.id} className="flex items-start gap-3">
-              <div className={cn(
-                'w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 mt-0.5',
-                getAvatarColor(item.user.name)
-              )}>
-                {getInitials(item.user.name)}
+        /* ONLY CONTENT SCROLLS */
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <div className="divide-y divide-slate-100">
+            {activity.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-start gap-2 px-3 py-1.5 hover:bg-slate-50"
+              >
+                <div
+                  className={cn(
+                    `
+                      mt-0.5 flex h-5 w-5
+                      shrink-0 items-center justify-center
+                      rounded-full text-[7px]
+                      font-semibold text-white
+                    `,
+                    getAvatarColor(item.user.name)
+                  )}
+                >
+                  {getInitials(item.user.name)}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <p className="line-clamp-2 text-[8px] leading-[1.2] text-slate-600">
+                    <span className="font-semibold text-slate-800">
+                      {item.user.name}
+                    </span>{' '}
+                    {item.message}
+                  </p>
+
+                  <RelativeTime
+                    date={item.createdAt}
+                    className="mt-0.5 block text-[7px] text-slate-400"
+                  />
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-foreground leading-relaxed">
-                  <span className="font-medium">{item.user.name}</span>
-                  {' '}{item.message}
-                </p>
-                <RelativeTime
-                  date={item.createdAt}
-                  className="block text-xs text-slate-400 mt-0.5"
-                />
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
     </div>
   )
 }
-
-
