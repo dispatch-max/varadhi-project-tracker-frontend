@@ -7,6 +7,7 @@ export const metadata = {
 
 export default function ProjectsPage() {
   return (
+<<<<<<< HEAD
     <div className="space-y-6">
 
       {/* Page Header */}
@@ -25,6 +26,10 @@ export default function ProjectsPage() {
         <ProjectsList />
       </Suspense>
 
+=======
+    <div className="p-2.5">
+      <ProjectsList />
+>>>>>>> e904b81 (Update export modal and document table layout)
     </div>
   )
 }

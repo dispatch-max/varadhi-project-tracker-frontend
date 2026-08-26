@@ -1,5 +1,5 @@
 import { RegisterForm } from '@/components/auth/register-form'
-
+import logoImg from '@/../public/projectlogo-removebg-preview.png'
 export const metadata = {
   title: 'Register',
 }
@@ -11,8 +11,12 @@ export default function RegisterPage() {
 
         {/* Logo & Title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-violet-600 text-white font-bold text-xl mb-4">
-            V
+           <div className="inline-flex items-center justify-center w-14 h-14  mb-4">
+            <img 
+              src={logoImg.src} 
+              alt="Varadhi Logo" 
+              className="w-8 h-8 object-contain" 
+            />
           </div>
           <h1 className="text-2xl font-semibold text-foreground">
             Create Account
