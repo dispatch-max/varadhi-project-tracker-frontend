@@ -205,7 +205,7 @@ export function ExportModal({ open, onClose, projects = [] }) {
       title="Export Reports"
       subtitle="Download project reports in your desired format"
     >
-      <div className="rounded-2xl bg-violet-50 p-5 mb-6 flex gap-4">
+      <div className="rounded-2xl  p-5 mb-6 flex gap-4">
         <div className="bg-violet-600 text-white p-3 rounded-xl shrink-0 h-12 w-12 flex items-center justify-center">
           <Sparkles />
         </div>
