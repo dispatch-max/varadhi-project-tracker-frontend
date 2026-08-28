@@ -3,20 +3,7 @@
 import { useState, useEffect } from 'react'
 import { dashboardApi } from '@/lib/api/dashboard.api'
 import { getInitials, getAvatarColor, cn } from '@/utils'
-import { formatDistanceToNow, parseISO } from 'date-fns'
-
-function RelativeTime({ dateString }) {
-  const [label, setLabel] = useState('')
-
-  useEffect(() => {
-    setLabel(
-      formatDistanceToNow(parseISO(dateString), { addSuffix: true })
-    )
-  }, [dateString])
-
-  if (!label) return null
-  return <p className="text-xs text-slate-400 mt-0.5">{label}</p>
-}
+import { RelativeTime } from '@/components/shared/relative-time'
 
 // Skeleton loader
 function ActivitySkeleton() {
@@ -50,9 +37,10 @@ export function RecentActivity() {
   }, [])
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-5 h-full">
-      <h3 className="text-sm font-semibold text-slate-800 mb-4">
-        Recent Activity
+    <div className="bg-card rounded-xl border border-border p-5 h-[320px] overflow-y-auto">
+      
+      <h3 className="text-sm font-semibold text-foreground mb-4">
+        Recent Activity 
       </h3>
 
       {isLoading ? (
@@ -74,11 +62,14 @@ export function RecentActivity() {
                 {getInitials(item.user.name)}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-slate-700 leading-relaxed">
+                <p className="text-xs text-foreground leading-relaxed">
                   <span className="font-medium">{item.user.name}</span>
                   {' '}{item.message}
                 </p>
-                <RelativeTime dateString={item.createdAt} />
+                <RelativeTime
+                  date={item.createdAt}
+                  className="block text-xs text-slate-400 mt-0.5"
+                />
               </div>
             </div>
           ))}

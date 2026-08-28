@@ -27,5 +27,15 @@ export const dashboardApi = {
     return data.data
   },
 
+  // Per-project health (on_track / at_risk / delayed) + overall completion.
+  getProjectHealth: async () => {
+    const { data } = await apiClient.get('/dashboard/project-health')
+    return data.data
+  },
 
+  // Gantt bars with offset/width already expressed as percentages.
+  getGantt: async () => {
+    const { data } = await apiClient.get('/dashboard/gantt')
+    return data.data
+  },
 }

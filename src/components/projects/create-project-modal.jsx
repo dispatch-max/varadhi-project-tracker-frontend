@@ -1,11 +1,13 @@
 'use client'
 
-import { useState,useEffect } from 'react'
+import { useState } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { projectsApi } from '@/lib/api/projects.api'
+import { useUsers, activeUsers, groupUsersForManagerPicker } from '@/hooks/use-users'
+import { getInitials, getAvatarColor, cn } from '@/utils'
 
 export function CreateProjectModal({ onClose, onSuccess }) {
   const [formData, setFormData] = useState({
@@ -13,26 +15,33 @@ export function CreateProjectModal({ onClose, onSuccess }) {
     description: '',
     startDate: '',
     endDate: '',
-     team: [],
+    // '' means "assign me as manager" — the backend already falls back to the
+    // creator when managerId is absent.
+    managerId: '',
+    memberIds: [],
   })
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState({})
-const [members, setMembers] = useState([])
-useEffect(() => {
-  async function loadMembers() {
-    try {
-      const res = await projectsApi.getMembers()
-      setMembers(res.data)
-    } catch (error) {
-      console.log("Failed to load members", error)
-    }
-  }
 
-  loadMembers()
-}, [])
+  // Manager picker and member checkboxes both read from this one fetch; the
+  // old separate projectsApi.getMembers() effect duplicated the same /users
+  // request and its result was no longer rendered anywhere.
+  const { users, isLoading: usersLoading, error: usersError, reload: reloadUsers } = useUsers()
+  const { privileged, employees } = groupUsersForManagerPicker(users)
+  const selectableMembers = activeUsers(users)
+
   function handleChange(e) {
     setFormData({ ...formData, [e.target.name]: e.target.value })
     setErrors({ ...errors, [e.target.name]: '' })
+  }
+
+  function toggleMember(userId) {
+    setFormData((prev) => ({
+      ...prev,
+      memberIds: prev.memberIds.includes(userId)
+        ? prev.memberIds.filter((id) => id !== userId)
+        : [...prev.memberIds, userId],
+    }))
   }
 
   function validate() {
@@ -56,7 +65,12 @@ useEffect(() => {
 
     setIsLoading(true)
     try {
-      await projectsApi.create(formData)
+      // '' -> null so the backend's `managerId || req.user.id` fallback
+      // (assign the creator) reads clearly rather than relying on '' being falsy.
+      await projectsApi.create({
+        ...formData,
+        managerId: formData.managerId || null,
+      })
       onSuccess?.()
       onClose()
     } catch (err) {

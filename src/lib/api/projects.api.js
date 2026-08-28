@@ -15,10 +15,13 @@ export const projectsApi = {
     const { data } = await apiClient.get(`/projects/${id}`)
     return data.data
   },
-  // Get all members
+  // Get all members. Unwraps the standard envelope like every sibling method —
+  // the previous version referenced an undefined `api` and returned the raw
+  // axios response, so any caller would have thrown.
   getMembers: async () => {
-  return api.get('/users')
-},
+    const { data } = await apiClient.get('/users')
+    return data.data
+  },
   // Create new project
   create: async (projectData) => {
     const { data } = await apiClient.post('/projects', projectData)

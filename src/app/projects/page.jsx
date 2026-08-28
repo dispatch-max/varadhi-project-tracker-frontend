@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { ProjectsList } from '@/components/projects/projects-list'
 
 export const metadata = {

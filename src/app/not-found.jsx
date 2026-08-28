@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="text-center max-w-md">
 
         {/* Big 404 */}
@@ -18,10 +18,10 @@ export default function NotFound() {
         </div>
 
         {/* Message */}
-        <h1 className="text-xl font-semibold text-slate-800 mb-2">
+        <h1 className="text-xl font-semibold text-foreground mb-2">
           Page not found
         </h1>
-        <p className="text-sm text-slate-500 mb-8 leading-relaxed">
+        <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
           The page you are looking for doesn&apos;t exist or
           you don&apos;t have permission to view it.
         </p>
@@ -36,7 +36,7 @@ export default function NotFound() {
           </Link>
           <Link
             href="/auth/login"
-            className="px-5 py-2.5 bg-white text-slate-700 text-sm font-medium rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
+            className="px-5 py-2.5 bg-card text-foreground text-sm font-medium rounded-lg border border-border hover:bg-background transition-colors"
           >
             Sign in
           </Link>

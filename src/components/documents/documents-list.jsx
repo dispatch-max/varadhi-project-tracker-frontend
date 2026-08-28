@@ -195,6 +195,13 @@ export function DocumentsList() {
   const imgCount = documents.filter((d) => ['png', 'jpg', 'jpeg'].includes(d.fileType)).length
   const zipCount = documents.filter((d) => d.fileType === 'zip').length
 
+  // Only meaningful while viewing every folder at once; null hides the hint.
+  // Documents keep their rows when a folder is deleted (folder_id -> NULL), so
+  // this surfaces those "unfiled" files rather than letting them go unnoticed.
+  const unfiledCount = selectedFolder === 'all'
+    ? documents.filter((d) => !d.folder).length
+    : null
+
   const selectedFolderName = folders.find((f) => f.id === selectedFolder)?.name || 'All Documents'
 
   return (
@@ -232,7 +239,7 @@ export function DocumentsList() {
             <p className="text-base font-bold text-slate-800 leading-none">{pdfCount + docCount}</p>
             <p className="text-[10px] text-slate-400 mt-0.5">Docs & PDFs</p>
           </div>
-        </div>
+        ))}
 
         <div className="p-2.5 bg-white rounded-lg border border-slate-200 flex items-center space-x-2.5 shadow-xs">
           <div className="p-2 bg-amber-50 text-amber-600 rounded-lg">
@@ -253,6 +260,28 @@ export function DocumentsList() {
             <p className="text-[10px] text-slate-400 mt-0.5">Archives</p>
           </div>
         </div>
+
+        <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+          className="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white text-slate-700"
+        >
+          <option value="all">All Types</option>
+          <option value="pdf">PDF</option>
+          <option value="docx">DOCX</option>
+          <option value="xlsx">XLSX</option>
+          <option value="png">PNG</option>
+          <option value="jpg">JPG</option>
+          <option value="zip">ZIP</option>
+        </select>
+
+        <Button
+          onClick={() => setShowUploadModal(true)}
+          className="bg-violet-600 hover:bg-violet-700 flex-shrink-0"
+        >
+          <Upload className="w-4 h-4 mr-2" />
+          Upload File
+        </Button>
       </div>
 
       {/* ─── 2. Recently Opened Row ─────────────────────────────────────── */}
@@ -274,10 +303,14 @@ export function DocumentsList() {
                   <p className="text-[10px] text-slate-400 truncate">{doc.project?.name || 'General'}</p>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
+              <div className="min-w-0">
+                <p className="text-xl font-bold text-slate-800 truncate">{stat.value}</p>
+                <p className="text-xs text-slate-400">{stat.label}</p>
+              </div>
+            </div>
+          )
+        })}
+      </div>
 
       {/* ─── 3. Action Toolbar & Path Breadcrumbs ───────────────────────── */}
       <div className="bg-white p-2.5 rounded-lg border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-2">
@@ -286,6 +319,11 @@ export function DocumentsList() {
           <span>Documents</span>
           <ChevronRight className="w-3 h-3 text-slate-400" />
           <span className="text-violet-600 font-semibold">{selectedFolderName}</span>
+          {unfiledCount > 0 && (
+            <span className="ml-2 text-slate-400">
+              ({unfiledCount} unfiled)
+            </span>
+          )}
         </div>
 
         {/* View Controls & Filter Actions */}
@@ -439,20 +477,20 @@ export function DocumentsList() {
                             <Pencil className="w-2.5 h-2.5" />
                           </button>
                           <button
-                            onClick={() => setFolderDeleteTarget(f)}
-                            className="text-slate-400 hover:text-red-600 p-0.5"
+                            onClick={() => setDeleteTarget(doc)}
+                            className="p-1 hover:text-red-600 rounded transition"
+                            title="Delete"
                           >
                             <Trash2 className="w-2.5 h-2.5" />
                           </button>
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-            ))}
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </div>
 
         {/* ─── Center Documents Listing ─────────────────────────────────── */}
         <div
@@ -555,7 +593,7 @@ export function DocumentsList() {
                     ))}
                   </div>
                 </div>
-              )}
+              </div>
 
               {/* Compact Pagination Bar */}
               <div className="flex items-center justify-between px-3 py-2 border-t border-slate-100 bg-slate-50/60">
@@ -566,6 +604,7 @@ export function DocumentsList() {
                   </span>{' '}
                   of <span className="font-semibold text-slate-700">{filtered.length}</span>
                 </p>
+              )}
 
                 <div className="flex items-center gap-1">
                   <button
@@ -586,7 +625,7 @@ export function DocumentsList() {
                     <ChevronRight className="w-3 h-3" />
                   </button>
                 </div>
-              </div>
+              )}
 
             </div>
           ) : (
@@ -658,8 +697,14 @@ export function DocumentsList() {
               )}
             </div>
           </div>
-        )}
-      </div>
+          <p className="text-sm font-medium text-slate-600">No documents found</p>
+          <p className="text-xs text-slate-400 mt-1">
+            {selectedFolder !== 'all'
+              ? 'This folder is empty — upload a file or move one here'
+              : 'Upload a file or try a different search'}
+          </p>
+        </div>
+      )}
 
       {/* ─── Modals & Alert Dialogs ──────────────────────────────────────── */}
       <AlertDialog

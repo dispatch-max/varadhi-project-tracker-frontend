@@ -12,6 +12,7 @@ import {
 import { projectsApi } from '@/lib/api/projects.api'
 import { useAuthStore } from '@/store/auth.store'
 import { EditProjectModal } from '@/components/projects/edit-project-modal'
+import { AddProjectMember } from '@/components/projects/add-project-member'
 import { StatusBadge, PriorityBadge, TypeBadge } from '@/components/tasks/task-badge'
 import {
   PROJECT_STATUS_COLORS, PROJECT_STATUS_LABELS,
@@ -21,6 +22,12 @@ import {
   formatDate, calcProgress, getInitials,
   getAvatarColor, isOverdue, cn
 } from '@/utils'
+
+// The completion percentages the backend fires a project_milestone
+// notification at — see MILESTONE_THRESHOLDS in tasks.controller.js. Both
+// sides round the same way (completed / total, Math.round), so a tick sitting
+// behind the fill is exactly when the manager was notified.
+const MILESTONES = [25, 50, 75, 100]
 
 // ─── Skeleton ──────────────────────────────────────────────────────────────────
 function PageSkeleton() {
@@ -252,6 +259,10 @@ export default function ProjectDetailPage({ params }) {
               )
             })}
           </div>
+          <p className="text-xs text-slate-400 mt-1">
+            Milestones at {MILESTONES.map((m) => `${m}%`).join(', ')} — the project
+            manager is notified each time one is reached.
+          </p>
         </div>
 
         {/* Right Side Header Box: Wide Progress Bar & Action Buttons */}
@@ -553,6 +564,7 @@ export default function ProjectDetailPage({ params }) {
               </tbody>
             </table>
           )}
+        </div>
         </div>
       )}
 

@@ -11,7 +11,7 @@ import { cn } from '@/utils'
 const STAT_CONFIG = [
   { label: 'Total Projects',  key: 'totalProjects',   icon: FolderOpen,     color: 'bg-violet-50 text-violet-600', trend: 'All projects'       },
   { label: 'Active Projects', key: 'activeProjects',  icon: FolderOpen,     color: 'bg-blue-50 text-blue-600',    trend: 'Currently running'  },
-  { label: 'Total Tasks',     key: 'totalTasks',      icon: ListChecks,     color: 'bg-slate-50 text-slate-600',  trend: 'Across all projects'},
+  { label: 'Total Tasks',     key: 'totalTasks',      icon: ListChecks,     color: 'bg-background text-muted-foreground',  trend: 'Across all projects'},
   { label: 'Completed',       key: 'completedTasks',  icon: CheckCircle2,   color: 'bg-green-50 text-green-600',  trend: 'Tasks finished'     },
   { label: 'In Progress',     key: 'inProgressTasks', icon: Clock,          color: 'bg-amber-50 text-amber-600',  trend: 'Being worked on'    },
   { label: 'Overdue',         key: 'overdueTasks',    icon: AlertTriangle,  color: 'bg-red-50 text-red-600',      trend: 'Needs attention'    },
@@ -20,7 +20,7 @@ const STAT_CONFIG = [
 // Skeleton loader for a single card
 function StatSkeleton() {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-4 animate-pulse">
+    <div className="bg-card rounded-xl border border-border p-4 animate-pulse">
       <div className="w-9 h-9 bg-slate-100 rounded-lg mb-3" />
       <div className="h-7 w-12 bg-slate-100 rounded mb-2" />
       <div className="h-3 w-20 bg-slate-100 rounded mb-1" />
@@ -59,7 +59,7 @@ export function StatsCards() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {Array.from({ length: 6 }).map((_, i) => <StatSkeleton key={i} />)}
       </div>
     )
@@ -72,23 +72,26 @@ export function StatsCards() {
         return (
           <div
             key={stat.key}
-            className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-sm transition-shadow"
+            className="bg-card rounded-2xl border border-slate-100 shadow-sm
+            hover:shadow-lg
+            hover:-translate-y-1
+            transition-all
+            duration-300
+            p-6 transition-shadow"
           >
-            <div className={cn(
-              'w-9 h-9 rounded-lg flex items-center justify-center mb-3',
-              stat.color
-            )}>
-              <Icon className="w-4 h-4" />
-            </div>
-            <p className="text-2xl font-semibold text-slate-800 leading-none mb-1">
+<div className="flex justify-between items-start mb-5">
+  <p className="text-sm font-semibold text-foreground">
+    {stat.label}
+  </p>
+
+  <Icon className="w-4 h-4 text-slate-400" />
+</div>
+            <p className="text-3xl font-bold tracking-tight font-semibold text-foreground leading-none mb-1">
               {stats?.[stat.key] ?? 0}
             </p>
-            <p className="text-xs font-medium text-slate-600 mb-1">
-              {stat.label}
-            </p>
-            <p className="text-xs text-slate-400">
-              {stat.trend}
-            </p>
+<p className="text-sm text-muted-foreground">
+  {stat.trend}
+</p>
           </div>
         )
       })}

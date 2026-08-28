@@ -32,10 +32,23 @@ export function KanbanCard({ task }) {
       style={style}
       {...attributes}
       {...listeners}
-      className={cn(
-        'bg-white rounded-xl border border-slate-200 p-3.5 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-all',
-        isDragging && 'opacity-50 shadow-lg scale-105 rotate-1'
-      )}
+className={cn(
+  'bg-card rounded-2xl border-2 p-4 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-all',
+
+  task.status === 'todo'
+    ? 'border-slate-300'
+    : task.status === 'in_progress'
+    ? 'border-amber-500'
+    : task.status === 'in_review' 
+    ? 'border-blue-500'
+    : task.status === 'completed'
+    ? 'border-green-500 bg-green-50'
+    : overdue
+    ? 'border-red-500 bg-red-50'
+    : 'border-border',
+
+  isDragging && 'opacity-50 shadow-lg scale-105 rotate-1'
+)}
     >
       {/* Type + Priority */}
       <div className="flex items-center gap-1.5 mb-2.5 flex-wrap">
@@ -44,19 +57,19 @@ export function KanbanCard({ task }) {
       </div>
 
       {/* Title */}
-      <p className="text-sm font-medium text-slate-800 leading-snug mb-2.5">
+     <p className="text-[15px] font-semibold text-foreground leading-6 mb-3">
         {task.title}
       </p>
 
       {/* Description */}
       {task.description && (
-        <p className="text-xs text-slate-400 line-clamp-2 mb-2.5 leading-relaxed">
+        <p className="text-xs text-muted-foreground line-clamp-3 mb-3 leading-relaxed">
           {task.description}
         </p>
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between mt-1">
+      <div className="flex items-center justify-between mt-4">
 
         {/* Due date */}
         {task.dueDate ? (
@@ -64,10 +77,13 @@ export function KanbanCard({ task }) {
             'flex items-center gap-1 text-xs',
             overdue ? 'text-red-500' : 'text-slate-400'
           )}>
-            {overdue
-              ? <AlertTriangle className="w-3 h-3" />
-              : <Calendar className="w-3 h-3" />
-            }
+{task.status === 'completed' ? (
+  <Calendar className="w-3 h-3 text-green-600" />
+) : overdue ? (
+  <AlertTriangle className="w-3 h-3 text-red-500" />
+) : (
+  <Calendar className="w-3 h-3" />
+)}
             <span>{formatDate(task.dueDate, 'MMM dd')}</span>
           </div>
         ) : (
@@ -75,21 +91,31 @@ export function KanbanCard({ task }) {
         )}
 
         {/* Assignee avatar */}
-        {task.assignee && (
-          <div
-            title={task.assignee.name}
-            className={cn(
-              'w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold',
-              getAvatarColor(task.assignee.name)
-            )}
-          >
-            {getInitials(task.assignee.name)}
-          </div>
-        )}
+{/* Assignee */}
+{task.assignee && (
+  <div className="flex items-center gap-2">
+    <div
+      title={task.assignee.name}
+      className={cn(
+        'w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0',
+        getAvatarColor(task.assignee.name)
+      )}
+    >
+      {getInitials(task.assignee.name)}
+    </div>
+
+    <span
+      className="text-[10px] text-muted-foreground leading-4 line-clamp-2 max-w-[90px]"
+      title={task.assignee.name}
+    >
+      {task.assignee.name}
+    </span>
+  </div>
+)}
       </div>
 
       {/* Project name */}
-      <div className="mt-2 pt-2 border-t border-slate-100">
+      <div className="mt-4 pt-3 border-t border-border">
         <p className="text-xs text-slate-400 truncate">
           {task.project?.name}
         </p>

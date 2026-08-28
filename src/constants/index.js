@@ -7,7 +7,7 @@ export const TASK_STATUS_LABELS = {
 }
 
 export const TASK_STATUS_COLORS = {
-  todo: 'bg-slate-100 text-slate-700',
+  todo: 'bg-slate-100 text-foreground',
   in_progress: 'bg-amber-100 text-amber-700',
   in_review: 'bg-blue-100 text-blue-700',
   completed: 'bg-green-100 text-green-700',
@@ -22,7 +22,7 @@ export const TASK_PRIORITY_LABELS = {
 }
 
 export const TASK_PRIORITY_COLORS = {
-  low: 'bg-slate-100 text-slate-600',
+  low: 'bg-slate-100 text-muted-foreground',
   medium: 'bg-amber-100 text-amber-700',
   high: 'bg-orange-100 text-orange-700',
   critical: 'bg-red-100 text-red-700',
@@ -57,7 +57,7 @@ export const PROJECT_STATUS_COLORS = {
   active: 'bg-green-100 text-green-700',
   on_hold: 'bg-amber-100 text-amber-700',
   completed: 'bg-blue-100 text-blue-700',
-  archived: 'bg-slate-100 text-slate-600',
+  archived: 'bg-slate-100 text-muted-foreground',
 }
 
 // ─── User Roles ────────────────────────────────────────────────────────────────
@@ -70,17 +70,30 @@ export const USER_ROLE_LABELS = {
 export const USER_ROLE_COLORS = {
   admin: 'bg-violet-100 text-violet-700',
   manager: 'bg-blue-100 text-blue-700',
-  employee: 'bg-slate-100 text-slate-700',
+  employee: 'bg-slate-100 text-foreground',
 }
 
 // ─── Navigation ────────────────────────────────────────────────────────────────
 export const NAV_ITEMS = [
   { label: 'Dashboard',  href: '/dashboard',  icon: 'LayoutDashboard', roles: ['admin', 'manager', 'employee'] },
+  // hidden: reachable only via the bell dropdown's "View all notifications" —
+  // kept in NAV_ITEMS (not deleted) so Topbar's title lookup still resolves
+  // 'Notifications' when this route is open; sidebar filters `hidden` out.
+  { label: 'Notifications', href: '/notifications', icon: 'Bell',      roles: ['admin', 'manager', 'employee'], hidden: true },
   { label: 'Projects',   href: '/projects',   icon: 'FolderOpen',      roles: ['admin', 'manager', 'employee'] },
   { label: 'Tasks',      href: '/tasks',       icon: 'ListChecks',      roles: ['admin', 'manager', 'employee'] },
   { label: 'Kanban',     href: '/kanban',      icon: 'LayoutKanban',    roles: ['admin', 'manager', 'employee'] },
+  // Module 4. Every role: a calendar connection is personal, so an employee
+  // syncing their own deadlines needs this as much as a manager does.
+  { label: 'Calendar',   href: '/calendar',    icon: 'CalendarSync',    roles: ['admin', 'manager', 'employee'] },
   { label: 'Documents',  href: '/documents',   icon: 'Files',           roles: ['admin', 'manager', 'employee'] },
+  { label: 'Leave',      href: '/leave-management', icon: 'CalendarDays', roles: ['admin', 'manager', 'employee'] },
+  { label: 'Time',       href: '/time-management', icon: 'Clock3', roles: ['admin', 'manager', 'employee'] },
   { label: 'Reports',    href: '/reports',     icon: 'BarChart3',       roles: ['admin', 'manager'] },
+  // Module 5. Admin/manager only, matching the backend's restrictTo on
+  // /api/teams — a webhook posts a whole project's activity to a channel, so
+  // configuring one is an administrative act, not a personal preference.
+  { label: 'Teams',      href: '/teams',       icon: 'MessageSquare',   roles: ['admin', 'manager'] },
   { label: 'Users',      href: '/users',       icon: 'Users',           roles: ['admin'] },
   { label: 'Settings',   href: '/settings',    icon: 'Settings',        roles: ['admin', 'manager', 'employee'] },
 ]

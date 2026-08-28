@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import {
   Search, UserPlus, MoreHorizontal,
   ShieldCheck, Shield, User,
@@ -34,7 +35,7 @@ const STATUS_CONFIG = {
   },
   inactive: {
     label: 'Inactive',
-    color: 'bg-slate-100 text-slate-500',
+    color: 'bg-slate-100 text-muted-foreground',
     icon: XCircle,
   },
   invited: {
@@ -47,8 +48,12 @@ const STATUS_CONFIG = {
 
 export function UsersList() {
   const { user: currentUser } = useAuthStore()
+  const searchParams = useSearchParams()
   const [search, setSearch] = useState('')
-  const [roleFilter, setRoleFilter] = useState('all')
+  // Seeded from the URL so the TeamsFiltersCard buttons (which push
+  // ?role=/?status=) actually filter this list.
+  const [roleFilter, setRoleFilter] = useState(searchParams.get('role') || 'all')
+  const statusFilter = searchParams.get('status') || ''
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [users, setUsers] = useState([])
@@ -89,7 +94,10 @@ export function UsersList() {
       email.toLowerCase().includes(search.toLowerCase())
     const matchesRole =
       roleFilter === 'all' || u.role === roleFilter
-    return matchesSearch && matchesRole
+    // Status comes from the URL only (the sidebar's "Pending Invites"), so it
+    // has no dropdown of its own.
+    const matchesStatus = !statusFilter || u.status === statusFilter
+    return matchesSearch && matchesRole && matchesStatus
   })
 
   // Persist role change to the backend, then refetch so UI matches the DB.
@@ -129,13 +137,15 @@ export function UsersList() {
   return (
     <div>
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+
+
+{/* Stats Row */}
+<div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {[
           {
             label: 'Total Members',
             value: users.length,
-            color: 'text-slate-800',
+            color: 'text-foreground',
           },
           {
             label: 'Active',
@@ -155,7 +165,17 @@ export function UsersList() {
         ].map((stat) => (
           <div
             key={stat.label}
-            className="bg-white rounded-xl border border-slate-200 px-4 py-3"
+ className="
+bg-card
+rounded-2xl
+border
+border-slate-100
+shadow-sm
+px-6
+py-5
+hover:shadow-md
+transition
+"
           >
             <p className={cn('text-2xl font-semibold', stat.color)}>
               {stat.value}
@@ -176,7 +196,7 @@ export function UsersList() {
             placeholder="Search by name or email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white placeholder:text-slate-400"
+            className="w-full pl-9 pr-4 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-card placeholder:text-slate-400"
           />
         </div>
 
@@ -184,7 +204,7 @@ export function UsersList() {
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
-          className="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white text-slate-700"
+          className="px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-card text-foreground"
         >
           <option value="all">All Roles</option>
           <option value="admin">Admin</option>
@@ -205,28 +225,28 @@ export function UsersList() {
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="bg-card rounded-xl border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50">
-                <th className="text-left px-5 py-3 text-xs font-medium text-slate-500">
+              <tr className="border-b border-slate-100 bg-background">
+                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground">
                   Member
                 </th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-slate-500">
+                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground">
                   Role
                 </th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-slate-500">
+                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground">
                   Status
                 </th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-slate-500 whitespace-nowrap">
+                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground whitespace-nowrap">
                   Tasks
                 </th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-slate-500 whitespace-nowrap">
+                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground whitespace-nowrap">
                   Joined
                 </th>
                 {isAdmin && (
-                  <th className="px-5 py-3 text-xs font-medium text-slate-500">
+                  <th className="px-5 py-3 text-xs font-medium text-muted-foreground">
                     Actions
                   </th>
                 )}
@@ -244,7 +264,7 @@ export function UsersList() {
                 return (
                   <tr
                     key={member.id}
-                    className="hover:bg-slate-50 transition-colors"
+                    className="hover:bg-background transition-colors"
                   >
                     {/* Member */}
                     <td className="px-5 py-3">
@@ -257,7 +277,7 @@ export function UsersList() {
                         </div>
                         <div>
                           <div className="flex items-center gap-1.5">
-                            <p className="text-sm font-medium text-slate-800">
+                            <p className="text-sm font-medium text-foreground">
                               {member.name}
                             </p>
                             {isCurrentUser && (
@@ -301,14 +321,14 @@ export function UsersList() {
 
                     {/* Tasks */}
                     <td className="px-5 py-3">
-                      <span className="text-sm text-slate-600">
+                      <span className="text-sm text-muted-foreground">
                         {member.tasksCount}
                       </span>
                     </td>
 
                     {/* Joined */}
                     <td className="px-5 py-3">
-                      <span className="text-xs text-slate-500 whitespace-nowrap">
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
                         {formatDate(member.createdAt)}
                       </span>
                     </td>
@@ -324,14 +344,14 @@ export function UsersList() {
                               )
                             }
                             disabled={isCurrentUser || isActioning}
-                            className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="p-1.5 text-slate-400 hover:text-muted-foreground hover:bg-slate-100 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"
                           >
                             <MoreHorizontal className="w-4 h-4" />
                           </button>
 
                           {/* Dropdown Menu */}
                           {openMenuId === member.id && (
-                            <div className="absolute right-0 top-8 w-48 bg-white border border-slate-200 rounded-xl shadow-lg z-10 py-1">
+                            <div className="absolute right-0 top-8 w-48 bg-card border border-border rounded-xl shadow-lg z-10 py-1">
 
                               {/* Change Role */}
                               <p className="px-3 py-1.5 text-xs font-medium text-slate-400">
@@ -345,10 +365,10 @@ export function UsersList() {
                                   }
                                   disabled={isActioning}
                                   className={cn(
-                                    'w-full text-left px-3 py-2 text-sm hover:bg-slate-50 flex items-center gap-2 disabled:opacity-50',
+                                    'w-full text-left px-3 py-2 text-sm hover:bg-background flex items-center gap-2 disabled:opacity-50',
                                     member.role === role
                                       ? 'text-violet-600 font-medium'
-                                      : 'text-slate-700'
+                                      : 'text-foreground'
                                   )}
                                 >
                                   {member.role === role && (
@@ -367,7 +387,7 @@ export function UsersList() {
                                 onClick={() => handleDeactivate(member.id)}
                                 disabled={isActioning}
                                 className={cn(
-                                  'w-full text-left px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50',
+                                  'w-full text-left px-3 py-2 text-sm hover:bg-background disabled:opacity-50',
                                   member.status === 'active'
                                     ? 'text-red-500'
                                     : 'text-green-600'
@@ -395,7 +415,7 @@ export function UsersList() {
             <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3">
               <Search className="w-5 h-5 text-slate-400" />
             </div>
-            <p className="text-sm font-medium text-slate-600">
+            <p className="text-sm font-medium text-muted-foreground">
               No members found
             </p>
             <p className="text-xs text-slate-400 mt-1">

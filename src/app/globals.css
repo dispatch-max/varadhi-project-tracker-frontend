@@ -112,43 +112,43 @@
   --sidebar-ring: oklch(0.708 0 0);
 
   /* Custom Application Brand Tokens */
-  --purple-700: #6D28D9; 
-  --purple-600: #7C3AED; 
+  --purple-700: #6D28D9;
+  --purple-600: #7C3AED;
   --purple-500: #8B5CF6;
-  --purple-300: #C4B5FD; 
-  --purple-100: #EDE7FE; 
+  --purple-300: #C4B5FD;
+  --purple-100: #EDE7FE;
   --purple-050: #F4F0FF;
-  
-  --ink: #1E1B26; 
-  --ink-2: #3F3A4A; 
-  --muted-color: #8A8597; 
+
+  --ink: #1E1B26;
+  --ink-2: #3F3A4A;
+  --muted-color: #8A8597;
   --muted-2: #A9A4B6;
-  
-  --bg: #F2F1F6; 
-  --line: #EDECF2; 
+
+  --bg: #F2F1F6;
+  --line: #EDECF2;
   --soft: #F7F6FA;
-  
-  --green: #22B573; 
-  --green-bg: #E7F8F0; 
+
+  --green: #22B573;
+  --green-bg: #E7F8F0;
   --green-tx: #159A5F;
-  --amber: #F0A63C; 
-  --amber-bg: #FDF3E2; 
+  --amber: #F0A63C;
+  --amber-bg: #FDF3E2;
   --amber-tx: #C4820F;
-  --red: #F0596B;   
-  --red-bg: #FEEDEF;   
+  --red: #F0596B;
+  --red-bg: #FEEDEF;
   --red-tx: #D9445A;
-  --blue: #5B7CFA;  
-  --blue-bg: #EAF1FF;  
+  --blue: #5B7CFA;
+  --blue-bg: #EAF1FF;
   --blue-tx: #3D6FE0;
-  --pink-bg: #FDECF5; 
+  --pink-bg: #FDECF5;
   --pink-tx: #C2418A;
-  --gray-bg: #F1F0F5; 
+  --gray-bg: #F1F0F5;
   --gray-tx: #6E6880;
 
-  --r-lg: 22px; 
-  --r-md: 16px; 
+  --r-lg: 22px;
+  --r-md: 16px;
   --r-sm: 12px;
-  
+
   --shadow: 0 1px 2px rgba(30,27,38,.04), 0 8px 24px rgba(30,27,38,.05);
   --shadow-soft: 0 2px 10px rgba(30,27,38,.04);
   --shadow-pop: 0 12px 34px rgba(30,27,38,.14);
@@ -196,6 +196,7 @@
 /* ==========================================
    3. BASE STYLES & RESET FIXES
    ========================================== */
+
 @layer base {
   * {
     box-sizing: border-box;

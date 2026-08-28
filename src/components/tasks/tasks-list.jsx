@@ -1,8 +1,8 @@
 
 'use client'
-
+import { TaskTabs } from './task-tabs'
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Plus, Search, Calendar,
   AlertTriangle, MoreHorizontal,
@@ -40,7 +40,7 @@ function TaskRowSkeleton() {
   )
 }
 
-function TaskActionsMenu({ task, onDeleted, onEdit }) {
+function TaskActionsMenu({ task, onDeleted, onEdit, openUp = false }) {
   const router = useRouter()
   const { user } = useAuthStore()
 
@@ -77,11 +77,11 @@ function TaskActionsMenu({ task, onDeleted, onEdit }) {
     }
   }
 
-  return (
-    <div className="relative">
+return (
+  <div className="relative inline-block">
       <button
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen((v) => !v) }}
-        className="text-slate-400 hover:text-slate-600 p-1 rounded hover:bg-slate-100"
+        className="text-slate-400 hover:text-muted-foreground p-1 rounded hover:bg-slate-100"
         aria-label="Task actions"
       >
         <MoreHorizontal className="w-4 h-4" />
@@ -93,12 +93,16 @@ function TaskActionsMenu({ task, onDeleted, onEdit }) {
             className="fixed inset-0 z-10"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(false) }}
           />
-          <div className="absolute right-0 top-8 w-44 bg-white border border-slate-200 rounded-xl shadow-lg z-20 py-1">
-            <button onClick={handleView} className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+<div
+  className={`absolute right-0 w-44 bg-card border border-border rounded-xl shadow-lg z-[9999] py-1 ${
+    openUp ? "bottom-full mb-2" : "top-full mt-2"
+  }`}
+>
+            <button onClick={handleView} className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-background flex items-center gap-2">
               <Eye className="w-3.5 h-3.5 text-slate-400" />
               View Task
             </button>
-            <button onClick={handleEdit} className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+            <button onClick={handleEdit} className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-background flex items-center gap-2">
               <Pencil className="w-3.5 h-3.5 text-slate-400" />
               Edit Task
             </button>
@@ -142,6 +146,7 @@ export function TasksList() {
   const { user } = useAuthStore()
   const mounted = useHasMounted()
   const canCreateTask = mounted && ['admin', 'manager'].includes(user?.role)
+  const searchParams = useSearchParams()
 
 
 
@@ -149,10 +154,25 @@ export function TasksList() {
   const [tasks, setTasks] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(searchParams.get('search') || '')
   const [statusFilter, setStatusFilter] = useState('all')
   const [priorityFilter, setPriorityFilter] = useState('all')
+  // 'all' | 'mine' — drives the TaskTabs assignee scope.
+  const [scope, setScope] = useState('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
+  // Pagination
+const [currentPage, setCurrentPage] = useState(1)
+const TASKS_PER_PAGE = 15
+
+  // Picks up a search term the topbar navigated here with (?search=...),
+  // including when this page is already mounted and the term changes.
+  useEffect(() => {
+    // Same traced-false-positive as elsewhere in this app (e.g.
+    // use-has-mounted.js's setMounted(true)) — a plain setState with no
+    // async work, safe to run directly in the effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSearch(searchParams.get('search') || '')
+  }, [searchParams])
 
 
   // ---- NEW fetch from backend API ----
@@ -164,6 +184,9 @@ export function TasksList() {
       if (statusFilter !== 'all') filters.status = statusFilter
       if (priorityFilter !== 'all') filters.priority = priorityFilter
       if (search) filters.search = search
+      // "My Tasks" scope. Employees are already restricted to their own rows
+      // server-side, so this only changes what admins/managers see.
+      if (scope === 'mine' && user?.id) filters.assigneeId = user.id
       const response = await tasksApi.getAll(filters)
       setTasks(response.data || [])
     } catch (err) {
@@ -176,60 +199,124 @@ export function TasksList() {
 
   // Debounced fetch — waits 300ms after filter/search change
   useEffect(() => {
+    // Pagination
+const indexOfLastTask = currentPage * TASKS_PER_PAGE
+const indexOfFirstTask = indexOfLastTask - TASKS_PER_PAGE
+
+const currentTasks = tasks.slice(
+  indexOfFirstTask,
+  indexOfLastTask
+)
+
+const totalPages = Math.ceil(
+  tasks.length / TASKS_PER_PAGE
+)
     const timer = setTimeout(fetchTasks, 300)
     return () => clearTimeout(timer)
-  }, [search, statusFilter, priorityFilter])
+  }, [search, statusFilter, priorityFilter, scope])
+  const indexOfLastTask = currentPage * TASKS_PER_PAGE
+
+const indexOfFirstTask = indexOfLastTask - TASKS_PER_PAGE
+
+const currentTasks = tasks.slice(
+  indexOfFirstTask,
+  indexOfLastTask
+)
+
+const totalPages = Math.ceil(
+  tasks.length / TASKS_PER_PAGE
+)
 
 
   return (
     <div>
 
+      {/* Scope tabs — All Tasks / My Tasks */}
+      <div className="mb-4">
+        <TaskTabs
+          active={scope}
+          onChange={(next) => {
+            setScope(next)
+            setCurrentPage(1)
+          }}
+        />
+      </div>
+
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
 
         {/* Search */}
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-[320px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
             placeholder="Search tasks..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white placeholder:text-slate-400"
+            className="w-full pl-9 pr-4 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-card placeholder:text-slate-400"
           />
         </div>
-
+<div className="flex items-center gap-3">
         {/* Status Filter */}
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white text-slate-700"
-        >
-          <option value="all">All Status</option>
-          <option value="todo">To Do</option>
-          <option value="in_progress">In Progress</option>
-          <option value="in_review">In Review</option>
-          <option value="completed">Completed</option>
-        </select>
+<div className="h-[40px] w-[150px] overflow-y-auto border border-border rounded-lg bg-card p-2">
+  <div className="flex flex-col gap-1">
 
+    {[
+      { value: 'all', label: 'All Status' },
+      { value: 'todo', label: 'To Do' },
+      { value: 'in_progress', label: 'In Progress' },
+      { value: 'in_review', label: 'In Review' },
+      { value: 'completed', label: 'Completed' },
+    ].map((status) => (
+      <button
+        key={status.value}
+        onClick={() => setStatusFilter(status.value)}
+        className={cn(
+          'w-full text-left px-2 py-1 rounded-md text-sm transition',
+          statusFilter === status.value
+            ? 'bg-violet-600 text-white'
+            : 'text-foreground hover:bg-slate-100'
+        )}
+      >
+        {status.label}
+      </button>
+    ))}
+
+  </div>
+</div>
         {/* Priority Filter */}
-        <select
-          value={priorityFilter}
-          onChange={(e) => setPriorityFilter(e.target.value)}
-          className="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white text-slate-700"
-        >
-          <option value="all">All Priority</option>
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-          <option value="critical">Critical</option>
-        </select>
+<div className="h-[40px] w-[150px] overflow-y-auto border border-border rounded-lg bg-card p-2">
+  <div className="flex flex-col gap-1">
 
+    {[
+      { value: 'all', label: 'All Priority' },
+      { value: 'low', label: 'Low' },
+      { value: 'medium', label: 'Medium' },
+      { value: 'high', label: 'High' },
+      { value: 'critical', label: 'Critical' },
+    ].map((status) => (
+      <button
+        key={status.value}
+        onClick={() => setStatusFilter(status.value)}
+        className={cn(
+          'w-full text-left px-2 py-1 text-sm rounded-md transition',
+          statusFilter === status.value
+            ? 'bg-violet-600 text-white'
+            : 'hover:bg-slate-100 text-foreground'
+        )}
+      >
+        {status.label}
+      </button>
+    ))}
+
+  </div>
+</div>
+</div>
         {/* Create Button */}
         {canCreateTask && (
   <Button
     onClick={() => setShowCreateModal(true)}
-    className="bg-violet-600 hover:bg-violet-700 flex-shrink-0"
+    className="bg-violet-600 hover:bg-violet-700 shrink-0"
   >
     <Plus className="w-4 h-4 mr-2" />
     New Task
@@ -257,35 +344,37 @@ export function TasksList() {
       {/* Results count — only show when not loading */}
       {!isLoading && (
         <p className="text-xs text-slate-400 mb-4">
-          Showing {tasks.length} task{tasks.length !== 1 ? 's' : ''}
+          Showing {indexOfFirstTask + 1}-
+{Math.min(indexOfLastTask, tasks.length)}
+ of {tasks.length} tasks
         </p>
       )}
 
       {/* Tasks Table */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="bg-card rounded-xl border border-border overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full">  
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50">
-                <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 w-full">
+              <tr className="border-b border-slate-100 bg-background">
+                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground w-full">
                   Task
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 whitespace-nowrap">
+                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground whitespace-nowrap">
                   Project
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 whitespace-nowrap">
+                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground whitespace-nowrap">
                   Type
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 whitespace-nowrap">
+                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground whitespace-nowrap">
                   Priority
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 whitespace-nowrap">
+                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground whitespace-nowrap">
                   Status
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 whitespace-nowrap">
+                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground whitespace-nowrap">
                   Assignee
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-slate-500 whitespace-nowrap">
+                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground whitespace-nowrap">
                   Due Date
                 </th>
                 <th className="px-4 py-3" />
@@ -299,7 +388,7 @@ export function TasksList() {
 
               /* Real task rows */
               ) : tasks.length > 0 ? (
-                tasks.map((task) => {
+                currentTasks.map((task) => {
                   const overdue =
                     task.dueDate &&
                     task.status !== 'completed' &&
@@ -308,23 +397,16 @@ export function TasksList() {
                   return (
                     <tr
                       key={task.id}
-                      className="hover:bg-slate-50 transition-colors"
+                      className="hover:bg-background transition-colors"
                     >
+     
                       {/* Title */}
-                      <td className="px-4 py-4">
-                        <p className="text-base font-semibold text-slate-900 truncate max-w-sm">
-                          {task.title}
-                        </p>
-                        {/* {task.description && (
-                          <p className="text-xs text-slate-400 truncate max-w-xs mt-0.5">
-                            {task.description}
-                          </p>
-                        )} */}
-                      </td>
-
+                    <td className="px-4 py-4">
+                    <p className="text-base font-semibold text-foreground max-w-sm whitespace-normal break-words"> {task.title} </p>
+                     </td>
                       {/* Project */}
                       <td className="px-4 py-3">
-                        <span className="text-xs text-slate-500 whitespace-nowrap">
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
                           {task.project?.name}
                         </span>
                       </td>
@@ -354,7 +436,7 @@ export function TasksList() {
                             )}>
                               {getInitials(task.assignee.name)}
                             </div>
-                            <span className="text-xs text-slate-600 whitespace-nowrap">
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">
                               {task.assignee.name}
                             </span>
                           </div>
@@ -368,7 +450,7 @@ export function TasksList() {
                         {task.dueDate ? (
                           <div className={cn(
                             'flex items-center gap-1 text-xs whitespace-nowrap',
-                            overdue ? 'text-red-500' : 'text-slate-500'
+                            overdue ? 'text-red-500' : 'text-muted-foreground'
                           )}>
                             {overdue && <AlertTriangle className="w-3 h-3" />}
                             <Calendar className="w-3 h-3" />
@@ -381,13 +463,18 @@ export function TasksList() {
 
                       {/* Actions */}
                       <td className="px-4 py-3">
-                        <TaskActionsMenu
-                          task={task}
-                          onDeleted={fetchTasks}
-                        />
+                       <TaskActionsMenu
+                       task={task}
+                       onDeleted={fetchTasks}
+                       //to open up bar 
+                       openUp={
+currentTasks.indexOf(task) >=
+currentTasks.length - 2
+}
+                       />
                       </td>
                       {/* <td className="px-4 py-3">
-                        <button className="text-slate-400 hover:text-slate-600 p-1 rounded hover:bg-slate-100">
+                        <button className="text-slate-400 hover:text-muted-foreground p-1 rounded hover:bg-slate-100">
                           <MoreHorizontal className="w-4 h-4" />
                         </button>
                       </td> */}
@@ -402,7 +489,7 @@ export function TasksList() {
                     <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                       <Search className="w-5 h-5 text-slate-400" />
                     </div>
-                    <p className="text-sm font-medium text-slate-600">No tasks found</p>
+                    <p className="text-sm font-medium text-muted-foreground">No tasks found</p>
                     <p className="text-xs text-slate-400 mt-1">
                       Try changing your filters or create a new task
                     </p>
@@ -412,6 +499,59 @@ export function TasksList() {
 
             </tbody>
           </table>
+          <div className="flex items-center justify-between border-t border-border px-6 py-4">
+
+  <p className="text-sm text-muted-foreground">
+    Showing {indexOfFirstTask + 1}-
+    {Math.min(indexOfLastTask, tasks.length)}
+    of {tasks.length} tasks
+  </p>
+
+  <div className="flex items-center gap-2">
+
+    <button
+      disabled={currentPage === 1}
+      onClick={() =>
+        setCurrentPage(currentPage - 1)
+      }
+      className="px-3 py-2 rounded-lg border border-border text-sm disabled:opacity-50"
+    >
+      Previous
+    </button>
+
+    {Array.from(
+      { length: totalPages },
+      (_, index) => (
+        <button
+          key={index}
+          onClick={() =>
+            setCurrentPage(index + 1)
+          }
+          className={cn(
+            "w-9 h-9 rounded-lg text-sm transition",
+            currentPage === index + 1
+              ? "bg-violet-600 text-white"
+              : "border border-border hover:bg-slate-100"
+          )}
+        >
+          {index + 1}
+        </button>
+      )
+    )}
+
+    <button
+      disabled={currentPage === totalPages}
+      onClick={() =>
+        setCurrentPage(currentPage + 1)
+      }
+      className="px-3 py-2 rounded-lg border border-border text-sm disabled:opacity-50"
+    >
+      Next
+    </button>
+
+  </div>
+
+</div>
         </div>
       </div>
 

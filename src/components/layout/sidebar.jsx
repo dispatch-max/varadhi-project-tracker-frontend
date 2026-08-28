@@ -20,10 +20,18 @@ import {
 
 import { useAuthStore } from '@/store/auth.store'
 import { authApi } from '@/lib/api/auth.api'
+import { clearOfflineCaches } from '@/lib/offline-cache'
+import { disablePush } from '@/lib/push'
+import { countForUser, clearForUser } from '@/lib/outbox'
+import { release as releaseReplayLock } from '@/lib/replay-lock'
+import { useOutboxStore } from '@/store/outbox.store'
 import { NAV_ITEMS } from '@/constants'
 import { getInitials, getAvatarColor, cn } from '@/utils'
 import { useHasMounted } from '@/hooks/use-has-mounted'
 
+// NAV_ITEMS carries icon NAMES, not components, so every entry there needs a
+// matching key here. A missing key renders no icon at all (the JSX guards with
+// `{Icon && ...}`) rather than erroring — so an omission fails silently.
 const ICON_MAP = {
   LayoutDashboard,
   FolderOpen: FolderKanban,
@@ -33,11 +41,24 @@ const ICON_MAP = {
   BarChart3,
   Users,
   Settings,
+  Bell,
+  CalendarSync,
+  MessageSquare,
+  // Added by the V2.0 release branch's Leave/Time nav entries.
+  CalendarDays,
+  Clock3,
 }
 
 export function Sidebar({ collapsed, setCollapsed }) {
   const pathname = usePathname()
   const router = useRouter()
+
+  // Collapsed rail (w-16) vs full sidebar (w-60), toggled by the chevron button.
+  // AppShell owns this so the main column can shift with the rail; the local
+  // state is the fallback for rendering Sidebar without those props.
+  const [collapsedLocal, setCollapsedLocal] = useState(false)
+  const collapsed = collapsedProp ?? collapsedLocal
+  const setCollapsed = setCollapsedProp ?? setCollapsedLocal
 
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
@@ -51,6 +72,18 @@ export function Sidebar({ collapsed, setCollapsed }) {
 
   // Logout
   async function handleLogout() {
+    // AC-15 safeguard: never silently destroy unsynced work. If anything is
+    // still queued, stop and make the user decide — logging out clears the
+    // outbox, and those changes exist nowhere else.
+    const uid = user?.id
+    if (uid) {
+      const queued = await countForUser(uid).catch(() => 0)
+      if (queued > 0 && !pendingLogout) {
+        setPendingLogout({ count: queued })
+        return
+      }
+    }
+
     setIsLoggingOut(true)
 
     try {
@@ -105,6 +138,7 @@ export function Sidebar({ collapsed, setCollapsed }) {
 
       {/* Nav Items */}
       <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+
         {filteredNav.map((item) => {
           const Icon = ICON_MAP[item.icon]
 
@@ -140,11 +174,22 @@ export function Sidebar({ collapsed, setCollapsed }) {
 
               {/* Active indicator when collapsed */}
               {collapsed && isActive && (
-                <span className="absolute left-0 w-1 h-6 bg-violet-600 rounded-r-full" />
+                <span
+                  className="
+                    absolute
+                    left-0
+                    w-1
+                    h-6
+                    bg-violet-600
+                    rounded-r-full
+                  "
+                />
               )}
+
             </Link>
           )
         })}
+
       </nav>
 
       {/* User + Logout */}
@@ -174,8 +219,10 @@ export function Sidebar({ collapsed, setCollapsed }) {
               <p className="text-xs text-muted-foreground truncate capitalize">
                 {user?.role}
               </p>
+
             </div>
           )}
+
         </div>
 
         {/* Logout Button */}
@@ -188,11 +235,48 @@ export function Sidebar({ collapsed, setCollapsed }) {
             collapsed ? 'justify-center' : ''
           )}
         >
+
           <LogOut className="w-4 h-4 flex-shrink-0" />
 
           {!collapsed && <span>Logout</span>}
         </button>
+
+        {/* AC-15 safeguard: unsynced work would be destroyed by signing out,
+            and it exists nowhere but this browser. Require an explicit,
+            informed confirmation rather than discarding it quietly. */}
+        {pendingLogout && (
+          <div
+            role="alertdialog"
+            aria-label="Unsynced changes"
+            className="absolute bottom-16 left-2 right-2 z-30 rounded-lg border border-amber-300 bg-white p-3 shadow-lg"
+          >
+            <p className="text-xs font-semibold text-slate-800">
+              {pendingLogout.count} unsynced change
+              {pendingLogout.count === 1 ? '' : 's'}
+            </p>
+            <p className="mt-1 text-[11px] leading-relaxed text-slate-600">
+              These were made offline and haven&apos;t reached the server. If you
+              log out now they will be <strong>permanently lost</strong>.
+              Reconnect and let them sync first if you want to keep them.
+            </p>
+            <div className="mt-2 flex items-center gap-2">
+              <button
+                onClick={handleLogout}
+                className="rounded-md bg-red-600 px-2.5 py-1 text-[11px] font-medium text-white transition-colors hover:bg-red-700"
+              >
+                Discard &amp; log out
+              </button>
+              <button
+                onClick={() => setPendingLogout(null)}
+                className="rounded-md border border-slate-200 px-2.5 py-1 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
     </aside>
   )
 }

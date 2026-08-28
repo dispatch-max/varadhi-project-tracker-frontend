@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import {
   Search,
@@ -47,6 +48,7 @@ export function ProjectsList() {
   const { user } = useAuthStore()
   const mounted = useHasMounted()
   const dateInputRef = useRef(null)
+  const searchParams = useSearchParams()
 
   const canCreate =
     mounted && ['admin', 'manager'].includes(user?.role)
@@ -57,12 +59,24 @@ export function ProjectsList() {
   const [showExport, setShowExport] = useState(false)
   const [showAnalytics, setShowAnalytics] = useState(false)
   const [showTeam, setShowTeam] = useState(false)
-  const [search, setSearch] = useState('')
+  // Seeded from the URL so the topbar search hand-off (?search=…) still lands
+  // here after the V2.0 list rewrite.
+  const [search, setSearch] = useState(searchParams.get('search') || '')
   const [statusFilter, setStatusFilter] = useState('all')
   const [selectedDeadlineDate, setSelectedDeadlineDate] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [view, setView] = useState('table')
   const [showCreateModal, setShowCreateModal] = useState(false)
+
+  // Picks up a search term the topbar navigated here with (?search=...),
+  // including when this page is already mounted and the term changes.
+  useEffect(() => {
+    // Same traced-false-positive as elsewhere in this app (e.g.
+    // use-has-mounted.js's setMounted(true)) — a plain setState with no
+    // async work, safe to run directly in the effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSearch(searchParams.get('search') || '')
+  }, [searchParams])
 
   async function fetchProjects() {
     try {
@@ -168,13 +182,19 @@ export function ProjectsList() {
       {/* TOP KPI STAT CARDS */}
       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-2.5">
         {[
-          { title: 'Total Projects', value: statistics.total, subText: '+3 this month', icon: FolderKanban, color: 'bg-violet-50 text-violet-600' },
-          { title: 'Active Projects', value: statistics.active, subText: '75% of total', icon: TrendingUp, color: 'bg-emerald-50 text-emerald-600' },
-          { title: 'Completed', value: statistics.completed, subText: '+2 this month', icon: CheckCircle2, color: 'bg-blue-50 text-blue-600' },
-          { title: 'On Hold', value: statistics.hold, subText: '4% of total', icon: PauseCircle, color: 'bg-amber-50 text-amber-600' },
-          { title: 'Overdue', value: statistics.overdue, subText: 'Needs attention', icon: AlertTriangle, color: 'bg-red-50 text-red-500' }
+          { title: 'Total Projects', value: statistics.total, icon: FolderKanban, color: 'bg-violet-50 text-violet-600' },
+          { title: 'Active Projects', value: statistics.active, icon: TrendingUp, color: 'bg-emerald-50 text-emerald-600' },
+          { title: 'Completed', value: statistics.completed, icon: CheckCircle2, color: 'bg-blue-50 text-blue-600' },
+          { title: 'On Hold', value: statistics.hold, icon: PauseCircle, color: 'bg-amber-50 text-amber-600' },
+          { title: 'Overdue', value: statistics.overdue, icon: AlertTriangle, color: 'bg-red-50 text-red-500' }
         ].map((item) => {
           const Icon = item.icon
+          // Percentage-of-total subtext replaces the hardcoded "+3 this month"
+          // strings from the original UI — those were invented figures, and the
+          // V2.0 rule is that every number on screen comes from real data.
+          const share = statistics.total === 0
+            ? '—'
+            : `${Math.round((item.value / statistics.total) * 100)}% of total`
           return (
             <div 
               key={item.title} 
@@ -377,7 +397,6 @@ export function ProjectsList() {
               ))}
             </div>
           </div>
-
           {/* LOADING STATE */}
           {isLoading && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-1">
@@ -387,8 +406,22 @@ export function ProjectsList() {
             </div>
           )}
 
+          {/* ERROR STATE */}
+          {!isLoading && error && (
+            <div className="py-14 text-center flex flex-col items-center">
+              <AlertTriangle className="w-10 h-10 text-red-300 mb-2" />
+              <p className="text-sm font-semibold text-slate-800">{error}</p>
+              <button
+                onClick={fetchProjects}
+                className="mt-3 h-9 px-4 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+
           {/* DATA VIEW */}
-          {!isLoading && displayedProjects.length > 0 && (
+          {!isLoading && !error && displayedProjects.length > 0 && (
             <>
               {view === "grid" ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
