@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // 'use client'
 
 // import Link from 'next/link'
@@ -355,36 +354,20 @@
 //   )
 // }
 
-=======
->>>>>>> e904b81 (Update export modal and document table layout)
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 
 import {
-<<<<<<< HEAD
   LayoutDashboard, FolderOpen, FolderKanban, ListChecks,
   Kanban, KanbanSquare, Files, BarChart3, Users, Settings,
   LogOut, ChevronLeft, ChevronRight, Bell,
-  CalendarSync, MessageSquare, CalendarDays, Clock3
+  CalendarSync, MessageSquare, CalendarDays, Clock3,CalendarCheck2,
   
-=======
-  LayoutDashboard,
-  FolderKanban,
-  ListChecks,
-  KanbanSquare,
-  Files,
-  BarChart3,
-  Users,
-  Settings,
-  LogOut,
-  ChevronLeft,
-  ChevronRight
->>>>>>> e904b81 (Update export modal and document table layout)
 } from 'lucide-react'
 
+import { useState } from 'react'
 import { useAuthStore } from '@/store/auth.store'
 import { authApi } from '@/lib/api/auth.api'
 import { clearOfflineCaches } from '@/lib/offline-cache'
@@ -406,6 +389,7 @@ const ICON_MAP = {
   LayoutKanban: KanbanSquare,
   Files,
   BarChart3,
+  CalendarCheck2,
   Users,
   Settings,
   Bell,
@@ -416,17 +400,11 @@ const ICON_MAP = {
   Clock3,
 }
 
-<<<<<<< HEAD
 export function Sidebar({ collapsed: collapsedProp, setCollapsed: setCollapsedProp }) {
   const pathname = usePathname()
   const router = useRouter()
 
   const { user, clearAuth } = useAuthStore()
-=======
-export function Sidebar({ collapsed, setCollapsed }) {
-  const pathname = usePathname()
-  const router = useRouter()
->>>>>>> e904b81 (Update export modal and document table layout)
 
   // Collapsed rail (w-16) vs full sidebar (w-60), toggled by the chevron button.
   // AppShell owns this so the main column can shift with the rail; the local
@@ -436,7 +414,6 @@ export function Sidebar({ collapsed, setCollapsed }) {
   const setCollapsed = setCollapsedProp ?? setCollapsedLocal
 
   const [isLoggingOut, setIsLoggingOut] = useState(false)
-<<<<<<< HEAD
   // Holds { count } while the unsynced-changes warning is on screen. Logging
   // out is blocked until the user explicitly confirms the loss.
   const [pendingLogout, setPendingLogout] = useState(null)
@@ -447,15 +424,6 @@ export function Sidebar({ collapsed, setCollapsed }) {
   // list while remaining in NAV_ITEMS so Topbar can still resolve their title.
   const filteredNav = NAV_ITEMS.filter(
     (item) => !item.hidden && item.roles.includes(user?.role || 'employee')
-=======
-
-  const { user, clearAuth } = useAuthStore()
-  const mounted = useHasMounted()
-
-  // Filter navigation items based on user role
-  const filteredNav = NAV_ITEMS.filter((item) =>
-    item.roles.includes(user?.role || 'employee')
->>>>>>> e904b81 (Update export modal and document table layout)
   )
 
   // Logout
@@ -473,7 +441,6 @@ export function Sidebar({ collapsed, setCollapsed }) {
     }
 
     setIsLoggingOut(true)
-<<<<<<< HEAD
     setPendingLogout(null)
 
     // Release this browser's push subscription BEFORE clearing auth — the
@@ -493,8 +460,6 @@ export function Sidebar({ collapsed, setCollapsed }) {
     } catch {
       /* non-fatal — logout continues regardless */
     }
-=======
->>>>>>> e904b81 (Update export modal and document table layout)
 
     try {
       await authApi.logout()
@@ -505,7 +470,6 @@ export function Sidebar({ collapsed, setCollapsed }) {
 
       document.cookie =
         'varadhi_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-<<<<<<< HEAD
       // Drop every cached API response alongside the token — otherwise this
       // user's tasks and projects stay readable from the service worker cache
       // after they've signed out. Awaited so the caches are gone before the
@@ -522,8 +486,6 @@ export function Sidebar({ collapsed, setCollapsed }) {
         releaseReplayLock(uid)
       }
       useOutboxStore.getState().reset()
-=======
->>>>>>> e904b81 (Update export modal and document table layout)
 
       router.push('/auth/login')
     }
@@ -536,11 +498,10 @@ export function Sidebar({ collapsed, setCollapsed }) {
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 h-screen bg-white border-r border-slate-200 flex flex-col z-20 transition-all duration-300',
+        'fixed rounded-r-2xl left-0 top-0 h-screen bg-white border-r border-slate-200 flex flex-col z-30 transition-all duration-300 ease-in-out',
         collapsed ? 'w-16' : 'w-60'
       )}
     >
-<<<<<<< HEAD
       {/* Logo Section */}
       <div className="flex items-center px-4 py-5 border-b border-slate-100">
         {/* Logo Container */}
@@ -575,33 +536,6 @@ export function Sidebar({ collapsed, setCollapsed }) {
         </button>
       </div>
 
-=======
-      {/* Logo */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-slate-100">
-        <div className="w-8 h-8 rounded-lg bg-violet-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
-          V
-        </div>
-        {!collapsed && (
-          <div>
-            <p className="text-sm font-semibold text-slate-800 leading-tight">
-              Varadhi
-            </p>
-            <p className="text-xs text-slate-400">Tracker</p>
-          </div>
-        )}
-        <button
-          onClick={() => setCollapsed((prev) => !prev)}
-          className="ml-auto text-slate-400 hover:text-slate-600 flex-shrink-0"
-        >
-          {collapsed ? (
-            <ChevronRight className="w-4 h-4" />
-          ) : (
-            <ChevronLeft className="w-4 h-4" />
-          )}
-        </button>
-      </div>
-
->>>>>>> e904b81 (Update export modal and document table layout)
       {/* Nav Items */}
       <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
 
@@ -609,20 +543,20 @@ export function Sidebar({ collapsed, setCollapsed }) {
           const Icon = ICON_MAP[item.icon]
 
           const isActive =
-            pathname === item.href || pathname.startsWith(item.href + '/')
+            pathname === item.href ||
+            pathname.startsWith(item.href + '/')
 
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                'relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group',
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all relative',
                 isActive
                   ? 'bg-violet-50 text-violet-700'
                   : 'text-muted-foreground hover:bg-background hover:text-foreground'
               )}
             >
-<<<<<<< HEAD
 
               {/* Icon */}
               {Icon && (
@@ -644,24 +578,6 @@ export function Sidebar({ collapsed, setCollapsed }) {
                 </span>
               )}
 
-=======
-              {/* Icon */}
-              {Icon && (
-                <Icon
-                  strokeWidth={isActive ? 2.2 : 1.8}
-                  className={cn(
-                    'w-[18px] h-[18px] flex-shrink-0 transition-all duration-200',
-                    isActive
-                      ? 'text-primary'
-                      : 'text-muted-foreground group-hover:text-foreground'
-                  )}
-                />
-              )}
-
-              {/* Text */}
-              {!collapsed && <span>{item.label}</span>}
-
->>>>>>> e904b81 (Update export modal and document table layout)
               {/* Active indicator when collapsed */}
               {collapsed && isActive && (
                 <span
@@ -684,28 +600,21 @@ export function Sidebar({ collapsed, setCollapsed }) {
 
       {/* User + Logout */}
       <div className="border-t border-slate-100 p-3 space-y-1">
-        <div
-          className={cn(
-            'flex items-center gap-3 px-2 py-2 rounded-lg',
-            collapsed ? 'justify-center' : ''
-          )}
-        >
-          <div
-            className={cn(
-              'w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0',
-              getAvatarColor(user?.name || 'U')
-            )}
-          >
+        <div className={cn(
+          'flex items-center gap-3 px-2 py-2 rounded-lg',
+          collapsed ? 'justify-center' : ''
+        )}>
+          <div className={cn(
+            'w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0',
+            getAvatarColor(user?.name || 'U')
+          )}>
             {getInitials(user?.name || 'User')}
           </div>
 
           {/* User Text */}
           {!collapsed && (
             <div className="min-w-0">
-<<<<<<< HEAD
 
-=======
->>>>>>> e904b81 (Update export modal and document table layout)
               <p className="text-xs font-medium text-foreground truncate">
                 {user?.name}
               </p>
@@ -725,7 +634,6 @@ export function Sidebar({ collapsed, setCollapsed }) {
           onClick={handleLogout}
           disabled={isLoggingOut}
           className={cn(
-<<<<<<< HEAD
             'w-full',
             'flex items-center gap-3',
             'px-3 py-2',
@@ -740,25 +648,17 @@ export function Sidebar({ collapsed, setCollapsed }) {
             collapsed
               ? 'justify-center'
               : ''
-=======
-            'w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-muted-foreground transition-all duration-200 hover:bg-red-50 hover:text-red-600',
-            collapsed ? 'justify-center' : ''
->>>>>>> e904b81 (Update export modal and document table layout)
           )}
         >
 
           <LogOut className="w-4 h-4 flex-shrink-0" />
 
-<<<<<<< HEAD
           {!collapsed && (
             <span>
               Logout
             </span>
           )}
 
-=======
-          {!collapsed && <span>Logout</span>}
->>>>>>> e904b81 (Update export modal and document table layout)
         </button>
 
         {/* AC-15 safeguard: unsynced work would be destroyed by signing out,
