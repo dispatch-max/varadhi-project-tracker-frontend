@@ -1,8 +1,14 @@
 import { LoginForm } from '@/components/auth/login-form'
-import logoImg from '@/../public/projectlogo-removebg-preview.png'
+
 export const metadata = {
   title: 'Login',
 }
+import {
+  FolderOpen,
+  Users,
+  BarChart3,
+  CalendarDays,
+} from "lucide-react";
 
 export default function LoginPage() {
   return (
@@ -18,19 +24,9 @@ export default function LoginPage() {
             {/* Logo & Title */}
             <div className="text-center mb-8">
 
-<<<<<<< HEAD
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-600 to-purple-700 text-white font-bold text-2xl shadow-lg mb-4">
                 V
               </div>
-=======
-             <div className="inline-flex items-center justify-center w-14 h-14  mb-4">
-  <img 
-    src={logoImg.src} 
-    alt="Varadhi Logo" 
-    className="w-8 h-8 object-contain" 
-  />
-</div>
->>>>>>> e904b81 (Update export modal and document table layout)
 
               <h1 className="text-4xl font-bold text-foreground">
                 Varadhi Tracker
@@ -81,7 +77,8 @@ export default function LoginPage() {
           <div className="grid grid-cols-2 gap-5 mt-10">
 
             <div className="bg-card rounded-2xl border border-border shadow-lg p-5 hover:-translate-y-1 hover:shadow-xl transition">
-              <div className="text-3xl">📁</div>
+
+                <FolderOpen className="h-8 w-8 text-gray-500"strokeWidth={1.8}/>
               <h3 className="font-semibold mt-3">Project Tracking</h3>
               <p className="text-sm text-muted-foreground mt-2">
                 Organize and monitor all projects.
@@ -89,7 +86,7 @@ export default function LoginPage() {
             </div>
 
             <div className="bg-card rounded-2xl border border-border shadow-lg p-5 hover:-translate-y-1 hover:shadow-xl transition">
-              <div className="text-3xl">👥</div>
+                  <Users className="h-8 w-8 text-gray-500"strokeWidth={1.8}/>
               <h3 className="font-semibold mt-3">Team Collaboration</h3>
               <p className="text-sm text-muted-foreground mt-2">
                 Collaborate with your teammates.
@@ -97,7 +94,7 @@ export default function LoginPage() {
             </div>
 
             <div className="bg-card rounded-2xl border border-border shadow-lg p-5 hover:-translate-y-1 hover:shadow-xl transition">
-              <div className="text-3xl">📊</div>
+                 <BarChart3 className="h-8 w-8 text-gray-500"strokeWidth={1.8}/>
               <h3 className="font-semibold mt-3">Reports</h3>
               <p className="text-sm text-muted-foreground mt-2">
                 Generate insights and analytics.
@@ -105,17 +102,10 @@ export default function LoginPage() {
             </div>
 
             <div className="bg-card rounded-2xl border border-border shadow-lg p-5 hover:-translate-y-1 hover:shadow-xl transition">
-<<<<<<< HEAD
-              <div className="text-3xl">🗓️</div>
+                  <CalendarDays className="h-8 w-8 text-gray-500"strokeWidth={1.8}/>
               <h3 className="font-semibold mt-3">Leave &amp; Time</h3>
               <p className="text-sm text-muted-foreground mt-2">
                 Track attendance and manage leave requests.
-=======
-              <div className="text-3xl">🤖</div>
-              <h3 className="font-semibold mt-3">AI Insights</h3>
-              <p className="text-sm text-muted-foreground mt-2">
-                AI-powered productivity suggestions.
->>>>>>> e904b81 (Update export modal and document table layout)
               </p>
             </div>
 
