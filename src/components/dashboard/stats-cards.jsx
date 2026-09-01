@@ -192,7 +192,7 @@ export function StatsCards() {
                   min-w-0
                   truncate
 
-                  text-[10px]
+                  text-xs
                   font-semibold
                   leading-none
                   text-slate-700
@@ -216,7 +216,7 @@ export function StatsCards() {
               className="
                 mt-1.5
 
-                text-[24px]
+                text-[28px]
                 font-bold
                 leading-none
                 text-slate-900
@@ -231,7 +231,7 @@ export function StatsCards() {
                 mt-1
                 truncate
 
-                text-[9px]
+                text-[10px]
                 leading-none
                 text-slate-500
               "

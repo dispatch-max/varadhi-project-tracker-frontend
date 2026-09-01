@@ -136,11 +136,11 @@ return (
     ====================================================== */}
     <div
       className="
-        w-[88vw]
+        w-[92vw]
         max-w-[1400px]
         min-w-0
-        max-h-[90vh]
-        overflow-y-auto
+        max-h-[calc(100vh-32px)]
+        overflow-hidden
         rounded-2xl
         bg-card
         shadow-xl
@@ -159,7 +159,7 @@ return (
           rounded-t-2xl
         "
       >
-        <h2 className="text-base font-semibold text-foreground">
+        <h2 className="text-lg font-semibold text-foreground">
           Create New Task
         </h2>
 
@@ -183,7 +183,7 @@ return (
       ==================================================== */}
       <form
         onSubmit={handleSubmit}
-        className="space-y-4 px-6 py-5"
+        className="space-y-3 px-7 py-4"
       >
         {errors.general && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -233,7 +233,7 @@ return (
               value={formData.description}
               onChange={handleChange}
               disabled={isLoading}
-              rows={4}
+              rows={2}
               className="
                 w-full resize-none
                 rounded-lg
@@ -260,7 +260,7 @@ return (
               value={formData.userStory}
               onChange={handleChange}
               disabled={isLoading}
-              rows={4}
+              rows={3}
               className="
                 w-full resize-none
                 rounded-lg
@@ -336,10 +336,7 @@ return (
             </option>
 
             {projects.map((project) => (
-              <option
-                key={project.id}
-                value={project.id}
-              >
+              <option key={project.id} value={project.id}>
                 {project.name}
               </option>
             ))}
@@ -374,18 +371,81 @@ return (
         </div>
 
         {/* =================================================
-            TYPE + PRIORITY + ASSIGNEE + DUE DATE
-            FOUR COLUMNS ON LARGE SCREEN
+            ASSIGNEE + DUE DATE
         ================================================== */}
-        <div
-          className="
-            grid
-            grid-cols-1
-            gap-4
-            md:grid-cols-2
-            xl:grid-cols-4
-          "
-        >
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+
+          {/* ASSIGNEE */}
+          <div className="space-y-1.5">
+            <Label htmlFor="assigneeId">
+              Assignee
+            </Label>
+
+            <select
+              id="assigneeId"
+              name="assigneeId"
+              value={formData.assigneeId}
+              onChange={handleChange}
+              disabled={isLoading || usersLoading}
+              className="
+                w-full
+                rounded-lg
+                border border-border
+                bg-card
+                px-3 py-2
+                text-sm
+                focus:outline-none
+                focus:ring-2
+                focus:ring-violet-500
+              "
+            >
+              <option value="">
+                {usersLoading ? 'Loading users...' : 'Unassigned'}
+              </option>
+
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.name}
+                </option>
+              ))}
+            </select>
+
+            {usersError && (
+              <p className="text-xs text-amber-600">
+                Couldn&apos;t load users.{' '}
+                <button
+                  type="button"
+                  onClick={loadUsers}
+                  className="font-medium underline"
+                >
+                  Retry
+                </button>
+              </p>
+            )}
+          </div>
+
+          {/* DUE DATE */}
+          <div className="space-y-1.5">
+            <Label htmlFor="dueDate">
+              Due Date
+            </Label>
+
+            <Input
+              id="dueDate"
+              name="dueDate"
+              type="date"
+              value={formData.dueDate}
+              onChange={handleChange}
+              disabled={isLoading}
+            />
+          </div>
+        </div>
+
+        {/* =================================================
+            TYPE + PRIORITY + STATUS
+        ================================================== */}
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+
           {/* TYPE */}
           <div className="space-y-1.5">
             <Label htmlFor="type">
@@ -449,18 +509,18 @@ return (
             </select>
           </div>
 
-          {/* ASSIGNEE */}
+          {/* STATUS */}
           <div className="space-y-1.5">
-            <Label htmlFor="assigneeId">
-              Assignee
+            <Label htmlFor="status">
+              Status
             </Label>
 
             <select
-              id="assigneeId"
-              name="assigneeId"
-              value={formData.assigneeId}
+              id="status"
+              name="status"
+              value={formData.status}
               onChange={handleChange}
-              disabled={isLoading || usersLoading}
+              disabled={isLoading}
               className="
                 w-full
                 rounded-lg
@@ -473,95 +533,12 @@ return (
                 focus:ring-violet-500
               "
             >
-              <option value="">
-                {usersLoading
-                  ? 'Loading users...'
-                  : 'Unassigned'}
-              </option>
-
-              {users.map((user) => (
-                <option
-                  key={user.id}
-                  value={user.id}
-                >
-                  {user.name}
-                </option>
-              ))}
+              <option value="todo">To Do</option>
+              <option value="in_progress">In Progress</option>
+              <option value="in_review">In Review</option>
+              <option value="completed">Completed</option>
             </select>
-
-            {usersError && (
-              <p className="text-xs text-amber-600">
-                Couldn&apos;t load users.{' '}
-                <button
-                  type="button"
-                  onClick={loadUsers}
-                  className="font-medium underline"
-                >
-                  Retry
-                </button>
-              </p>
-            )}
           </div>
-
-          {/* DUE DATE */}
-          <div className="space-y-1.5">
-            <Label htmlFor="dueDate">
-              Due Date
-            </Label>
-
-            <Input
-              id="dueDate"
-              name="dueDate"
-              type="date"
-              value={formData.dueDate}
-              onChange={handleChange}
-              disabled={isLoading}
-            />
-          </div>
-        </div>
-
-        {/* =================================================
-            STATUS
-        ================================================== */}
-        <div className="space-y-1.5">
-          <Label htmlFor="status">
-            Status
-          </Label>
-
-          <select
-            id="status"
-            name="status"
-            value={formData.status}
-            onChange={handleChange}
-            disabled={isLoading}
-            className="
-              w-full
-              rounded-lg
-              border border-border
-              bg-card
-              px-3 py-2
-              text-sm
-              focus:outline-none
-              focus:ring-2
-              focus:ring-violet-500
-            "
-          >
-            <option value="todo">
-              To Do
-            </option>
-
-            <option value="in_progress">
-              In Progress
-            </option>
-
-            <option value="in_review">
-              In Review
-            </option>
-
-            <option value="completed">
-              Completed
-            </option>
-          </select>
         </div>
 
         {/* =================================================
@@ -572,7 +549,7 @@ return (
             flex items-center justify-end
             gap-3
             border-t border-border
-            pt-4
+            pt-3
           "
         >
           <Button

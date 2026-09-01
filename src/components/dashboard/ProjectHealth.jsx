@@ -1,48 +1,227 @@
+// 'use client'
+
+// import { useEffect, useState } from 'react'
+// import { Card } from '@/components/ui/card'
+
+// import {
+//   RadialBarChart,
+//   RadialBar,
+//   PolarAngleAxis,
+// } from 'recharts'
+// import { dashboardApi } from '@/lib/api/dashboard.api'
+
+// const HEALTH_STYLES = {
+//   on_track: {
+//     label: 'On Track',
+//     dot: 'bg-green-500',
+//     text: 'text-green-600',
+//   },
+//   at_risk: {
+//     label: 'At Risk',
+//     dot: 'bg-amber-500',
+//     text: 'text-amber-600',
+//   },
+//   delayed: {
+//     label: 'Delayed',
+//     dot: 'bg-red-500',
+//     text: 'text-red-600',
+//   },
+// }
+
+// function Shell({ children }) {
+//   return (
+//     <Card className="h-full min-h-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+//       <div className="flex h-[30px] items-center justify-between px-3">
+//         <h3 className="truncate text-[11px] font-semibold text-slate-800">
+//           Project Health Overview
+//         </h3>
+
+  
+//       </div>
+
+//       {children}
+//     </Card>
+//   )
+// }
+
+// export function ProjectHealth() {
+//   const [data, setData] = useState(null)
+//   const [loading, setLoading] = useState(true)
+//   const [error, setError] = useState(null)
+
+//   useEffect(() => {
+//     let cancelled = false
+
+//     async function load() {
+//       try {
+//         const res = await dashboardApi.getProjectHealth()
+
+//         if (!cancelled) {
+//           setData(res)
+//         }
+//       } catch {
+//         if (!cancelled) {
+//           setError('Failed to load project health.')
+//         }
+//       } finally {
+//         if (!cancelled) {
+//           setLoading(false)
+//         }
+//       }
+//     }
+
+//     load()
+
+//     return () => {
+//       cancelled = true
+//     }
+//   }, [])
+
+//   if (loading) {
+//     return (
+//       <Shell>
+//         <div className="flex h-[105px] items-center px-3">
+//           <div className="h-[78px] w-[78px] animate-pulse rounded-full bg-slate-100" />
+//         </div>
+//       </Shell>
+//     )
+//   }
+
+//   if (error) {
+//     return (
+//       <Shell>
+//         <div className="flex h-[105px] items-center justify-center px-3">
+//           <p className="text-[9px] text-slate-500">
+//             {error}
+//           </p>
+//         </div>
+//       </Shell>
+//     )
+//   }
+
+//   const overall = data?.overallPercent ?? 0
+//   const projects = (data?.projects ?? []).slice(0, 4)
+
+//   const chartData = [
+//     {
+//       value: overall,
+//       fill: '#7C3AED',
+//     },
+//   ]
+
+//   return (
+//     <Shell>
+//       <div className="flex h-[105px] items-center px-3 pb-2">
+
+//         {/* LEFT DONUT */}
+//         <div className="flex w-[92px] shrink-0 items-center">
+//           <RadialBarChart
+//             width={88}
+//             height={88}
+//             data={chartData}
+//             innerRadius="68%"
+//             outerRadius="88%"
+//             startAngle={90}
+//             endAngle={-270}
+//             barSize={7}
+//           >
+//             <PolarAngleAxis
+//               type="number"
+//               domain={[0, 100]}
+//               tick={false}
+//             />
+
+//             <RadialBar
+//               dataKey="value"
+//               background={{ fill: '#ECEEF3' }}
+//               cornerRadius={20}
+//             />
+
+//             <text
+//               x="50%"
+//               y="42%"
+//               textAnchor="middle"
+//               dominantBaseline="middle"
+//               className="fill-slate-500 text-[6px]"
+//             >
+//               Health
+//             </text>
+
+//             <text
+//               x="50%"
+//               y="59%"
+//               textAnchor="middle"
+//               dominantBaseline="middle"
+//               className="fill-slate-900 text-[15px] font-bold"
+//             >
+//               {overall}%
+//             </text>
+//           </RadialBarChart>
+//         </div>
+
+//         {/* RIGHT INFO */}
+//         <div className="min-w-0 flex-1 pl-2">
+//           <div className="space-y-2">
+//             {projects.map((project) => {
+//               const style =
+//                 HEALTH_STYLES[project.health] ??
+//                 HEALTH_STYLES.on_track
+
+//               return (
+//                 <div
+//                   key={project.id}
+//                   className="flex min-w-0 items-center justify-between gap-2"
+//                 >
+//                   <div className="flex min-w-0 items-center gap-1.5">
+//                     <span
+//                       className={`h-1.5 w-1.5 shrink-0 rounded-full ${style.dot}`}
+//                     />
+
+//                     <span className="truncate text-[9px] font-medium text-slate-600">
+//                       {project.name}
+//                     </span>
+//                   </div>
+
+//                   <span
+//                     className={`shrink-0 text-[8px] font-medium ${style.text}`}
+//                   >
+//                     {style.label}
+//                   </span>
+//                 </div>
+//               )
+//             })}
+//           </div>
+//         </div>
+//       </div>
+//     </Shell>
+//   )
+// }
+
 'use client'
 
 import { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/card'
-
-import {
-  RadialBarChart,
-  RadialBar,
-  PolarAngleAxis,
-} from 'recharts'
+import { RadialBarChart, RadialBar, PolarAngleAxis } from 'recharts'
 import { dashboardApi } from '@/lib/api/dashboard.api'
 
 const HEALTH_STYLES = {
-  on_track: {
-    label: 'On Track',
-    dot: 'bg-green-500',
-    text: 'text-green-600',
-  },
-  at_risk: {
-    label: 'At Risk',
-    dot: 'bg-amber-500',
-    text: 'text-amber-600',
-  },
-  delayed: {
-    label: 'Delayed',
-    dot: 'bg-red-500',
-    text: 'text-red-600',
-  },
+  on_track: { label: 'On Track', dot: 'bg-green-500', text: 'text-green-600' },
+  at_risk: { label: 'At Risk', dot: 'bg-amber-500', text: 'text-amber-600' },
+  delayed: { label: 'Delayed', dot: 'bg-red-500', text: 'text-red-600' },
 }
 
 function Shell({ children }) {
   return (
-    <Card className="h-full min-h-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex h-[30px] items-center justify-between px-3">
-        <h3 className="truncate text-[11px] font-semibold text-slate-800">
-          Project Health Overview
-        </h3>
-
-  
+    <Card className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 shadow-sm">
+      <div className="flex h-[56px] shrink-0 items-start px-5 pt-3">
+        <h3 className="text-[16px] font-semibold text-slate-800">Project Health Overview</h3>
       </div>
-
       {children}
     </Card>
   )
 }
+
+
 
 export function ProjectHealth() {
   const [data, setData] = useState(null)
@@ -51,142 +230,55 @@ export function ProjectHealth() {
 
   useEffect(() => {
     let cancelled = false
-
     async function load() {
       try {
         const res = await dashboardApi.getProjectHealth()
-
-        if (!cancelled) {
-          setData(res)
-        }
+        if (!cancelled) setData(res)
       } catch {
-        if (!cancelled) {
-          setError('Failed to load project health.')
-        }
+        if (!cancelled) setError('Failed to load project health.')
       } finally {
-        if (!cancelled) {
-          setLoading(false)
-        }
+        if (!cancelled) setLoading(false)
       }
     }
-
     load()
-
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [])
 
   if (loading) {
-    return (
-      <Shell>
-        <div className="flex h-[105px] items-center px-3">
-          <div className="h-[78px] w-[78px] animate-pulse rounded-full bg-slate-100" />
-        </div>
-      </Shell>
-    )
+    return <Shell><div className="flex flex-1 items-center justify-center"><div className="h-[112px] w-[112px] animate-pulse rounded-full bg-slate-100" /></div></Shell>
   }
 
   if (error) {
-    return (
-      <Shell>
-        <div className="flex h-[105px] items-center justify-center px-3">
-          <p className="text-[9px] text-slate-500">
-            {error}
-          </p>
-        </div>
-      </Shell>
-    )
+    return <Shell><div className="flex flex-1 items-center justify-center px-4 text-[11px] text-slate-500">{error}</div></Shell>
   }
 
   const overall = data?.overallPercent ?? 0
-  const projects = (data?.projects ?? []).slice(0, 4)
-
-  const chartData = [
-    {
-      value: overall,
-      fill: '#7C3AED',
-    },
-  ]
+  const projects = (data?.projects ?? []).slice(0, 5)
+  const chartData = [{ value: overall, fill: '#7C3AED' }]
 
   return (
     <Shell>
-      <div className="flex h-[105px] items-center px-3 pb-2">
-
-        {/* LEFT DONUT */}
-        <div className="flex w-[92px] shrink-0 items-center">
-          <RadialBarChart
-            width={88}
-            height={88}
-            data={chartData}
-            innerRadius="68%"
-            outerRadius="88%"
-            startAngle={90}
-            endAngle={-270}
-            barSize={7}
-          >
-            <PolarAngleAxis
-              type="number"
-              domain={[0, 100]}
-              tick={false}
-            />
-
-            <RadialBar
-              dataKey="value"
-              background={{ fill: '#ECEEF3' }}
-              cornerRadius={20}
-            />
-
-            <text
-              x="50%"
-              y="42%"
-              textAnchor="middle"
-              dominantBaseline="middle"
-              className="fill-slate-500 text-[6px]"
-            >
-              Health
-            </text>
-
-            <text
-              x="50%"
-              y="59%"
-              textAnchor="middle"
-              dominantBaseline="middle"
-              className="fill-slate-900 text-[15px] font-bold"
-            >
-              {overall}%
-            </text>
+      <div className="flex min-h-0 flex-1 items-center gap-5 px-5 pb-5">
+        <div className="flex w-[135px] shrink-0 items-center justify-center">
+          <RadialBarChart width={112} height={112} data={chartData} innerRadius="68%" outerRadius="88%" startAngle={90} endAngle={-270} barSize={9}>
+            <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
+            <RadialBar dataKey="value" background={{ fill: '#ECEEF3' }} cornerRadius={20} />
+            <text x="50%" y="42%" textAnchor="middle" dominantBaseline="middle" className="fill-slate-500 text-[10px]">Health</text>
+            <text x="50%" y="59%" textAnchor="middle" dominantBaseline="middle" className="fill-slate-900 text-[19px] font-bold">{overall}%</text>
           </RadialBarChart>
         </div>
 
-        {/* RIGHT INFO */}
-        <div className="min-w-0 flex-1 pl-2">
-          <div className="space-y-2">
+        <div className="min-w-0 flex-1">
+          <div className="space-y-4">
             {projects.map((project) => {
-              const style =
-                HEALTH_STYLES[project.health] ??
-                HEALTH_STYLES.on_track
-
+              const style = HEALTH_STYLES[project.health] ?? HEALTH_STYLES.on_track
               return (
-                <div
-                  key={project.id}
-                  className="flex min-w-0 items-center justify-between gap-2"
-                >
-                  <div className="flex min-w-0 items-center gap-1.5">
-                    <span
-                      className={`h-1.5 w-1.5 shrink-0 rounded-full ${style.dot}`}
-                    />
-
-                    <span className="truncate text-[9px] font-medium text-slate-600">
-                      {project.name}
-                    </span>
+                <div key={project.id} className="flex min-w-0 items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className={`h-2 w-2 shrink-0 rounded-full ${style.dot}`} />
+                    <span className="truncate text-sm font-medium text-slate-600">{project.name}</span>
                   </div>
-
-                  <span
-                    className={`shrink-0 text-[8px] font-medium ${style.text}`}
-                  >
-                    {style.label}
-                  </span>
+                  <span className={`shrink-0 text-[10px] font-medium ${style.text}`}>{style.label}</span>
                 </div>
               )
             })}
