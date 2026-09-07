@@ -1,16 +1,158 @@
+// 'use client'
+
+// import { useEffect, useState } from 'react'
+// import { Card } from '@/components/ui/card'
+
+// import { tasksApi } from '@/lib/api/tasks.api'
+
+// function Shell({ children }) {
+//   return (
+//     <Card className="h-full min-h-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+//       <div className="flex h-[30px] items-center justify-between px-3">
+//         <h3 className="text-[11px] font-semibold text-slate-800">
+//           Tasks Overview
+//         </h3>
+
+//       </div>
+
+//       {children}
+//     </Card>
+//   )
+// }
+
+// export function TasksOverview() {
+//   const [stats, setStats] = useState(null)
+//   const [isLoading, setIsLoading] = useState(true)
+//   const [error, setError] = useState(null)
+
+//   useEffect(() => {
+//     let cancelled = false
+
+//     async function load() {
+//       try {
+//         const data = await tasksApi.getStats()
+//         if (!cancelled) setStats(data)
+//       } catch {
+//         if (!cancelled) {
+//           setError('Failed to load task stats.')
+//         }
+//       } finally {
+//         if (!cancelled) {
+//           setIsLoading(false)
+//         }
+//       }
+//     }
+
+//     load()
+
+//     return () => {
+//       cancelled = true
+//     }
+//   }, [])
+
+//   if (isLoading) {
+//     return (
+//       <Shell>
+//         <div className="animate-pulse px-3 pt-1">
+//           <div className="h-2.5 w-20 rounded bg-slate-100" />
+//           <div className="mt-3 h-5 w-full rounded-md bg-slate-100" />
+//         </div>
+//       </Shell>
+//     )
+//   }
+
+//   if (error) {
+//     return (
+//       <Shell>
+//         <div className="flex h-[105px] items-center justify-center">
+//           <p className="text-[9px] text-slate-500">
+//             {error}
+//           </p>
+//         </div>
+//       </Shell>
+//     )
+//   }
+
+//   if (!stats || stats.total === 0) {
+//     return (
+//       <Shell>
+//         <div className="flex h-[105px] items-center justify-center">
+//           <p className="text-[9px] text-slate-400">
+//             No tasks yet.
+//           </p>
+//         </div>
+//       </Shell>
+//     )
+//   }
+
+//   const progress = stats.completedPercent ?? 0
+
+//   const breakdown = [
+//     { label: 'To Do', value: stats.todo ?? 0 },
+//     { label: 'In Progress', value: stats.inProgress ?? 0 },
+//     { label: 'Completed', value: stats.completed ?? 0 },
+//   ]
+
+//   return (
+//     <Shell>
+//       <div className="px-3 pb-2 pt-1">
+
+//         <p className="text-[9px] font-medium text-slate-700">
+//           Total tasks {stats.total}
+//         </p>
+
+
+
+//         <div className="mt-2.5">
+//           <div className="relative h-[18px] overflow-hidden rounded-md bg-slate-200">
+//             <div
+//               className="
+//                 flex h-full items-center
+//                 rounded-md
+//                 bg-gradient-to-r
+//                 from-violet-600 to-cyan-400
+//                 px-2
+//               "
+//               style={{
+//                 width: `${Math.max(progress, 10)}%`,
+//               }}
+//             >
+//               <span className="text-[8px] font-semibold text-white">
+//                 {progress}%
+//               </span>
+//             </div>
+//           </div>
+//         </div>
+
+//         <div className="mt-3 grid grid-cols-3 gap-2">
+//           {breakdown.map((item) => (
+//             <div key={item.label}>
+//               <p className="text-[8px] text-slate-500">
+//                 {item.label}
+//               </p>
+
+//               <p className="mt-1 text-[16px] font-medium leading-none text-slate-800">
+//                 {item.value}
+//               </p>
+//             </div>
+//           ))}
+//         </div>
+//       </div>
+//     </Shell>
+//   )
+// }
+
 'use client'
 
 import { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/card'
-import { MoreHorizontal } from 'lucide-react'
 import { tasksApi } from '@/lib/api/tasks.api'
 
 function Shell({ children }) {
   return (
-    <Card className="h-[360px] rounded-2xl border border-border bg-card shadow-sm flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between px-6 pt-5">
-        <h3 className="text-sm font-semibold text-foreground">Tasks Overview</h3>
-        <MoreHorizontal className="h-4 w-4 text-slate-400" />
+    <Card className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 shadow-sm">
+      <div className="flex h-[56px] shrink-0 items-start px-5 pt-3">
+        <h3 className="text-[16px] font-semibold text-slate-800">Tasks Overview</h3>
       </div>
       {children}
     </Card>
@@ -38,79 +180,34 @@ export function TasksOverview() {
     return () => { cancelled = true }
   }, [])
 
-  if (isLoading) {
-    return (
-      <Shell>
-        <div className="flex-1 px-6 pt-6 animate-pulse space-y-4">
-          <div className="h-3 w-20 rounded bg-slate-100" />
-          <div className="h-10 w-24 rounded bg-slate-100" />
-          <div className="h-6 w-full rounded-full bg-slate-100" />
-        </div>
-      </Shell>
-    )
-  }
+  if (isLoading) return <Shell><div className="flex flex-1 items-center px-4"><div className="h-6 w-full animate-pulse rounded-md bg-slate-100" /></div></Shell>
+  if (error) return <Shell><div className="flex flex-1 items-center justify-center text-[11px] text-slate-500">{error}</div></Shell>
+  if (!stats || stats.total === 0) return <Shell><div className="flex flex-1 items-center justify-center text-[11px] text-slate-400">No tasks yet.</div></Shell>
 
-  if (error) {
-    return (
-      <Shell>
-        <div className="flex flex-1 items-center justify-center px-6">
-          <p className="text-sm text-muted-foreground">{error}</p>
-        </div>
-      </Shell>
-    )
-  }
-
-  if (!stats || stats.total === 0) {
-    return (
-      <Shell>
-        <div className="flex flex-1 items-center justify-center px-6">
-          <p className="text-sm text-muted-foreground">No tasks yet.</p>
-        </div>
-      </Shell>
-    )
-  }
-
-  // Completion share drives the bar; the server already rounds it.
-  const progress = stats.completedPercent
+  const progress = stats.completedPercent ?? 0
   const breakdown = [
-    { label: 'To Do', value: stats.todo },
-    { label: 'In Progress', value: stats.inProgress },
-    { label: 'Completed', value: stats.completed },
+    { label: 'To Do', value: stats.todo ?? 0 },
+    { label: 'In Progress', value: stats.inProgress ?? 0 },
+    { label: 'Completed', value: stats.completed ?? 0 },
   ]
 
   return (
     <Shell>
-      <div className="px-6 mt-4">
-        <p className="text-sm text-muted-foreground">Total Tasks</p>
-
-        <div className="flex flex-wrap items-end gap-3 mt-2">
-          <h2 className="text-5xl font-bold">{stats.total}</h2>
-          {stats.completedThisWeek > 0 && (
-            <span className="text-sm text-green-600">
-              +{stats.completedThisWeek} completed this week
-            </span>
-          )}
-        </div>
-      </div>
-
-      <div className="px-6 mt-6">
-        <div className="h-6 rounded-full bg-slate-200 overflow-hidden">
-          <div
-            className="flex h-full items-center justify-end rounded-full bg-gradient-to-r from-violet-600 to-cyan-400 pr-3"
-            style={{ width: `${Math.max(progress, 8)}%` }}
-          >
-            <span className="text-xs font-medium text-white">{progress}%</span>
+      <div className="px-5 pb-5 pt-6">
+        <p className="text-[13px] font-medium text-slate-700">Total tasks <span className="font-semibold">{stats.total}</span></p>
+        <div className="relative mt-4 h-[28px] overflow-hidden rounded-md bg-slate-200">
+          <div className="flex h-full items-center rounded-md bg-gradient-to-r from-violet-600 to-cyan-400 px-3" style={{ width: `${Math.max(progress, 10)}%` }}>
+           <span className="text-[12px] font-semibold text-white">{progress}%</span>
           </div>
         </div>
-      </div>
-
-      <div className="mt-auto grid grid-cols-3 border-t border-slate-100">
-        {breakdown.map((item) => (
-          <div key={item.label} className="py-5 text-center">
-            <p className="text-xs text-muted-foreground">{item.label}</p>
-            <h3 className="mt-1 text-2xl font-bold">{item.value}</h3>
-          </div>
-        ))}
+        <div className="mt-7 grid grid-cols-3 gap-5">
+          {breakdown.map((item) => (
+            <div key={item.label}>
+             <p className="text-[12px] text-slate-500">{item.label}</p>
+              <p className="mt-2 text-[26px] font-semibold leading-none text-slate-800">{item.value}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </Shell>
   )

@@ -47,7 +47,9 @@ export function AppShell({ children }) {
           <InstallPrompt className="mb-5" />
           {children}
         </main>
+
       </div>
+
     </div>
   )
 }

@@ -290,21 +290,44 @@ export function KanbanBoard() {
         </div>
       )}
 
-      {/* Board — horizontal scroll on small screens */}
+{/* =========================================================
+    KANBAN BOARD
+
+    Always keeps:
+    1. To Do
+    2. In Progress
+    3. In Review
+    4. Completed
+
+    in ONE ROW.
+========================================================= */}
+
 <div
-  className="grid gap-5 w-full"
-  style={{
-    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-  }}
+  className="
+    grid
+    w-full
+    min-w-0
+    grid-cols-4
+    gap-2
+    xl:gap-3
+  "
 >
-        {KANBAN_COLUMNS.map((column) => (
-          <KanbanColumn
-            key={column.id}
-            column={column}
-            tasks={getTasksByStatus(column.id)}
-          />
-        ))}
-      </div>
+  {KANBAN_COLUMNS.map((column) => (
+    <div
+      key={column.id}
+      className="
+        min-w-0
+        w-full
+        overflow-hidden
+      "
+    >
+      <KanbanColumn
+        column={column}
+        tasks={getTasksByStatus(column.id)}
+      />
+    </div>
+  ))}
+</div>
 
       {/* Drag Overlay — shows floating card while dragging */}
       <DragOverlay>

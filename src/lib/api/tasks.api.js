@@ -1,85 +1,185 @@
-// These handle all backend API calls. When  backend is ready, everything connects from here.
+// These handle all backend API calls.
+// IMPORTANT:
+// getAll() keeps its OLD return shape so Kanban and other modules
+// that expect an ARRAY are not disturbed.
 
 import apiClient from '@/lib/api-client'
 
 export const tasksApi = {
-  // Get all tasks (with optional filters)
+  // =========================================================
+  // GET ALL TASKS
+  // KEEP THIS RETURN VALUE AS AN ARRAY.
+  // Used by Kanban and any existing components.
+  // =========================================================
   getAll: async (filters = {}, page = 1, limit = 10) => {
     const { data } = await apiClient.get('/tasks', {
-      params: { ...filters, page, limit },
+      params: {
+        ...filters,
+        page,
+        limit,
+      },
     })
+
     return data.data
   },
 
-  // Aggregate counts for the stats rows (role-scoped server-side).
+  // =========================================================
+  // GET PAGINATED TASKS
+  // ONLY TasksList should use this.
+  //
+  // Unlike getAll(), this returns the complete API response
+  // so TasksList can read:
+  // - task rows
+  // - total task count
+  // - total pages
+  // =========================================================
+  getPaginated: async (filters = {}, page = 1, limit = 10) => {
+    const { data } = await apiClient.get('/tasks', {
+      params: {
+        ...filters,
+        page,
+        limit,
+      },
+    })
+
+    return data
+  },
+
+  // =========================================================
+  // TASK STATS
+  // =========================================================
   getStats: async () => {
     const { data } = await apiClient.get('/tasks/stats')
     return data.data
   },
 
-  // Counts + percentages per priority level.
+  // =========================================================
+  // PRIORITY BREAKDOWN
+  // =========================================================
   getPriorityBreakdown: async () => {
-    const { data } = await apiClient.get('/tasks/priority-breakdown')
+    const { data } = await apiClient.get(
+      '/tasks/priority-breakdown'
+    )
+
     return data.data
   },
 
-  // Tasks due soon (overdue first). `days` widens the window.
+  // =========================================================
+  // UPCOMING TASKS
+  // =========================================================
   getUpcoming: async ({ limit = 5, days = 30 } = {}) => {
-    const { data } = await apiClient.get('/tasks/upcoming', { params: { limit, days } })
+    const { data } = await apiClient.get('/tasks/upcoming', {
+      params: {
+        limit,
+        days,
+      },
+    })
+
     return data.data
   },
 
-  // Get single task by ID
+  // =========================================================
+  // GET SINGLE TASK
+  // =========================================================
   getById: async (id) => {
     const { data } = await apiClient.get(`/tasks/${id}`)
     return data.data
   },
 
-  // Get all tasks for a project
+  // =========================================================
+  // GET PROJECT TASKS
+  // =========================================================
   getByProject: async (projectId) => {
-    const { data } = await apiClient.get(`/projects/${projectId}/tasks`)
+    const { data } = await apiClient.get(
+      `/projects/${projectId}/tasks`
+    )
+
     return data.data
   },
 
-  // Create new task
+  // =========================================================
+  // CREATE TASK
+  // =========================================================
   create: async (taskData) => {
-    const { data } = await apiClient.post('/tasks', taskData)
+    const { data } = await apiClient.post(
+      '/tasks',
+      taskData
+    )
+
     return data.data
   },
 
-  // Update task.
-  // `baseUpdatedAt` is optional optimistic-concurrency (AC-15): pass the
-  // `updatedAt` you last saw and the server rejects the write with 409 if the
-  // row has moved on. Omit it and the call behaves exactly as it always did.
+  // =========================================================
+  // UPDATE TASK
+  // =========================================================
   update: async (id, taskData, baseUpdatedAt) => {
-    const body = baseUpdatedAt ? { ...taskData, baseUpdatedAt } : taskData
-    const { data } = await apiClient.put(`/tasks/${id}`, body)
+    const body = baseUpdatedAt
+      ? {
+          ...taskData,
+          baseUpdatedAt,
+        }
+      : taskData
+
+    const { data } = await apiClient.put(
+      `/tasks/${id}`,
+      body
+    )
+
     return data.data
   },
 
-  // Update only the status (used in Kanban drag & drop)
-  updateStatus: async (id, status, baseUpdatedAt) => {
-    const body = baseUpdatedAt ? { status, baseUpdatedAt } : { status }
-    const { data } = await apiClient.patch(`/tasks/${id}/status`, body)
+  // =========================================================
+  // UPDATE STATUS
+  // =========================================================
+  updateStatus: async (
+    id,
+    status,
+    baseUpdatedAt
+  ) => {
+    const body = baseUpdatedAt
+      ? {
+          status,
+          baseUpdatedAt,
+        }
+      : {
+          status,
+        }
+
+    const { data } = await apiClient.patch(
+      `/tasks/${id}/status`,
+      body
+    )
+
     return data.data
   },
 
-  // Delete task
+  // =========================================================
+  // DELETE TASK
+  // =========================================================
   delete: async (id) => {
     await apiClient.delete(`/tasks/${id}`)
   },
 
-  // Add comment to task
+  // =========================================================
+  // ADD COMMENT
+  // =========================================================
   addComment: async (taskId, content) => {
     const { data } = await apiClient.post(
       `/tasks/${taskId}/comments`,
-      { content }
+      {
+        content,
+      }
     )
+
     return data.data
   },
 
-  // Delete comment
+  // =========================================================
+  // DELETE COMMENT
+  // =========================================================
   deleteComment: async (taskId, commentId) => {
-    await apiClient.delete(`/tasks/${taskId}/comments/${commentId}`)
+    await apiClient.delete(
+      `/tasks/${taskId}/comments/${commentId}`
+    )
   },
 }

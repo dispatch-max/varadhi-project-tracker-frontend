@@ -4,11 +4,11 @@ import { ProjectProgress } from '@/components/dashboard/project-progress'
 import { CalendarSyncWidget } from '@/components/dashboard/calendar-sync-widget'
 import { ProjectHealth } from '@/components/dashboard/ProjectHealth'
 import { TasksOverview } from '@/components/dashboard/TasksOverview'
-import {UpcomingDeadlines} from '@/components/dashboard/UpcomingDeadlines'
+import { UpcomingDeadlines } from '@/components/dashboard/UpcomingDeadlines'
 import { NotificationsCard } from '@/components/dashboard/NotificationsCard'
-import { CalendarCard } from '@/components/dashboard/CalendarCard'
 import { GanttPreview } from '@/components/dashboard/GanttPreview'
-import { ChevronDown } from "lucide-react";
+
+import { ChevronDown } from 'lucide-react'
 
 export const metadata = {
   title: 'Dashboard',
@@ -16,92 +16,116 @@ export const metadata = {
 
 export default function DashboardPage() {
   return (
-    <div className="space-y-6">
-{/* Page Header */}
-<div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-8">
+    <main className="w-full min-w-0 bg-slate-50">
+      <div className="mx-auto w-full max-w-[1800px] min-w-0 px-5 py-6 lg:px-6 xl:px-7">
 
-  {/* Left Side */}
-  <div>
-    <h1 className="text-3xl font-bold text-foreground">
-      Project Dashboard
-    </h1>
+        {/* =====================================================
+            DASHBOARD HEADER
+        ===================================================== */}
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-[30px] font-semibold leading-tight tracking-tight text-slate-900">
+              Project Dashboard
+            </h1>
 
-    <p className="mt-1 text-sm text-muted-foreground">
-      Welcome back, Varadhi Team
-    </p>
-  </div>
+            <p className="mt-1 text-[16px] text-slate-500">
+              Welcome back, Varadhi Team
+            </p>
+          </div>
 
-  {/* Right Side */}
-  <div className="flex items-center gap-3">
+          <button
+            type="button"
+            className="
+              flex h-11 items-center gap-2
+              rounded-xl border border-slate-200
+              bg-white px-5
+              text-[14px] font-medium text-slate-700
+              shadow-sm
+              transition
+              hover:bg-slate-50
+            "
+          >
+            This week
+            <ChevronDown className="h-5 w-5" />
+          </button>
+        </div>
 
-    {/* This Week */}
-    <button className="flex items-center gap-2 px-4 h-10 bg-card border border-border rounded-xl text-sm text-foreground hover:bg-background">
-      This week
-      <ChevronDown className="w-4 h-4" />
-    </button>
+        {/* =====================================================
+            STATS
+        ===================================================== */}
+        <section className="mb-6 w-full">
+          <StatsCards />
+        </section>
 
-  </div>
+        {/* =====================================================
+            ROW 1
+            Project Health / Tasks / Upcoming Deadlines
+        ===================================================== */}
+        <section
+          className="
+            mb-6
+            grid
+            w-full
+            min-w-0
+            gap-5
+            lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.7fr)]
+          "
+        >
+          <div className="min-w-0 min-h-[300px] h-[300px]">
+            <ProjectHealth />
+          </div>
 
-</div>
+          <div className="min-w-0 min-h-[300px] h-[300px]">
+            <TasksOverview />
+          </div>
 
-      {/* Stats Cards */}
-      <StatsCards />
-<div className="grid grid-cols-12 gap-6">
+          <div className="min-w-0 min-h-[300px] h-[300px]">
+            <UpcomingDeadlines />
+          </div>
+        </section>
 
-  {/* Project Health */}
-  <div className="col-span-12 lg:col-span-3">
-    <ProjectHealth />
-  </div>
+        {/* =====================================================
+            ROW 2
+            Recent Activity / Project Progress /
+            Notifications / Calendar Sync
+        ===================================================== */}
+        <section
+          className="
+            mb-6
+            grid
+            w-full
+            min-w-0
+            gap-5
+            lg:grid-cols-4
+          "
+        >
+          <div className="min-w-0 min-h-[330px]">
+            <RecentActivity />
+          </div>
 
-  {/* Tasks Overview */}
-  <div className="col-span-12 lg:col-span-3">
-    <TasksOverview />
-  </div>
+          <div className="min-w-0 min-h-[330px]">
+            <ProjectProgress />
+          </div>
 
-  {/* Upcoming Deadlines */}
-  <div className="col-span-12 lg:col-span-6">
-    <UpcomingDeadlines />
-  </div>
+          <div className="min-w-0 min-h-[330px]">
+            <NotificationsCard />
+          </div>
 
-</div>
+          <div className="min-w-0 min-h-[330px]">
+            <CalendarSyncWidget />
+          </div>
+        </section>
 
-      {/* Bottom Row — Activity + Projects */}
-<div className="grid grid-cols-12 gap-6">
-  <div className="col-span-12 lg:col-span-4">
-    <RecentActivity />
-  </div>
+        {/* =====================================================
+            GANTT TIMELINE
+        ===================================================== */}
+        <section className="mb-6 w-full min-w-0">
+          <div className="min-h-[330px] w-full min-w-0">
+            <GanttPreview />
+          </div>
+        </section>
 
-  <div className="col-span-12 lg:col-span-4">
-    <NotificationsCard />
-  </div>
-
-      {/* CalendarCard */}
-  <div className="col-span-12 lg:col-span-4">
-    <CalendarCard />
-  </div>
-</div>
-
-      {/* Stats Cards */}
-<div className="grid grid-cols-12 gap-6">
-
-  {/* GanttPreview */}
-  <div className="col-span-12">
-    <GanttPreview />
-  </div>
-
-</div>
-
-      {/* Project progress + calendar sync. Both were dropped by the V2.0
-          dashboard rewrite; re-added here so the existing project rollup and
-          the calendar-connection widget stay reachable. */}
-<div className="grid grid-cols-12 gap-6">
-  <div className="col-span-12 lg:col-span-6">
-    <ProjectProgress />
-  </div>
-  <div className="col-span-12 lg:col-span-6">
-    <CalendarSyncWidget />
-  </div>
-</div>
-    </div>
+      </div>
+    </main>
   )
 }

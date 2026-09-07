@@ -90,10 +90,12 @@ export function CreateProjectModal({ onClose, onSuccess }) {
       className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-card rounded-2xl w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
+      {/* <div className="bg-card rounded-2xl w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto"> */}
+      <div className="bg-card rounded-2xl w-full max-w-4xl shadow-xl max-h-[calc(100vh-2rem)] overflow-y-auto">
 
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+        {/* <div className="flex items-center justify-between px-6 py-4 border-b border-border"> */}
+        <div className="flex items-center justify-between px-7 py-4 border-b border-border">
           <h2 className="text-base font-semibold text-foreground">
             Create New Project
           </h2>
@@ -106,7 +108,8 @@ export function CreateProjectModal({ onClose, onSuccess }) {
         </div>
 
         {/* Modal Body */}
-        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+        {/* <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4"> */}
+        <form onSubmit={handleSubmit} className="px-7 py-5 space-y-3.5">
 
           {/* General Error */}
           {errors.general && (
@@ -141,73 +144,86 @@ export function CreateProjectModal({ onClose, onSuccess }) {
               value={formData.description}
               onChange={handleChange}
               disabled={isLoading}
-              rows={3}
+              rows={2}
               className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent resize-none placeholder:text-slate-400"
             />
           </div>
 
-          {/* Dates */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="startDate">Start Date *</Label>
-              <Input
-                id="startDate"
-                name="startDate"
-                type="date"
-                value={formData.startDate}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-              {errors.startDate && (
-                <p className="text-red-500 text-xs">{errors.startDate}</p>
-              )}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="endDate">End Date</Label>
-              <Input
-                id="endDate"
-                name="endDate"
-                type="date"
-                value={formData.endDate}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-          {/* Project Manager — drives who receives overdue alerts,
-              48h escalations and milestone notifications. */}
-          <div className="space-y-1.5">
-            <Label htmlFor="managerId">Project Manager</Label>
-            <select
-              id="managerId"
-              name="managerId"
-              value={formData.managerId}
-              onChange={handleChange}
-              disabled={isLoading || usersLoading}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
-            >
-              <option value="">
-                {usersLoading ? 'Loading users...' : 'Assign me as manager'}
-              </option>
-              {privileged.length > 0 && (
-                <optgroup label="Managers & Admins">
-                  {privileged.map((u) => (
-                    <option key={u.id} value={u.id}>{u.name}</option>
-                  ))}
-                </optgroup>
-              )}
-              {employees.length > 0 && (
-                <optgroup label="Employees">
-                  {employees.map((u) => (
-                    <option key={u.id} value={u.id}>{u.name}</option>
-                  ))}
-                </optgroup>
-              )}
-            </select>
-            <p className="text-xs text-slate-400">
-              The manager receives overdue alerts, escalations and milestone updates.
-            </p>
-          </div>
+{/* Dates + Project Manager */}
+<div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+
+  {/* Start Date */}
+  <div className="space-y-1.5">
+    <Label htmlFor="startDate">Start Date *</Label>
+    <Input
+      id="startDate"
+      name="startDate"
+      type="date"
+      value={formData.startDate}
+      onChange={handleChange}
+      disabled={isLoading}
+    />
+    {errors.startDate && (
+      <p className="text-red-500 text-xs">{errors.startDate}</p>
+    )}
+  </div>
+
+  {/* End Date */}
+  <div className="space-y-1.5">
+    <Label htmlFor="endDate">End Date</Label>
+    <Input
+      id="endDate"
+      name="endDate"
+      type="date"
+      value={formData.endDate}
+      onChange={handleChange}
+      disabled={isLoading}
+    />
+  </div>
+
+  {/* Project Manager */}
+  <div className="space-y-1.5">
+    <Label htmlFor="managerId">Project Manager</Label>
+
+    <select
+      id="managerId"
+      name="managerId"
+      value={formData.managerId}
+      onChange={handleChange}
+      disabled={isLoading || usersLoading}
+      className="w-full h-10 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+    >
+      <option value="">
+        {usersLoading ? 'Loading users...' : 'Assign me as manager'}
+      </option>
+
+      {privileged.length > 0 && (
+        <optgroup label="Managers & Admins">
+          {privileged.map((u) => (
+            <option key={u.id} value={u.id}>
+              {u.name}
+            </option>
+          ))}
+        </optgroup>
+      )}
+
+      {employees.length > 0 && (
+        <optgroup label="Employees">
+          {employees.map((u) => (
+            <option key={u.id} value={u.id}>
+              {u.name}
+            </option>
+          ))}
+        </optgroup>
+      )}
+    </select>
+  </div>
+
+</div>
+
+<p className="text-xs text-slate-400 -mt-1">
+  The manager receives overdue alerts, escalations and milestone updates.
+</p>
 
           {/* Team members — each person selected is notified they were added. */}
           <div className="space-y-1.5">
@@ -224,7 +240,8 @@ export function CreateProjectModal({ onClose, onSuccess }) {
             ) : selectableMembers.length === 0 ? (
               <p className="text-xs text-slate-400">No other active users yet.</p>
             ) : (
-              <div className="max-h-40 overflow-y-auto border border-slate-200 rounded-lg divide-y divide-slate-100">
+              <div className="border border-slate-200 rounded-lg overflow-hidden">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {selectableMembers.map((u) => (
                   <label
                     key={u.id}
@@ -251,6 +268,7 @@ export function CreateProjectModal({ onClose, onSuccess }) {
                     </span>
                   </label>
                 ))}
+                </div>
               </div>
             )}
             <p className="text-xs text-slate-400">

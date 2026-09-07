@@ -43,7 +43,7 @@ const TILES = [
 
 function Shell({ children }) {
   return (
-    <Card className="h-[160px] rounded-2xl border border-border bg-card p-5 shadow-sm">
+    <Card className="h-[160px] rounded-2xl border border-border bg-card p-3 shadow-sm">
       <div className="mb-1 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-foreground">Priority Breakdown</h3>
         <Link href="/tasks" className="text-xs font-medium text-violet-600 hover:underline">

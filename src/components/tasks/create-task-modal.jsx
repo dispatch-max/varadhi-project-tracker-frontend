@@ -115,54 +115,117 @@ export function CreateTaskModal({ onClose, onSuccess }) {
     }
   }
 
-  return (
+return (
+  <div
+    className="
+      fixed inset-0 z-50
+      flex items-center justify-center
+      bg-black/50
+      px-6 py-4
+    "
+    onClick={(e) => {
+      if (e.target === e.currentTarget) {
+        onClose()
+      }
+    }}
+  >
+    {/* =====================================================
+        MODAL
+        WIDE HORIZONTALLY
+        HEIGHT IS NOT FORCED
+    ====================================================== */}
     <div
-      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+      className="
+        w-[92vw]
+        max-w-[1400px]
+        min-w-0
+        max-h-[calc(100vh-32px)]
+        overflow-hidden
+        rounded-2xl
+        bg-card
+        shadow-xl
+      "
     >
-      <div className="bg-card rounded-2xl w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
+      {/* ===================================================
+          HEADER
+      ==================================================== */}
+      <div
+        className="
+          sticky top-0 z-10
+          flex items-center justify-between
+          border-b border-border
+          bg-card
+          px-6 py-4
+          rounded-t-2xl
+        "
+      >
+        <h2 className="text-lg font-semibold text-foreground">
+          Create New Task
+        </h2>
 
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border sticky top-0 bg-card rounded-t-2xl">
-          <h2 className="text-base font-semibold text-foreground">
-            Create New Task
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-muted-foreground p-1 rounded-lg hover:bg-background"
-          >
-            <X className="w-4 h-4" />
-          </button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="
+            rounded-lg p-1
+            text-slate-400
+            transition
+            hover:bg-background
+            hover:text-muted-foreground
+          "
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* ===================================================
+          BODY
+      ==================================================== */}
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-3 px-7 py-4"
+      >
+        {errors.general && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {errors.general}
+          </div>
+        )}
+
+        {/* =================================================
+            TITLE
+        ================================================== */}
+        <div className="space-y-1.5">
+          <Label htmlFor="title">
+            Task Title
+          </Label>
+
+          <Input
+            id="title"
+            name="title"
+            placeholder="e.g. Build login page UI"
+            value={formData.title}
+            onChange={handleChange}
+            disabled={isLoading}
+          />
+
+          {errors.title && (
+            <p className="text-xs text-red-500">
+              {errors.title}
+            </p>
+          )}
         </div>
 
-        {/* Body */}
-        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
-
-          {errors.general && (
-            <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-4 py-3">
-              {errors.general}
-            </div>
-          )}
-
-          {/* Title */}
+        {/* =================================================
+            DESCRIPTION + USER STORY
+            Two columns because modal is now horizontal
+        ================================================== */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {/* DESCRIPTION */}
           <div className="space-y-1.5">
-            <Label htmlFor="title">Task Title</Label>
-            <Input
-              id="title"
-              name="title"
-              placeholder="e.g. Build login page UI"
-              value={formData.title}
-              onChange={handleChange}
-              disabled={isLoading}
-            />
-            {errors.title && (
-              <p className="text-red-500 text-xs">{errors.title}</p>
-            )}
-          </div>
+            <Label htmlFor="description">
+              Description
+            </Label>
 
-          {/* Description */}
-          <div className="space-y-1.5">
-            <Label htmlFor="description">Description</Label>
             <textarea
               id="description"
               name="description"
@@ -170,198 +233,305 @@ export function CreateTaskModal({ onClose, onSuccess }) {
               value={formData.description}
               onChange={handleChange}
               disabled={isLoading}
-              rows={3}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none placeholder:text-slate-400"
+              rows={2}
+              className="
+                w-full resize-none
+                rounded-lg
+                border border-border
+                px-3 py-2
+                text-sm
+                placeholder:text-slate-400
+                focus:outline-none
+                focus:ring-2
+                focus:ring-violet-500
+              "
             />
           </div>
 
-
-          {/* User Story */}
+          {/* USER STORY */}
           <div className="space-y-1.5">
-              <Label htmlFor="userStory">User Story</Label>
-                <textarea
-                  id="userStory"
-                  name="userStory"
-                  // placeholder={`As a [user type],
-                  // I want [action],
-                  // So that [benefit]`}
-                  value={formData.userStory}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                  rows={4}
-                  className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
-              />
-          </div>
+            <Label htmlFor="userStory">
+              User Story
+            </Label>
 
-            {/* Acceptance Criteria */}
-                          <div className="space-y-1.5">
-                <Label htmlFor="acceptanceCriteria">
-                  Acceptance Criteria
-                </Label>
-
-                <textarea
-                  id="acceptanceCriteria"
-                  name="acceptanceCriteria"
-              //     placeholder={`• Criteria 1
-              // • Criteria 2
-              // • Criteria 3`}
-                  value={formData.acceptanceCriteria}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                  rows={4}
-                  className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
-                />
-                </div>
-
-          {/* Project */}
-          <div className="space-y-1.5">
-            <Label htmlFor="projectId">Project *</Label>
-            <select
-              id="projectId"
-              name="projectId"
-              value={formData.projectId}
+            <textarea
+              id="userStory"
+              name="userStory"
+              value={formData.userStory}
               onChange={handleChange}
-              disabled={isLoading || projectsLoading}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-card"
+              disabled={isLoading}
+              rows={3}
+              className="
+                w-full resize-none
+                rounded-lg
+                border border-border
+                px-3 py-2
+                text-sm
+                focus:outline-none
+                focus:ring-2
+                focus:ring-violet-500
+              "
+            />
+          </div>
+        </div>
+
+        {/* =================================================
+            ACCEPTANCE CRITERIA
+        ================================================== */}
+        <div className="space-y-1.5">
+          <Label htmlFor="acceptanceCriteria">
+            Acceptance Criteria
+          </Label>
+
+          <textarea
+            id="acceptanceCriteria"
+            name="acceptanceCriteria"
+            value={formData.acceptanceCriteria}
+            onChange={handleChange}
+            disabled={isLoading}
+            rows={3}
+            className="
+              w-full resize-none
+              rounded-lg
+              border border-border
+              px-3 py-2
+              text-sm
+              focus:outline-none
+              focus:ring-2
+              focus:ring-violet-500
+            "
+          />
+        </div>
+
+        {/* =================================================
+            PROJECT
+        ================================================== */}
+        <div className="space-y-1.5">
+          <Label htmlFor="projectId">
+            Project *
+          </Label>
+
+          <select
+            id="projectId"
+            name="projectId"
+            value={formData.projectId}
+            onChange={handleChange}
+            disabled={isLoading || projectsLoading}
+            className="
+              w-full
+              rounded-lg
+              border border-border
+              bg-card
+              px-3 py-2
+              text-sm
+              focus:outline-none
+              focus:ring-2
+              focus:ring-violet-500
+            "
+          >
+            <option value="">
+              {projectsLoading
+                ? 'Loading projects...'
+                : 'Select a project...'}
+            </option>
+
+            {projects.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.name}
+              </option>
+            ))}
+          </select>
+
+          {projectsError && (
+            <p className="text-xs text-amber-600">
+              Couldn&apos;t load projects.{' '}
+              <button
+                type="button"
+                onClick={loadProjects}
+                className="font-medium underline"
+              >
+                Retry
+              </button>
+            </p>
+          )}
+
+          {!projectsLoading &&
+            !projectsError &&
+            projects.length === 0 && (
+              <p className="text-xs text-slate-400">
+                No projects found. Create a project first.
+              </p>
+            )}
+
+          {errors.projectId && (
+            <p className="text-xs text-red-500">
+              {errors.projectId}
+            </p>
+          )}
+        </div>
+
+        {/* =================================================
+            ASSIGNEE + DUE DATE
+        ================================================== */}
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+
+          {/* ASSIGNEE */}
+          <div className="space-y-1.5">
+            <Label htmlFor="assigneeId">
+              Assignee
+            </Label>
+
+            <select
+              id="assigneeId"
+              name="assigneeId"
+              value={formData.assigneeId}
+              onChange={handleChange}
+              disabled={isLoading || usersLoading}
+              className="
+                w-full
+                rounded-lg
+                border border-border
+                bg-card
+                px-3 py-2
+                text-sm
+                focus:outline-none
+                focus:ring-2
+                focus:ring-violet-500
+              "
             >
               <option value="">
-                {projectsLoading ? 'Loading projects...' : 'Select a project...'}
+                {usersLoading ? 'Loading users...' : 'Unassigned'}
               </option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}
+
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.name}
                 </option>
               ))}
             </select>
-            {projectsError && (
-              <p className="text-amber-600 text-xs">
-                Couldn&apos;t load projects.{' '}
+
+            {usersError && (
+              <p className="text-xs text-amber-600">
+                Couldn&apos;t load users.{' '}
                 <button
                   type="button"
-                  onClick={loadProjects}
-                  className="underline font-medium"
+                  onClick={loadUsers}
+                  className="font-medium underline"
                 >
                   Retry
                 </button>
               </p>
             )}
-            {!projectsLoading && !projectsError && projects.length === 0 && (
-              <p className="text-slate-400 text-xs">
-                No projects found. Create a project first.
-              </p>
-            )}
-{/*               
-              <option value="">Select a project...</option>
-              {MOCK_PROJECTS.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select> */}
-
-            {errors.projectId && (
-              <p className="text-red-500 text-xs">{errors.projectId}</p>
-            )}
           </div>
 
-          {/* Type + Priority */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="type">Type</Label>
-              <select
-                id="type"
-                name="type"
-                value={formData.type}
-                onChange={handleChange}
-                disabled={isLoading}
-                className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-card"
-              >
-                <option value="feature">Feature</option>
-                <option value="bug">Bug</option>
-                <option value="infra">Infra</option>
-                <option value="research">Research</option>
-                <option value="design">Design</option>
-              </select>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="priority">Priority</Label>
-              <select
-                id="priority"
-                name="priority"
-                value={formData.priority}
-                onChange={handleChange}
-                disabled={isLoading}
-                className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-card"
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="critical">Critical</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Assignee + Due Date */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="assigneeId">Assignee</Label>
-              <select
-                id="assigneeId"
-                name="assigneeId"
-                value={formData.assigneeId}
-                onChange={handleChange}
-                disabled={isLoading || usersLoading}
-                className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-card"
-              >
-                <option value="">
-                  {usersLoading ? 'Loading users...' : 'Unassigned'}
-                </option>
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>{u.name}</option>
-                ))}
-              </select>
-              {usersError && (
-                <p className="text-amber-600 text-xs">
-                  Couldn&apos;t load users.{' '}
-                  <button
-                    type="button"
-                    onClick={loadUsers}
-                    className="underline font-medium"
-                  >
-                    Retry
-                  </button>
-                </p>
-              )}
-            </div>
-            
-                {/* <option value="">Unassigned</option>
-                {MOCK_MEMBERS.map((m) => (
-                  <option key={m.id} value={m.id}>{m.name}</option>
-                ))}
-              </select>
-            </div> */}
-
-            <div className="space-y-1.5">
-              <Label htmlFor="dueDate">Due Date</Label>
-              <Input
-                id="dueDate"
-                name="dueDate"
-                type="date"
-                value={formData.dueDate}
-                onChange={handleChange}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-
-          {/* Status */}
+          {/* DUE DATE */}
           <div className="space-y-1.5">
-            <Label htmlFor="status">Status</Label>
+            <Label htmlFor="dueDate">
+              Due Date
+            </Label>
+
+            <Input
+              id="dueDate"
+              name="dueDate"
+              type="date"
+              value={formData.dueDate}
+              onChange={handleChange}
+              disabled={isLoading}
+            />
+          </div>
+        </div>
+
+        {/* =================================================
+            TYPE + PRIORITY + STATUS
+        ================================================== */}
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+
+          {/* TYPE */}
+          <div className="space-y-1.5">
+            <Label htmlFor="type">
+              Type
+            </Label>
+
+            <select
+              id="type"
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+              disabled={isLoading}
+              className="
+                w-full
+                rounded-lg
+                border border-border
+                bg-card
+                px-3 py-2
+                text-sm
+                focus:outline-none
+                focus:ring-2
+                focus:ring-violet-500
+              "
+            >
+              <option value="feature">Feature</option>
+              <option value="bug">Bug</option>
+              <option value="infra">Infra</option>
+              <option value="research">Research</option>
+              <option value="design">Design</option>
+            </select>
+          </div>
+
+          {/* PRIORITY */}
+          <div className="space-y-1.5">
+            <Label htmlFor="priority">
+              Priority
+            </Label>
+
+            <select
+              id="priority"
+              name="priority"
+              value={formData.priority}
+              onChange={handleChange}
+              disabled={isLoading}
+              className="
+                w-full
+                rounded-lg
+                border border-border
+                bg-card
+                px-3 py-2
+                text-sm
+                focus:outline-none
+                focus:ring-2
+                focus:ring-violet-500
+              "
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
+          </div>
+
+          {/* STATUS */}
+          <div className="space-y-1.5">
+            <Label htmlFor="status">
+              Status
+            </Label>
+
             <select
               id="status"
               name="status"
               value={formData.status}
               onChange={handleChange}
               disabled={isLoading}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 bg-card"
+              className="
+                w-full
+                rounded-lg
+                border border-border
+                bg-card
+                px-3 py-2
+                text-sm
+                focus:outline-none
+                focus:ring-2
+                focus:ring-violet-500
+              "
             >
               <option value="todo">To Do</option>
               <option value="in_progress">In Progress</option>
@@ -369,31 +539,48 @@ export function CreateTaskModal({ onClose, onSuccess }) {
               <option value="completed">Completed</option>
             </select>
           </div>
+        </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-end gap-3 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              className="bg-violet-600 hover:bg-violet-700"
-              disabled={isLoading}
-            >
-              {isLoading
-                ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating...</>
-                : 'Create Task'
-              }
-            </Button>
-          </div>
+        {/* =================================================
+            FOOTER
+        ================================================== */}
+        <div
+          className="
+            flex items-center justify-end
+            gap-3
+            border-t border-border
+            pt-3
+          "
+        >
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
 
-        </form>
-      </div>
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="
+              bg-violet-600
+              hover:bg-violet-700
+            "
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              'Create Task'
+            )}
+          </Button>
+        </div>
+      </form>
     </div>
-  )
+  </div>
+)
 }

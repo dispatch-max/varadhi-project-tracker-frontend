@@ -32,7 +32,7 @@ export function KanbanStats() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid w-full min-w-0 grid-cols-4 gap-2 lg:gap-3">
         {[0, 1, 2, 3].map((i) => (
           <div
             key={i}
@@ -92,21 +92,95 @@ export function KanbanStats() {
     },
   ]
 
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {cards.map((card) => {
-        const Icon = card.icon
-        return (
-          <div key={card.title} className="rounded-xl border border-border bg-card p-4">
-            <div className={`mb-3 flex h-8 w-8 items-center justify-center rounded-lg ${card.iconBg}`}>
-              <Icon className={`h-4 w-4 ${card.iconColor}`} />
-            </div>
-            <h3 className="text-2xl font-bold text-foreground">{card.value}</h3>
-            <p className="text-sm text-muted-foreground">{card.title}</p>
-            <p className="mt-0.5 text-xs text-slate-400">{card.change}</p>
+return (
+  <div
+    className="
+      grid
+      w-full
+      min-w-0
+      grid-cols-4
+      gap-2
+      lg:gap-3
+    "
+  >
+    {cards.map((card) => {
+      const Icon = card.icon
+
+      return (
+        <div
+          key={card.title}
+          className="
+            min-w-0
+            rounded-xl
+            border
+            border-border
+            bg-card
+            p-3
+            lg:p-4
+          "
+        >
+          <div
+            className={`
+              mb-2
+              flex
+              h-7
+              w-7
+              items-center
+              justify-center
+              rounded-lg
+              lg:h-8
+              lg:w-8
+              ${card.iconBg}
+            `}
+          >
+            <Icon
+              className={`
+                h-3.5
+                w-3.5
+                lg:h-4
+                lg:w-4
+                ${card.iconColor}
+              `}
+            />
           </div>
-        )
-      })}
-    </div>
-  )
+
+          <h3
+            className="
+              truncate
+              text-xl
+              font-bold
+              text-foreground
+              lg:text-2xl
+            "
+          >
+            {card.value}
+          </h3>
+
+          <p
+            className="
+              truncate
+              text-xs
+              text-muted-foreground
+              lg:text-sm
+            "
+          >
+            {card.title}
+          </p>
+
+          <p
+            className="
+              mt-0.5
+              truncate
+              text-[10px]
+              text-slate-400
+              lg:text-xs
+            "
+          >
+            {card.change}
+          </p>
+        </div>
+      )
+    })}
+  </div>
+)
 }

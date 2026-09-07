@@ -66,11 +66,10 @@ export function RegisterForm() {
 
     setIsLoading(true)
     try {
-      const { user, token } = await authApi.register(formData)
-      setAuth(user, token)
-
-      // Save token in cookie for middleware
-      document.cookie = `varadhi_token=${token}; path=/; max-age=${7 * 24 * 60 * 60}`
+      const { user } = await authApi.register(formData)
+      // Sets the user cache and the route-gate hint cookie. The real
+      // credentials are httpOnly cookies already set by the register response.
+      setAuth(user)
 
       router.push('/dashboard')
     } catch (err) {

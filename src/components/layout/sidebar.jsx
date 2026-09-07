@@ -374,6 +374,7 @@ import { clearOfflineCaches } from '@/lib/offline-cache'
 import { disablePush } from '@/lib/push'
 import { countForUser, clearForUser } from '@/lib/outbox'
 import { release as releaseReplayLock } from '@/lib/replay-lock'
+import { publishSessionEvent, SESSION_EVENTS } from '@/lib/session-channel'
 import { useOutboxStore } from '@/store/outbox.store'
 import { NAV_ITEMS } from '@/constants'
 import { getInitials, getAvatarColor, cn } from '@/utils'
@@ -468,8 +469,16 @@ export function Sidebar({ collapsed: collapsedProp, setCollapsed: setCollapsedPr
     } finally {
       clearAuth()
 
-      document.cookie =
-        'varadhi_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+      // Requirement 5: signing out in one tab signs out all of them. Without
+      // this, sibling tabs keep showing a dashboard backed by a cookie the
+      // server has just revoked, and only discover it on the next click — as a
+      // bare redirect with no explanation. Published before the caches are
+      // cleared so siblings start tearing down in parallel.
+      publishSessionEvent(SESSION_EVENTS.LOGOUT, { reason: 'user-logout' })
+
+      // clearAuth() already dropped the route-gate hint cookie via
+      // clearAuthHint(); no manual document.cookie write is needed here.
+
       // Drop every cached API response alongside the token — otherwise this
       // user's tasks and projects stay readable from the service worker cache
       // after they've signed out. Awaited so the caches are gone before the
