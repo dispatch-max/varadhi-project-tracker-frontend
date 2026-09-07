@@ -7,11 +7,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuthStore } from '@/store/auth.store'
 import { usersApi } from '@/lib/api/users.api'
+import { broadcastUserUpdate } from '@/components/auth/session-guard'
 import { getInitials, getAvatarColor, cn } from '@/utils'
 import { USER_ROLE_LABELS } from '@/constants'
 
 export function ProfileForm() {
-  const { user, setAuth } = useAuthStore()
+  const { user, setUser } = useAuthStore()
   const fileInputRef = useRef(null)
 
   const [formData, setFormData] = useState({
@@ -68,7 +69,13 @@ export function ProfileForm() {
     setIsLoading(true)
     try {
       const updatedUser = await usersApi.updateProfile(formData)
-      setAuth(updatedUser, user?.token || '')
+      // setUser, not setAuth: this is a profile edit, not a new sign-in. It
+      // merges into the cached user and leaves session state alone. (The old
+      // `user?.token` argument was always undefined — tokens never lived here.)
+      setUser(updatedUser)
+      // Push it to the other tabs so the sidebar avatar and name update there
+      // too, instead of going stale until the next reload.
+      broadcastUserUpdate(updatedUser)
       setIsSuccess(true)
     } catch (err) {
       setErrors({

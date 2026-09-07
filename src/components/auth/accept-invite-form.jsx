@@ -98,15 +98,16 @@ export function AcceptInviteForm() {
 
     setIsLoading(true)
     try {
-      const { user, token: jwt } = await authApi.acceptInvite({
+      const { user } = await authApi.acceptInvite({
         token,
         name: formData.name,
         password: formData.password,
       })
 
-      // Auto-login: store auth + cookie, same as register/login flows
-      setAuth(user, jwt)
-      document.cookie = `varadhi_token=${jwt}; path=/; max-age=${7 * 24 * 60 * 60}`
+      // Auto-login, same as register/login. accept-invite now starts a real
+      // session with httpOnly cookies; it used to return a bare JWT with no
+      // session row, which the current middleware refuses outright.
+      setAuth(user)
 
       router.push('/dashboard')
       router.refresh()

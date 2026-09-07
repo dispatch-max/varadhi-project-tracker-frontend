@@ -1,12 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useAuthStore } from '@/store/auth.store'
 import { authApi } from '@/lib/api/auth.api'
 import { clearOfflineCaches } from '@/lib/offline-cache'
+import { purgeLegacyBrowserAuth } from '@/lib/auth-hint'
+import { probeSession } from '@/lib/session-recovery'
+import { wasSignedOutLocally, clearSignedOutFlag } from '@/lib/session-channel'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -23,6 +26,75 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
+  /*
+   * Silent session recovery — runs before the form is shown.
+   *
+   * Existing users arrive here for a reason that has nothing to do with being
+   * signed out: the pre-migration hint cookie held the access token and lapsed
+   * after 15 minutes, so Next middleware redirected them even though their
+   * httpOnly session is alive for another 7 days. Asking them for a password
+   * would be the migration visibly failing.
+   *
+   * Start in the checking state ONLY when a probe could plausibly succeed. If
+   * this tab already watched a logout happen, there is nothing to check and the
+   * form renders immediately — no spinner, no request.
+   */
+  const [checking, setChecking] = useState(() => !wasSignedOutLocally())
+
+  useEffect(() => {
+    let cancelled = false
+
+    ;(async () => {
+      // Do this FIRST and synchronously. The legacy `varadhi_token` value holds
+      // a real JWT readable by any script — the exact exposure this migration
+      // exists to close — so it is purged before any await, not after.
+      purgeLegacyBrowserAuth()
+
+      /*
+       * Don't interrogate the server about a session we just watched die.
+       *
+       * After a logout — in this tab or a sibling's, via BroadcastChannel — the
+       * cookies are gone and the session row is revoked. Probing would be a
+       * guaranteed 401 followed by a pointless refresh attempt. Skipping it is
+       * both faster and the thing that keeps a logout from re-entering the
+       * recovery path at all.
+       */
+      if (wasSignedOutLocally()) {
+        if (!cancelled) setChecking(false)
+        return
+      }
+
+      let user = null
+      try {
+        user = await probeSession()
+      } finally {
+        /*
+         * DETERMINISTIC EXIT — the fix for the stuck spinner.
+         *
+         * This used to sit behind `if (cancelled) return`, which meant a
+         * cancelled effect never cleared `checking`. Combined with a
+         * mount-once ref guard, a remount would not start a replacement probe
+         * either, so the component could sit on "Checking your session..."
+         * forever. Now the state is always cleared, on every path — success,
+         * 401, refresh failure, network error — and `cancelled` only prevents
+         * setting state on an unmounted component.
+         */
+        if (!cancelled) setChecking(false)
+      }
+
+      if (cancelled || !user) return
+
+      // Still signed in. Restore the store and hint cookie, then continue to
+      // the app instead of showing a password prompt.
+      setAuth(user)
+      router.replace('/dashboard')
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [router, setAuth])
+
   function handleChange(e) {
     setFormData({ ...formData, [e.target.name]: e.target.value })
     setError('')
@@ -38,49 +110,54 @@ export function LoginForm() {
     }
 
     setIsLoading(true)
-    try {
-      const { user, token } = await authApi.login(formData)
+ try {
+  const { user } = await authApi.login(formData)
 
-      // Discard any service-worker cache left by a previous session BEFORE
-      // navigating. This is the real cross-user-leak guarantee: logout clears
-      // caches too, but a browser killed mid-session never runs that path, so
-      // a successful login is the first moment we can be certain a different
-      // person may be about to read the previous user's cached API responses.
-      //
-      // Awaited deliberately — caches.delete() is async, and if router.push
-      // won the race the dashboard could paint from the old user's cache. The
-      // catch keeps a storage failure from ever blocking a valid login;
-      // clearOfflineCaches already swallows its own errors, so this is belt
-      // and braces.
-      await clearOfflineCaches().catch(() => {})
+  // Drop any cached responses belonging to whoever used this browser last —
+  // otherwise the new user can briefly see the previous user's data from the
+  // service worker cache.
+  await clearOfflineCaches().catch(() => {})
 
-      // Save to Zustand store + localStorage
-      setAuth(user, token)
+  // Stores the user object in localStorage (shared by every tab) and sets the
+  // route-gate hint cookie. No token is involved: login already set httpOnly
+  // access and refresh cookies that JavaScript cannot read.
+  setAuth(user)
 
-      // Save token in cookie for middleware
-      document.cookie = `varadhi_token=${token}; path=/; max-age=${7 * 24 * 60 * 60}`
+  // This tab is signed in again, so a later visit to the login page should
+  // probe normally rather than skipping straight to the form.
+  clearSignedOutFlag()
 
-      // Redirect based on role
-      router.push('/dashboard')
-      router.refresh()
-    } catch (err) {
-      // No `response` means the request never reached the server — offline, DNS
-      // failure, or the API is down. Falling through to the credentials message
-      // would tell an offline user their correct password is wrong, and they'd
-      // retype it indefinitely.
-      if (!err.response) {
-        setError(
-          "Can't reach the server. Check your connection and try again."
-        )
-      } else {
-        setError(
-          err.response?.data?.message ||
-          'Invalid email or password. Try again.'
-        )
-      }
-    } finally {
-      setIsLoading(false)
-    }
+  router.push('/dashboard')
+  router.refresh()
+} catch (err) {
+  if (!err.response) {
+    setError("Can't reach the server. Check your connection and try again.")
+  } else {
+    setError(
+      err.response?.data?.message ||
+      'Invalid email or password. Try again.'
+    )
+  }
+} finally {
+  setIsLoading(false)
+}
+}
+
+  // Session probe still in flight. Showing the password fields here and then
+  // yanking them away on a successful recovery is worse than a brief, honest
+  // wait — and it would invite someone to start typing a password they do not
+  // need to enter.
+  if (checking) {
+    return (
+      <div
+        className="flex flex-col items-center justify-center gap-3 py-12"
+        role="status"
+        aria-live="polite"
+      >
+        <Loader2 className="h-6 w-6 animate-spin text-violet-600" />
+        <p className="text-sm text-muted-foreground">Checking your session...</p>
+      </div>
+    )
   }
 
   return (
