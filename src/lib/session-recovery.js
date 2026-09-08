@@ -29,7 +29,10 @@ import axios from 'axios'
  * authenticated calls the real client would.
  */
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
+// Relative for the same reason as api-client.js: same-origin requests keep the
+// auth cookies first-party, which is the only way Safari and mobile Chrome will
+// store them at all.
+const BASE = process.env.NEXT_PUBLIC_API_URL || '/api'
 
 // Longer than the client default: on Render's free tier this is often the
 // request that wakes a cold container, and a timeout here would show the login

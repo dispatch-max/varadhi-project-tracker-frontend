@@ -7,7 +7,20 @@ import { publishSessionEvent, SESSION_EVENTS } from '@/lib/session-channel'
 // pulls only auth-hint and utils, neither of which reaches back here.
 import { useAuthStore } from '@/store/auth.store'
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
+/*
+ * Relative by default, and that is the important part.
+ *
+ * '/api' resolves against whatever origin the page is served from, and
+ * next.config.mjs rewrites it to the backend server-side. The browser therefore
+ * only ever sees ONE origin, which is what makes the auth cookies first-party.
+ *
+ * Pointing this at an absolute cross-domain URL is what broke production:
+ * Safari and mobile Chrome refused to store the backend's cookies because they
+ * were third-party, so every user logged in successfully and was then
+ * immediately signed out. Keep this relative unless the API is genuinely
+ * same-site with the frontend (e.g. app.varadhi.com + api.varadhi.com).
+ */
+const BASE = process.env.NEXT_PUBLIC_API_URL || '/api'
 
 const apiClient = axios.create({
   baseURL: BASE,
